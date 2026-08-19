@@ -1,0 +1,6 @@
+{
+  "name": "Pata Amiga",
+  "description": "Plataforma de bienestar animal en Purificación, Tolima para adopciones, reportes de rescate, eventos de esterilización y chat con voluntarios.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
