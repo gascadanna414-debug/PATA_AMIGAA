@@ -38,7 +38,7 @@ import {
 import { AuthController } from '../controllers/authController';
 import { StoreController } from '../controllers/storeController';
 import { PURIFICACION_NEIGHBORHOODS } from '../data/initialData';
-import { resolveImageUrl } from '../utils/imageUtils';
+import { resolveImageUrl, handleImageError } from '../utils/imageUtils';
 
 interface AdminPanelProps {
   currentUser: User | null;
@@ -391,6 +391,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           src={resolveImageUrl(report.photoUrl)}
                           alt={report.animalType}
                           className="w-full h-full object-cover"
+                          onError={(e) => handleImageError(e, 'dog')}
                           referrerPolicy="no-referrer"
                         />
                         <span className={`absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full text-white ${
@@ -719,9 +720,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <div className="p-3 space-y-2">
                   <div className="relative aspect-square rounded-xl overflow-hidden bg-[#2C1E14]">
                     <img
-                      src={resolveImageUrl(pet.photos[0])}
+                      src={resolveImageUrl(pet.photos[0], pet.species === 'Gato' ? 'cat' : 'dog')}
                       alt={pet.name}
                       className="w-full h-full object-cover"
+                      onError={(e) => handleImageError(e, pet.species === 'Gato' ? 'cat' : 'dog')}
                       referrerPolicy="no-referrer"
                     />
                     <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/70 text-white">
@@ -813,9 +815,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <div className="grid grid-cols-2 gap-2">
                     <div className="relative aspect-square rounded-xl overflow-hidden bg-[#2C1E14]">
                       <img
-                        src={resolveImageUrl(story.beforePhotoUrl)}
+                        src={resolveImageUrl(story.beforePhotoUrl, 'before')}
                         alt={`Antes ${story.petName}`}
                         className="w-full h-full object-cover"
+                        onError={(e) => handleImageError(e, 'before')}
                         referrerPolicy="no-referrer"
                       />
                       <span className="absolute bottom-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-black/80 text-white">
@@ -824,9 +827,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                     <div className="relative aspect-square rounded-xl overflow-hidden bg-[#2C1E14]">
                       <img
-                        src={resolveImageUrl(story.currentPhotoUrl)}
+                        src={resolveImageUrl(story.currentPhotoUrl, 'after')}
                         alt={`Después ${story.petName}`}
                         className="w-full h-full object-cover"
+                        onError={(e) => handleImageError(e, 'after')}
                         referrerPolicy="no-referrer"
                       />
                       <span className="absolute bottom-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#9E6B38] text-white">
@@ -964,9 +968,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 ).map((photo, i) => (
                   <div key={i} className="aspect-square rounded-xl overflow-hidden bg-[#2C1E14] border border-[#E8DFD3]">
                     <img
-                      src={resolveImageUrl(photo)}
+                      src={resolveImageUrl(photo, 'dog')}
                       alt={`Evidencia ${i + 1}`}
                       className="w-full h-full object-cover"
+                      onError={(e) => handleImageError(e, 'dog')}
                       referrerPolicy="no-referrer"
                     />
                   </div>

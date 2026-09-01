@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { AdoptionPet, User } from '../types';
 import { StoreController } from '../controllers/storeController';
+import { resolveImageUrl, handleImageError } from '../utils/imageUtils';
 import confetti from 'canvas-confetti';
 
 interface AdoptionsViewProps {
@@ -444,9 +445,10 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
                     {/* Photo & badges */}
                     <div className="relative h-60 overflow-hidden bg-[#1C120B]">
                       <img
-                        src={pet.photos[0]}
+                        src={resolveImageUrl(pet.photos[0], pet.species === 'Gato' ? 'cat' : 'dog')}
                         alt={pet.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => handleImageError(e, pet.species === 'Gato' ? 'cat' : 'dog')}
                         referrerPolicy="no-referrer"
                       />
                       <div className="absolute top-3 left-3 bg-[#2C1E14]/80 backdrop-blur-xs text-[#FAF6F0] text-[11px] font-medium px-2.5 py-1 rounded-full border border-white/10">
@@ -579,9 +581,10 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
                   {/* Large High-Res Pet Photo */}
                   <div className="relative rounded-2xl overflow-hidden bg-[#1C120B] border border-[#EAE2D5] shadow-sm">
                     <img
-                      src={activePet.photos[0]}
+                      src={resolveImageUrl(activePet.photos[0], activePet.species === 'Gato' ? 'cat' : 'dog')}
                       alt={activePet.name}
                       className="w-full h-72 sm:h-80 object-cover"
+                      onError={(e) => handleImageError(e, activePet.species === 'Gato' ? 'cat' : 'dog')}
                       referrerPolicy="no-referrer"
                     />
                     <div className="absolute top-3 left-3 bg-[#2C1E14]/80 backdrop-blur-xs text-white text-xs font-semibold px-3 py-1 rounded-full border border-white/10">

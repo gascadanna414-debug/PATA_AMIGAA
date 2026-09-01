@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { ChatChannel, ChatMessage, User } from '../types';
 import { StoreController } from '../controllers/storeController';
+import { resolveImageUrl, handleImageError } from '../utils/imageUtils';
 
 interface ChatViewProps {
   currentUser: User | null;
@@ -151,9 +152,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 >
                   <div className="relative shrink-0">
                     <img
-                      src={chan.avatar}
+                      src={resolveImageUrl(chan.avatar, 'volunteer')}
                       alt={chan.name}
                       className="w-11 h-11 rounded-full object-cover border border-[#EAE2D5]"
+                      onError={(e) => handleImageError(e, 'volunteer')}
                       referrerPolicy="no-referrer"
                     />
                     {chan.online && (
@@ -214,9 +216,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
             <div className="flex items-center gap-3">
               <div className="relative">
                 <img
-                  src={activeChannel.avatar}
+                  src={resolveImageUrl(activeChannel.avatar, 'volunteer')}
                   alt={activeChannel.name}
                   className="w-10 h-10 rounded-full object-cover border border-[#EAE2D5]"
+                  onError={(e) => handleImageError(e, 'volunteer')}
                   referrerPolicy="no-referrer"
                 />
                 {activeChannel.online && (
@@ -264,7 +267,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   {!isMe && (
                     <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-[#EAE2D5] bg-[#FAF6F0]">
                       {msg.avatar ? (
-                        <img src={msg.avatar} alt={msg.senderName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        <img 
+                          src={resolveImageUrl(msg.avatar, 'volunteer')} 
+                          alt={msg.senderName} 
+                          className="w-full h-full object-cover" 
+                          onError={(e) => handleImageError(e, 'volunteer')}
+                          referrerPolicy="no-referrer" 
+                        />
                       ) : (
                         <div className="w-full h-full bg-[#2C1E14] text-white flex items-center justify-center text-xs font-bold">
                           {msg.senderName.charAt(0)}

@@ -19,7 +19,7 @@ import {
 import { AnimalReport, User } from '../types';
 import { StoreController } from '../controllers/storeController';
 import { PURIFICACION_NEIGHBORHOODS } from '../data/initialData';
-import { resolveImageUrl } from '../utils/imageUtils';
+import { resolveImageUrl, handleImageError } from '../utils/imageUtils';
 import confetti from 'canvas-confetti';
 
 interface ReportViewProps {
@@ -465,9 +465,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     {photos.map((url, idx) => (
                       <div key={idx} className="relative group rounded-2xl overflow-hidden border-2 border-[#9E6B38] bg-[#2C1E14] aspect-square shadow-xs">
                         <img
-                          src={resolveImageUrl(url)}
+                          src={resolveImageUrl(url, 'dog')}
                           alt={`Evidencia ${idx + 1}`}
                           className="w-full h-full object-cover"
+                          onError={(e) => handleImageError(e, 'dog')}
                           referrerPolicy="no-referrer"
                         />
                         <span className="absolute top-1.5 left-1.5 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
@@ -602,9 +603,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   >
                     <div className="flex gap-3">
                       <img
-                        src={resolveImageUrl(rep.photoUrl)}
+                        src={resolveImageUrl(rep.photoUrl, 'dog')}
                         alt="Foto reporte"
                         className="w-16 h-16 rounded-xl object-cover border border-[#E8DFD3] shrink-0"
+                        onError={(e) => handleImageError(e, 'dog')}
                         referrerPolicy="no-referrer"
                       />
                       <div className="space-y-1 flex-1 min-w-0">
@@ -639,9 +641,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                         {allEvidences.map((photo, pIdx) => (
                           <img
                             key={pIdx}
-                            src={resolveImageUrl(photo)}
+                            src={resolveImageUrl(photo, 'dog')}
                             alt={`Evidencia ${pIdx + 1}`}
                             className="w-10 h-10 rounded-lg object-cover border border-[#E8DFD3] shrink-0"
+                            onError={(e) => handleImageError(e, 'dog')}
                             referrerPolicy="no-referrer"
                           />
                         ))}

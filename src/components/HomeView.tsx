@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { SuccessStory, User } from '../types';
 import { StoreController } from '../controllers/storeController';
+import { resolveImageUrl, handleImageError } from '../utils/imageUtils';
 import confetti from 'canvas-confetti';
 
 interface HomeViewProps {
@@ -75,9 +76,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
         {/* Background Image */}
         <div className="relative h-[260px] sm:h-[360px] md:h-[420px] w-full">
           <img 
-            src="/src/assets/images/hero_banner_puppy_1788225942236.jpg" 
+            src={resolveImageUrl('hero_banner_puppy_1788225942236.jpg', 'hero')} 
             alt="Salva una vida hoy - Pata Amiga Purificación" 
             className="w-full h-full object-cover object-center"
+            onError={(e) => handleImageError(e, 'hero')}
+            referrerPolicy="no-referrer"
           />
           {/* Subtle gradient overlay on left for maximum text contrast */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent flex items-center">
@@ -110,9 +113,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <div className="flex flex-col items-center space-y-1.5">
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-white shadow-xs bg-[#EAE2D5]">
                 <img 
-                  src="/src/assets/images/mona_dog_1788225963408.jpg" 
+                  src={resolveImageUrl('mona_dog_1788225963408.jpg', 'puppy')} 
                   alt="Mona" 
                   className="w-full h-full object-cover"
+                  onError={(e) => handleImageError(e, 'puppy')}
+                  referrerPolicy="no-referrer"
                 />
               </div>
               <span className="text-xs font-bold text-[#2C1E14]">Mona</span>
@@ -128,9 +133,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <div className="flex flex-col items-center space-y-1.5">
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-white shadow-xs bg-[#EAE2D5]">
                 <img 
-                  src="/src/assets/images/kiara_cat_rescue_1788226493062.jpg" 
+                  src={resolveImageUrl('kiara_cat_rescue_1788226493062.jpg', 'cat')} 
                   alt="Kiara" 
                   className="w-full h-full object-cover"
+                  onError={(e) => handleImageError(e, 'cat')}
+                  referrerPolicy="no-referrer"
                 />
               </div>
               <span className="text-xs font-bold text-[#2C1E14]">Kiara</span>
@@ -146,9 +153,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <div className="flex flex-col items-center space-y-1.5">
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-white shadow-xs bg-[#EAE2D5]">
                 <img 
-                  src="/src/assets/images/rocky_labrador_1788225471339.jpg" 
+                  src={resolveImageUrl('rocky_labrador_1788225471339.jpg', 'dogLabrador')} 
                   alt="Rocky" 
                   className="w-full h-full object-cover"
+                  onError={(e) => handleImageError(e, 'dogLabrador')}
+                  referrerPolicy="no-referrer"
                 />
               </div>
               <span className="text-xs font-bold text-[#2C1E14]">Rocky</span>
@@ -209,9 +218,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <div className="flex flex-col items-center space-y-1.5">
               <div className="w-full h-20 sm:h-22 rounded-xl overflow-hidden border border-[#EAE2D5] bg-black/5 shadow-2xs">
                 <img 
-                  src="/src/assets/images/chopper_rescue_1788225394304.jpg" 
+                  src={resolveImageUrl('chopper_rescue_1788225394304.jpg', 'dog')} 
                   alt="El rescate de Chopper" 
                   className="w-full h-full object-cover"
+                  onError={(e) => handleImageError(e, 'dog')}
+                  referrerPolicy="no-referrer"
                 />
               </div>
               <span className="text-[11px] font-extrabold uppercase text-[#2C1E14] leading-tight line-clamp-1">
@@ -229,9 +240,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <div className="flex flex-col items-center space-y-1.5">
               <div className="w-full h-20 sm:h-22 rounded-xl overflow-hidden border border-[#EAE2D5] bg-black/5 shadow-2xs">
                 <img 
-                  src="/src/assets/images/hades_rescue_1788225379594.jpg" 
+                  src={resolveImageUrl('hades_rescue_1788225379594.jpg', 'dogNoble')} 
                   alt="El rescate de Hades" 
                   className="w-full h-full object-cover"
+                  onError={(e) => handleImageError(e, 'dogNoble')}
+                  referrerPolicy="no-referrer"
                 />
               </div>
               <span className="text-[11px] font-extrabold uppercase text-[#2C1E14] leading-tight line-clamp-1">
@@ -282,9 +295,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
               <div>
                 <div className="h-36 overflow-hidden bg-black/10 relative">
                   <img
-                    src={story.currentPhotoUrl || story.beforePhotoUrl}
+                    src={resolveImageUrl(story.currentPhotoUrl || story.beforePhotoUrl, story.species === 'Gato' ? 'cat' : 'dog')}
                     alt={story.petName}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => handleImageError(e, story.species === 'Gato' ? 'cat' : 'dog')}
+                    referrerPolicy="no-referrer"
                   />
                   <div className="absolute top-2 left-2 bg-[#2C1E14]/80 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
                     {story.species}

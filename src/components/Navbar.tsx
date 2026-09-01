@@ -15,6 +15,7 @@ import {
 import { User } from '../types';
 import { AuthController } from '../controllers/authController';
 import { StoreController } from '../controllers/storeController';
+import { resolveImageUrl, handleImageError } from '../utils/imageUtils';
 import { Logo } from './Logo';
 
 interface NavbarProps {
@@ -130,7 +131,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="flex items-center gap-2.5 bg-[#FAF6F0] pl-3 pr-2 py-1 rounded-full border border-[#E8DFD3]">
                 <div className="w-7 h-7 rounded-full bg-[#9E6B38] text-white flex items-center justify-center font-bold text-xs shadow-inner">
                   {currentUser.avatar ? (
-                    <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full rounded-full object-cover" />
+                    <img 
+                      src={resolveImageUrl(currentUser.avatar, 'avatar')} 
+                      alt={currentUser.name} 
+                      className="w-full h-full rounded-full object-cover"
+                      onError={(e) => handleImageError(e, 'avatar')}
+                      referrerPolicy="no-referrer"
+                    />
                   ) : (
                     currentUser.name.charAt(0).toUpperCase()
                   )}

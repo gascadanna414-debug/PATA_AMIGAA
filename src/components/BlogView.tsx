@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Heart, Share2, ArrowLeft, ArrowRight, MapPin, Calendar, CheckCircle2, BookOpen, Search, Sparkles, User as UserIcon } from 'lucide-react';
 import { SuccessStory, User } from '../types';
 import { StoreController } from '../controllers/storeController';
+import { resolveImageUrl, handleImageError } from '../utils/imageUtils';
 import confetti from 'canvas-confetti';
 
 interface BlogViewProps {
@@ -172,9 +173,10 @@ export const BlogView: React.FC<BlogViewProps> = ({
         {/* Hero Photo */}
         <div className="relative rounded-2xl overflow-hidden shadow-sm border border-[#EAE2D5] max-w-3xl mx-auto bg-[#1C120B]">
           <img
-            src={currentStory.currentPhotoUrl || currentStory.beforePhotoUrl}
+            src={resolveImageUrl(currentStory.currentPhotoUrl || currentStory.beforePhotoUrl, currentStory.species === 'Gato' ? 'cat' : 'dog')}
             alt={`Historia de rescate de ${currentStory.petName}`}
             className="w-full h-auto max-h-[480px] object-cover mx-auto"
+            onError={(e) => handleImageError(e, currentStory.species === 'Gato' ? 'cat' : 'dog')}
             referrerPolicy="no-referrer"
           />
           <div className="absolute top-3 left-3 bg-[#2C1E14]/80 backdrop-blur-xs text-white text-[11px] font-semibold px-3 py-1 rounded-full">
@@ -192,9 +194,10 @@ export const BlogView: React.FC<BlogViewProps> = ({
               <span className="text-xs font-bold text-[#8A7568] block">Al momento del rescate</span>
               <div className="h-44 rounded-xl overflow-hidden bg-black/10">
                 <img
-                  src={currentStory.beforePhotoUrl}
+                  src={resolveImageUrl(currentStory.beforePhotoUrl, 'before')}
                   alt={`Antes de ${currentStory.petName}`}
                   className="w-full h-full object-cover"
+                  onError={(e) => handleImageError(e, 'before')}
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -203,9 +206,10 @@ export const BlogView: React.FC<BlogViewProps> = ({
               <span className="text-xs font-bold text-[#9E6B38] block">Hoy con su familia adoptiva</span>
               <div className="h-44 rounded-xl overflow-hidden bg-black/10">
                 <img
-                  src={currentStory.currentPhotoUrl}
+                  src={resolveImageUrl(currentStory.currentPhotoUrl, 'after')}
                   alt={`Después de ${currentStory.petName}`}
                   className="w-full h-full object-cover"
+                  onError={(e) => handleImageError(e, 'after')}
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -340,9 +344,10 @@ export const BlogView: React.FC<BlogViewProps> = ({
               <div>
                 <div className="relative h-48 overflow-hidden bg-[#1C120B]">
                   <img
-                    src={story.currentPhotoUrl || story.beforePhotoUrl}
+                    src={resolveImageUrl(story.currentPhotoUrl || story.beforePhotoUrl, story.species === 'Gato' ? 'cat' : 'dog')}
                     alt={story.petName}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => handleImageError(e, story.species === 'Gato' ? 'cat' : 'dog')}
                     referrerPolicy="no-referrer"
                   />
                   <div className="absolute top-3 left-3 bg-[#2C1E14]/80 backdrop-blur-xs text-white text-[10px] font-semibold px-2.5 py-1 rounded-full">
