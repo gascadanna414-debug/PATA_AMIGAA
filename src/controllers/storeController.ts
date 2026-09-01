@@ -53,23 +53,21 @@ function setItem<T>(key: string, value: T): void {
 export const StoreController = {
   // --- SUCCESS STORIES ---
   getSuccessStories(): SuccessStory[] {
-    const stories = getItem<SuccessStory[]>(STORIES_KEY, INITIAL_SUCCESS_STORIES);
-    // Sync matching photos if legacy data was cached
-    const updated = stories.map(s => {
-      const initial = INITIAL_SUCCESS_STORIES.find(init => init.id === s.id);
-      if (initial && (!s.beforePhotoUrl.startsWith('/src/assets') || !s.currentPhotoUrl.startsWith('/src/assets'))) {
-        return {
-          ...s,
-          beforePhotoUrl: initial.beforePhotoUrl,
-          currentPhotoUrl: initial.currentPhotoUrl,
-          breed: initial.breed,
-          rescueStory: initial.rescueStory,
-          adoptionStory: initial.adoptionStory
+    const cached = getItem<SuccessStory[]>(STORIES_KEY, INITIAL_SUCCESS_STORIES);
+    // Ensure all initial stories exist and have updated photos
+    const merged = [...INITIAL_SUCCESS_STORIES];
+    cached.forEach(c => {
+      const idx = merged.findIndex(m => m.id === c.id);
+      if (idx !== -1) {
+        merged[idx] = {
+          ...merged[idx],
+          likes: Math.max(merged[idx].likes, c.likes || 0)
         };
+      } else {
+        merged.push(c);
       }
-      return s;
     });
-    return updated;
+    return merged;
   },
 
   likeSuccessStory(storyId: string): SuccessStory[] {
@@ -81,7 +79,15 @@ export const StoreController = {
 
   // --- ADOPTIONS ---
   getAdoptionPets(): AdoptionPet[] {
-    return getItem<AdoptionPet[]>(PETS_KEY, INITIAL_ADOPTION_PETS);
+    const cached = getItem<AdoptionPet[]>(PETS_KEY, INITIAL_ADOPTION_PETS);
+    const merged = [...INITIAL_ADOPTION_PETS];
+    cached.forEach(c => {
+      const idx = merged.findIndex(m => m.id === c.id);
+      if (idx === -1 && c.id !== 'pet-luna' && c.id !== 'pet-nala' && c.name !== 'Luna' && c.name !== 'Nala') {
+        merged.push(c);
+      }
+    });
+    return merged.filter(p => p.id !== 'pet-luna' && p.id !== 'pet-nala' && p.name !== 'Luna' && p.name !== 'Nala');
   },
 
   getPetById(id: string): AdoptionPet | undefined {

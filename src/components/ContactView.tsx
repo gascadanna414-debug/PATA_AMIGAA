@@ -80,17 +80,16 @@ export const ContactView: React.FC<ContactViewProps> = ({
   return (
     <div className="space-y-10 pb-16">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#1E3A8A] text-white rounded-3xl p-6 sm:p-10 shadow-xl border border-slate-700/80 relative overflow-hidden">
-        <div className="max-w-3xl space-y-3 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F5EFEB]/15 text-[#BAE6FD] text-xs font-bold border border-[#BAE6FD]/30">
-            <Mail className="w-3.5 h-3.5 text-[#38BDF8]" />
-            <span>Estamos para escucharte en Purificación, Tolima</span>
-          </div>
-          <h1 className="text-2xl sm:text-4xl font-extrabold font-['Outfit',sans-serif]">
-            Contacto & Canales de Ayuda Pata Amiga
+      <div className="bg-white text-[#2C1E14] rounded-3xl p-6 sm:p-8 shadow-xs border border-[#EAE2D5] relative overflow-hidden">
+        <div className="max-w-3xl space-y-2">
+          <span className="text-[11px] font-bold tracking-wider uppercase text-[#9E6B38] block">
+            Estamos para escucharte en Purificación, Tolima
+          </span>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-['Fraunces',serif] text-[#2C1E14] tracking-tight">
+            Canales de contacto y apoyo comunitario
           </h1>
-          <p className="text-sm sm:text-base text-slate-200 leading-relaxed">
-            ¿Tienes dudas sobre procesos de adopción, quieres vincular tu veterinaria o deseas colaborar con donaciones de alimento para los refugios temporales de Purificación? Escríbenos o contáctanos directamente.
+          <p className="text-xs sm:text-sm text-[#6E574B] leading-relaxed">
+            ¿Tienes dudas sobre adopciones, quieres vincular tu veterinaria o deseas aportar concentrado y medicamentos para los albergues de paso? Escríbenos directamente.
           </p>
         </div>
       </div>
@@ -99,27 +98,27 @@ export const ContactView: React.FC<ContactViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* LEFT COLUMN: Official Email, Phone, Address & Donation Methods */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E8E2D8] space-y-6 shadow-xs">
-            <h3 className="text-xl font-bold font-['Outfit',sans-serif] text-[#0F172A] border-b border-[#F1EBE3] pb-3">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#EAE2D5] space-y-6 shadow-xs">
+            <h3 className="text-xl font-bold font-['Fraunces',serif] text-[#2C1E14] border-b border-[#F5EDE2] pb-3">
               Información de Contacto
             </h3>
 
             {/* Official Email */}
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#E0F2FE] border border-[#BAE6FD] text-[#0284C7] flex items-center justify-center shrink-0 shadow-xs">
-                <Mail className="w-6 h-6 text-[#0284C7]" />
+              <div className="w-12 h-12 rounded-2xl bg-[#FAF6F0] border border-[#E8DFD3] text-[#9E6B38] flex items-center justify-center shrink-0">
+                <Mail className="w-5 h-5 text-[#9E6B38]" />
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-bold text-[#0284C7] uppercase tracking-wider block">
-                  Correo Electrónico Oficial:
+                <span className="text-xs font-semibold text-[#9E6B38] uppercase tracking-wider block">
+                  Correo Electrónico:
                 </span>
                 <a 
                   href="mailto:contacto@pataamiga-purificacion.org"
-                  className="text-sm sm:text-base font-bold text-[#0F172A] hover:text-[#0284C7] hover:underline block break-all"
+                  className="text-sm sm:text-base font-semibold text-[#2C1E14] hover:text-[#9E6B38] hover:underline block break-all"
                 >
                   contacto@pataamiga-purificacion.org
                 </a>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[#6E574B]">
                   Respuesta en menos de 24 horas hábiles.
                 </p>
               </div>
@@ -127,20 +126,20 @@ export const ContactView: React.FC<ContactViewProps> = ({
 
             {/* Official Phone / WhatsApp */}
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#E0F2FE] border border-[#BAE6FD] text-[#0284C7] flex items-center justify-center shrink-0 shadow-xs">
-                <Phone className="w-6 h-6 text-[#0284C7]" />
+              <div className="w-12 h-12 rounded-2xl bg-[#FAF6F0] border border-[#E8DFD3] text-[#9E6B38] flex items-center justify-center shrink-0">
+                <Phone className="w-5 h-5 text-[#9E6B38]" />
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-bold text-[#0284C7] uppercase tracking-wider block">
-                  Teléfono & WhatsApp de Urgencias:
+                <span className="text-xs font-semibold text-[#9E6B38] uppercase tracking-wider block">
+                  Teléfono & WhatsApp:
                 </span>
                 <a 
                   href="tel:+573128904521"
-                  className="text-sm sm:text-base font-bold text-[#0284C7] hover:underline block font-mono"
+                  className="text-sm sm:text-base font-semibold text-[#9E6B38] hover:underline block font-mono"
                 >
                   +57 312 890 4521
                 </a>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[#6E574B]">
                   Atención de casos y reportes comunitarios en Tolima.
                 </p>
               </div>
@@ -148,70 +147,70 @@ export const ContactView: React.FC<ContactViewProps> = ({
 
             {/* Location in Purificación Tolima */}
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#E0F2FE] border border-[#BAE6FD] text-[#0284C7] flex items-center justify-center shrink-0 shadow-xs">
-                <MapPin className="w-6 h-6 text-[#0284C7]" />
+              <div className="w-12 h-12 rounded-2xl bg-[#FAF6F0] border border-[#E8DFD3] text-[#9E6B38] flex items-center justify-center shrink-0">
+                <MapPin className="w-5 h-5 text-[#9E6B38]" />
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-bold text-[#0284C7] uppercase tracking-wider block">
-                  Ubicación Principal:
+                <span className="text-xs font-semibold text-[#9E6B38] uppercase tracking-wider block">
+                  Ubicación:
                 </span>
-                <p className="text-sm font-semibold text-slate-800">
+                <p className="text-sm font-medium text-[#2C1E14]">
                   Municipio de Purificación, Tolima, Colombia
                 </p>
-                <p className="text-xs text-slate-500">
-                  Puntos de acopio en Barrio El Ospina Pérez y Plaza de Bolívar.
+                <p className="text-xs text-[#6E574B]">
+                  Puntos de acopio en Barrio El Ospina Pérez y Parque Principal.
                 </p>
               </div>
             </div>
 
             {/* Attention hours */}
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#E0F2FE] border border-[#BAE6FD] text-[#0284C7] flex items-center justify-center shrink-0 shadow-xs">
-                <Clock className="w-6 h-6 text-[#0284C7]" />
+              <div className="w-12 h-12 rounded-2xl bg-[#FAF6F0] border border-[#E8DFD3] text-[#9E6B38] flex items-center justify-center shrink-0">
+                <Clock className="w-5 h-5 text-[#9E6B38]" />
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-bold text-[#0284C7] uppercase tracking-wider block">
+                <span className="text-xs font-semibold text-[#9E6B38] uppercase tracking-wider block">
                   Horarios de Atención:
                 </span>
-                <p className="text-xs text-slate-700">
-                  Lunes a Domingo: 8:00 AM – 6:00 PM (Urgencias 24/7 vía chat de reporte)
+                <p className="text-xs text-[#5C4538]">
+                  Lunes a Domingo: 8:00 AM – 6:00 PM (Urgencias 24/7 vía canal de rescate)
                 </p>
               </div>
             </div>
           </div>
 
           {/* Donation Transparency Box */}
-          <div className="bg-white p-6 rounded-3xl border border-[#E8E2D8] space-y-3 shadow-xs">
-            <h4 className="text-sm font-bold text-[#0F172A] uppercase tracking-wider flex items-center gap-2">
-              <Heart className="w-4 h-4 text-[#0284C7] fill-[#0284C7]" />
+          <div className="bg-white p-6 rounded-3xl border border-[#EAE2D5] space-y-3 shadow-xs">
+            <h4 className="text-sm font-bold font-['Fraunces',serif] text-[#2C1E14] flex items-center gap-2">
+              <Heart className="w-4 h-4 text-[#9E6B38] fill-[#9E6B38]" />
               <span>Aportes y Donaciones Solidarias</span>
             </h4>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Tus donaciones cubren compras de concentrado, medicamentos para cachorros y cirugías de animales atropellados en Purificación.
+            <p className="text-xs text-[#5C4538] leading-relaxed">
+              Las donaciones cubren alimento concentrado, medicamentos y atención veterinaria para animales rescatados en Purificación.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-              <div className="p-3 bg-[#F5EFEB]/70 rounded-xl border border-[#E5DDD0] flex items-center justify-between text-xs">
+              <div className="p-3 bg-[#FAF6F0] rounded-2xl border border-[#E8DFD3] flex items-center justify-between text-xs">
                 <div>
-                  <span className="font-bold text-[#0F172A] block">Nequi / Daviplata</span>
-                  <span className="font-mono text-[#0284C7] font-semibold">312 890 4521</span>
+                  <span className="font-semibold text-[#2C1E14] block">Nequi / Daviplata</span>
+                  <span className="font-mono text-[#9E6B38] font-medium">312 890 4521</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleCopy('3128904521', 'nequi')}
-                  className="p-1.5 rounded-lg bg-white text-[#0F172A] hover:bg-[#F5EFEB] cursor-pointer border border-[#E5DDD0]"
+                  className="p-1.5 rounded-full bg-white text-[#2C1E14] hover:bg-[#F3ECE0] cursor-pointer border border-[#E8DFD3]"
                   title="Copiar número"
                 >
-                  {copiedAccount === 'nequi' ? <Check className="w-3.5 h-3.5 text-[#0284C7]" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedAccount === 'nequi' ? <Check className="w-3.5 h-3.5 text-[#9E6B38]" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
               </div>
 
-              <div className="p-3 bg-[#F5EFEB]/70 rounded-xl border border-[#E5DDD0] flex items-center justify-between text-xs">
+              <div className="p-3 bg-[#FAF6F0] rounded-2xl border border-[#E8DFD3] flex items-center justify-between text-xs">
                 <div>
-                  <span className="font-bold text-[#0F172A] block">Donación en Especie</span>
-                  <span className="text-slate-500 text-[11px]">Concentrado / Cobijas</span>
+                  <span className="font-semibold text-[#2C1E14] block">Donación en Especie</span>
+                  <span className="text-[#6E574B] text-[11px]">Concentrado / Insumos</span>
                 </div>
-                <span className="text-[10px] bg-[#E0F2FE] text-[#0369A1] px-2 py-0.5 rounded font-bold border border-[#BAE6FD]">
+                <span className="text-[10px] bg-white text-[#9E6B38] px-2 py-0.5 rounded-full font-semibold border border-[#E8DFD3]">
                   Tolima
                 </span>
               </div>
@@ -220,34 +219,34 @@ export const ContactView: React.FC<ContactViewProps> = ({
         </div>
 
         {/* RIGHT COLUMN: Functional Contact Form */}
-        <div className="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-[#E8E2D8] shadow-sm">
+        <div className="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-[#EAE2D5] shadow-xs">
           {isSubmitted ? (
             <div className="space-y-4 text-center py-10 animate-in fade-in">
-              <div className="w-16 h-16 bg-[#E0F2FE] text-[#0284C7] rounded-full flex items-center justify-center mx-auto shadow-inner border border-[#BAE6FD]">
-                <CheckCircle2 className="w-9 h-9" />
+              <div className="w-16 h-16 bg-[#FAF6F0] text-[#9E6B38] rounded-full flex items-center justify-center mx-auto border border-[#E8DFD3]">
+                <CheckCircle2 className="w-9 h-9 text-[#9E6B38]" />
               </div>
-              <h3 className="text-xl font-bold font-['Outfit',sans-serif] text-[#0F172A]">
-                ¡Mensaje Enviado con Éxito!
+              <h3 className="text-xl font-bold font-['Fraunces',serif] text-[#2C1E14]">
+                ¡Mensaje recibido con éxito!
               </h3>
-              <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
-                Gracias por comunicarte con <strong>Pata Amiga Purificación</strong>. Hemos recibido tu consulta y nuestro equipo voluntario te responderá lo antes posible al correo <strong>{email}</strong>.
+              <p className="text-xs sm:text-sm text-[#5C4538] max-w-md mx-auto leading-relaxed">
+                Gracias por escribir a <strong>Pata Amiga Purificación</strong>. Te responderemos pronto al correo <strong>{email}</strong>.
               </p>
               <button
                 id="contact-again-btn"
                 onClick={() => setIsSubmitted(false)}
-                className="px-6 py-2.5 bg-[#0284C7] text-white text-xs font-bold rounded-xl shadow hover:bg-[#0369A1] cursor-pointer"
+                className="px-6 py-2.5 bg-[#9E6B38] text-white text-xs font-semibold rounded-full shadow-xs hover:bg-[#86582A] cursor-pointer"
               >
                 Enviar otro mensaje
               </button>
             </div>
           ) : (
             <form onSubmit={handleSubmitContact} className="space-y-4">
-              <div className="border-b border-[#F1EBE3] pb-3">
-                <h2 className="text-lg font-bold font-['Outfit',sans-serif] text-[#0F172A]">
-                  Formulario de Contacto Directo
+              <div className="border-b border-[#F5EDE2] pb-3">
+                <h2 className="text-lg font-bold font-['Fraunces',serif] text-[#2C1E14]">
+                  Escríbenos un mensaje
                 </h2>
-                <p className="text-xs text-slate-500">
-                  Déjanos tus datos y mensaje para ponernos en contacto contigo.
+                <p className="text-xs text-[#6E574B]">
+                  Déjanos tus datos y nos pondremos en contacto contigo.
                 </p>
               </div>
 
@@ -260,8 +259,8 @@ export const ContactView: React.FC<ContactViewProps> = ({
 
               {/* Nombre */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Tu Nombre Completo *
+                <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
+                  Nombre Completo *
                 </label>
                 <input
                   id="contact-name-input"
@@ -270,14 +269,14 @@ export const ContactView: React.FC<ContactViewProps> = ({
                   placeholder="Ej. Camila Andrea Gómez"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284C7] transition"
+                  className="w-full px-4 py-2.5 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs sm:text-sm text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38] transition"
                 />
               </div>
 
               {/* Correo y Teléfono */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
                     Correo Electrónico *
                   </label>
                   <input
@@ -287,12 +286,12 @@ export const ContactView: React.FC<ContactViewProps> = ({
                     placeholder="tu.correo@ejemplo.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284C7] transition"
+                    className="w-full px-4 py-2.5 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs sm:text-sm text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38] transition"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
                     Teléfono / WhatsApp
                   </label>
                   <input
@@ -301,21 +300,21 @@ export const ContactView: React.FC<ContactViewProps> = ({
                     placeholder="312 890 4521"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284C7] transition"
+                    className="w-full px-4 py-2.5 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs sm:text-sm text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38] transition"
                   />
                 </div>
               </div>
 
               {/* Asunto */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
                   Motivo de Contacto / Asunto *
                 </label>
                 <select
                   id="contact-subject-select"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284C7]"
+                  className="w-full px-4 py-2.5 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs sm:text-sm text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
                 >
                   <option value="Consulta General / Voluntariado">Quiero unirme como voluntario en Purificación</option>
                   <option value="Donaciones de Alimento / Económicas">Quiero realizar una donación o apadrinar</option>
@@ -327,7 +326,7 @@ export const ContactView: React.FC<ContactViewProps> = ({
 
               {/* Mensaje */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
                   Tu Mensaje *
                 </label>
                 <textarea
@@ -337,13 +336,13 @@ export const ContactView: React.FC<ContactViewProps> = ({
                   placeholder="Escribe detalladamente tu consulta, propuesta o mensaje para el equipo de Pata Amiga..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284C7] transition"
+                  className="w-full px-4 py-2.5 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs sm:text-sm text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38] transition"
                 />
               </div>
 
-              <div className="p-3 bg-[#E0F2FE] rounded-xl border border-[#BAE6FD] text-[11px] text-[#0F172A] flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-[#0284C7] shrink-0" />
-                <span>Tu mensaje será tratado confidencialmente por los coordinadores de Pata Amiga Purificación Tolima.</span>
+              <div className="p-3 bg-[#FAF6F0] rounded-xl border border-[#E8DFD3] text-[11px] text-[#5C4538] flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-[#9E6B38] shrink-0" />
+                <span>Tu mensaje será atendido con reserva por los coordinadores de Pata Amiga en Purificación, Tolima.</span>
               </div>
 
               {/* Botón de Enviar */}
@@ -351,10 +350,10 @@ export const ContactView: React.FC<ContactViewProps> = ({
                 id="contact-submit-btn"
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 px-4 bg-[#0284C7] hover:bg-[#0369A1] text-white font-bold rounded-xl shadow-md transition duration-150 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-sm"
+                className="w-full py-3 px-4 bg-[#9E6B38] hover:bg-[#86582A] text-white font-semibold rounded-full shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-xs sm:text-sm"
               >
-                <Send className="w-4 h-4 text-[#BAE6FD]" />
-                <span>{isSubmitting ? 'Enviando mensaje...' : 'Enviar Mensaje a Pata Amiga'}</span>
+                <Send className="w-4 h-4 text-white" />
+                <span>{isSubmitting ? 'Enviando mensaje...' : 'Enviar mensaje'}</span>
               </button>
             </form>
           )}

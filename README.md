@@ -152,15 +152,16 @@ mysql -u root -p < database/seeds.sql
   - `chat`: Canales de comunicación en vivo con brigadistas y veterinarias.
   - `contact`: Canales de WhatsApp, llamadas de urgencia y cuentas Nequi/Daviplata.
 
-### 5.2 Estilos Globales y Tipografía (`src/index.css`)
+### 5.2 Estilos Globales, Tipografía y Paleta de Colores (`src/index.css`)
 - Se importa Tailwind CSS 4 mediante `@import "tailwindcss";`.
-- Tipografía oficial cargada desde Google Fonts:
-  - **Titulares y Marca**: *Outfit* (Sans-serif moderno de alto impacto).
-  - **Cuerpo y Textos**: *Inter* (Legibilidad óptima).
-- Paleta cromática armoniosa:
-  - **Azul Marino Profundo**: `#0F172A`, `#1E293B`
-  - **Azul Pastel / Celeste**: `#BAE6FD`, `#E0F2FE`, `#38BDF8`
-  - **Beige Cálido y Crema**: `#FBF8F3`, `#F5EFEB`, `#E8E2D8`
+- Tipografía editorial y cálida cargada desde Google Fonts:
+  - **Titulares y Branding**: *Fraunces* (Serif de estilo editorial, orgánico y humano).
+  - **Cuerpo y Textos**: *Plus Jakarta Sans* (Legibilidad moderna, clara y accesible).
+- Paleta cromática cálida y terrenal (Tonos Café & Terracota):
+  - **Café Oscuro Intenso (Fondos y Títulos)**: `#241710`, `#1D120C`, `#3B2519`
+  - **Terracota / Ámbar Cálido (Acentos & Acciones)**: `#C2672B`, `#A8531E`, `#D97706`
+  - **Crema y Arena Suave (Fondos Secundarios)**: `#FAF7F2`, `#F2EAE0`, `#E7DFD5`
+  - **Café Medio (Textos descriptivos)**: `#523F34`, `#6E574B`, `#8A7568`
 
 ### 5.3 Controladores de Estado y Persistencia (`src/controllers/`)
 - **`authController.ts`**: Controla el ciclo de vida de la sesión, almacenamiento local encriptado (`localStorage`), roles y validación de credenciales.

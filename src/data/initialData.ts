@@ -2,6 +2,114 @@ import { SuccessStory, AdoptionPet, HealthEvent, AnimalReport, ChatChannel, Chat
 
 export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
   {
+    id: 'story-hades',
+    petName: 'Hades',
+    species: 'Perro',
+    breed: 'Mestizo de Pitbull',
+    estimatedAge: '2 años',
+    rescueLocation: 'Vía hacia Saldaña, Purificación Tolima',
+    rescueStory: 'Hades no siempre tuvo nombre. Durante mucho tiempo fue solo una sombra más al borde del camino, moviéndose rápido entre el ruido de los motores y el olor a asfalto caliente. Había aprendido a sobrevivir esquivando ruedas, buscando restos de comida y confiando solo en su instinto. Pero lo curioso de Hades es que, incluso en medio de todo eso, nunca perdió algo muy suyo: la curiosidad y la nobleza.',
+    adoptionStory: 'Un día se detuvo frente a un taller donde una voluntaria de Pata Amiga le ofreció agua limpia. No huyó. Se quedó esperando, con los ojos atentos y la cola moviéndose apenas un poco. Tras su chequeo veterinario y esterilización, fue adoptado por Don Fernando y su familia en Purificación, donde hoy duerme tranquilo en su propio patio.',
+    adoptedFamilyName: 'Familia Ramírez Gómez',
+    adoptedDate: '12 de Junio, 2024',
+    healthBefore: 'Deshidratación, almohadillas lastimadas por el asfalto y parásitos.',
+    healthAfter: '100% recuperado, peso ideal, esterilizado, vacunado y muy afectuoso.',
+    beforePhotoUrl: '/src/assets/images/hades_rescue_1788225379594.jpg',
+    currentPhotoUrl: '/src/assets/images/hades_rescue_1788225379594.jpg',
+    rescuerName: 'Equipo Voluntario Pata Amiga',
+    likes: 89
+  },
+  {
+    id: 'story-chopper',
+    petName: 'Chopper',
+    species: 'Perro',
+    breed: 'Criollo Mestizo',
+    estimatedAge: '1 año',
+    rescueLocation: 'Barrio Ospina Pérez, Purificación Tolima',
+    rescueStory: 'El refugio estaba casi en silencio aquella tarde. Afuera, el viento movía las hojas secas como si contaran secretos que nadie escuchaba. Dentro, entre jaulas limpias pero frías, había un perro que no ladraba. No era el más grande ni el más llamativo. Tenía el pelaje opaco, cicatrices que hablaban de un pasado difícil y una mirada tranquila, demasiado tranquila para alguien tan joven.',
+    adoptionStory: 'A diferencia de los demás, no saltaba cuando alguien se acercaba. Solo observaba con ternura. Los voluntarios decían que había llegado solo una mañana sentado frente a la puerta esperando. Hoy Chopper es el consentido indiscutible de la familia Castro Morales en su finca campestre.',
+    adoptedFamilyName: 'Familia Castro Morales',
+    adoptedDate: '24 de Agosto, 2024',
+    healthBefore: 'Bajo peso, anemia leve y pelaje maltratado.',
+    healthAfter: 'Totalmente revitalizado, pelaje brillante, carné de vacunas completo y esterilizado.',
+    beforePhotoUrl: '/src/assets/images/chopper_rescue_1788225394304.jpg',
+    currentPhotoUrl: '/src/assets/images/chopper_rescue_1788225394304.jpg',
+    rescuerName: 'Dra. Sofía - Rescatista Purificación',
+    likes: 94
+  },
+  {
+    id: 'story-mateo',
+    petName: 'Mateo',
+    species: 'Perro',
+    breed: 'Criollo Caramelo',
+    estimatedAge: '2 años',
+    rescueLocation: 'Malecón del Río Magdalena, Purificación Tolima',
+    rescueStory: 'Mateo deambulaba cerca de la orilla del Río Magdalena buscando sombra y restos de comida de los pescadores. Estaba asustadizo, con desnutrición severa y una patita delantera lastimada por un tropiezo.',
+    adoptionStory: 'Una brigada de voluntarios de Pata Amiga logró ganarse su confianza con paciencia y premios. Tras dos meses de tratamiento y rehabilitación física en hogar de paso, fue adoptado por la profesora Luz Marina, quien lo lleva a pasear todas las tardes.',
+    adoptedFamilyName: 'Luz Marina & Familia',
+    adoptedDate: '18 de Julio, 2024',
+    healthBefore: 'Desnutrición moderada, cojera en miembro anterior izquierdo y pulgas.',
+    healthAfter: 'Corre con total energía, pelaje dorado radiante, peso óptimo y vacunación completa.',
+    beforePhotoUrl: '/src/assets/images/mateo_rescue_story_1788226480262.jpg',
+    currentPhotoUrl: '/src/assets/images/mateo_rescue_story_1788226480262.jpg',
+    rescuerName: 'Brigadistas Río Magdalena Purificación',
+    likes: 67
+  },
+  {
+    id: 'story-kiara',
+    petName: 'Kiara',
+    species: 'Gato',
+    breed: 'Calicó Mestiza',
+    estimatedAge: '1 año',
+    rescueLocation: 'Barrio El Triunfo, Purificación Tolima',
+    rescueStory: 'Kiara fue encontrada atrapada en la copa de un árbol durante un fuerte aguacero en Purificación. Llevaba más de un día maullando asustada sin poder bajar.',
+    adoptionStory: 'Con ayuda de la comunidad y una escalera alta, fue rescatada a salvo. Resultó ser una gata increíblemente dulce y cariñosa. Fue adoptada por una pareja de jóvenes médicos que buscaban una compañera hogareña.',
+    adoptedFamilyName: 'Dra. Valentina & Dr. Camilo',
+    adoptedDate: '05 de Septiembre, 2024',
+    healthBefore: 'Hipotermia leve, asustadiza y deshidratada.',
+    healthAfter: 'Esterilizada, ronroneadora experta, con peso saludable y vacunas felinas al día.',
+    beforePhotoUrl: '/src/assets/images/kiara_cat_rescue_1788226493062.jpg',
+    currentPhotoUrl: '/src/assets/images/kiara_cat_rescue_1788226493062.jpg',
+    rescuerName: 'Equipo Voluntario Purificación',
+    likes: 72
+  },
+  {
+    id: 'story-bruno',
+    petName: 'Bruno',
+    species: 'Perro',
+    breed: 'Cruce Pastor Tolimense',
+    estimatedAge: '3 años',
+    rescueLocation: 'Vereda Chenche Asoleados (Rural), Purificación',
+    rescueStory: 'Bruno vivía amarrado con una soga corta bajo el sol inclemente en una finca abandonada. No tenía acceso a agua fresca y presentaba dermatitis severa por el calor y parásitos.',
+    adoptionStory: 'A través de un reporte ciudadano en Pata Amiga, se coordinó el rescate y traslado a la clínica veterinaria. Tras sanar sus heridas y recuperar la confianza en los humanos, encontró un hogar definitivo en una hermosa casa de campo en Purificación.',
+    adoptedFamilyName: 'Familia Mendoza Barreto',
+    adoptedDate: '14 de Octubre, 2024',
+    healthBefore: 'Dermatitis solar, bajo peso y marcas de rozamiento en el cuello.',
+    healthAfter: 'Pelaje grueso y brillante, esterilizado, sociable con otros perros y muy protector.',
+    beforePhotoUrl: '/src/assets/images/bruno_dog_rescue_1788226506971.jpg',
+    currentPhotoUrl: '/src/assets/images/bruno_dog_rescue_1788226506971.jpg',
+    rescuerName: 'Rescate Rural Purificación',
+    likes: 81
+  },
+  {
+    id: 'story-nala',
+    petName: 'Nala',
+    species: 'Perro',
+    breed: 'Cachorrita Mestiza',
+    estimatedAge: '6 meses',
+    rescueLocation: 'Sector Santander, Purificación Tolima',
+    rescueStory: 'Nala fue abandonada en una caja de cartón cerca de la escuela del barrio Santander junto con dos de sus hermanitos cuando apenas tenían unas pocas semanas de vida.',
+    adoptionStory: 'Fueron alimentados con biberón en un hogar de paso voluntario. Nala fue la primera en ser adoptada por la familia Pineda, quienes tienen dos niños que ahora son sus compañeros inseparables de juegos.',
+    adoptedFamilyName: 'Familia Pineda Ruiz',
+    adoptedDate: '02 de Noviembre, 2024',
+    healthBefore: 'Lactante huérfana, baja temperatura y parásitos intestinales.',
+    healthAfter: 'Cachorra juguetona y sana, con esquema completo de vacunación y microchip.',
+    beforePhotoUrl: '/src/assets/images/nala_puppy_rescue_1788226520622.jpg',
+    currentPhotoUrl: '/src/assets/images/nala_puppy_rescue_1788226520622.jpg',
+    rescuerName: 'Hogar de Paso Amigos Peludos',
+    likes: 98
+  },
+  {
     id: 'story-1',
     petName: 'Canela',
     species: 'Perro',
@@ -59,163 +167,264 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
 
 export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
   {
-    id: 'pet-1',
-    name: 'Luna',
+    id: 'pet-mona',
+    name: 'Mona',
     species: 'Perro',
-    breed: 'Criollo Mestizo',
+    breed: 'Cachorro Mestizo',
     gender: 'Hembra',
-    age: '1.5 años',
-    size: 'Mediano',
-    story: 'Luna fue encontrada deambulando cerca al Parque Principal de Purificación buscando comida. Es sumamente cariñosa, dulce con los niños y se lleva bien con otros perritos.',
-    rescueHistory: 'Rescatada hace 2 meses en el centro de Purificación. Llegó con pulgas y parásitos pero ya fue tratada con antiparasitarios de amplio espectro.',
+    age: '5 meses',
+    size: 'Pequeño',
+    story: 'Mona es una cachorrita dulce, juguetona y muy tierna de pelaje dorado. Le encanta compartir con niños y es muy obediente.',
+    rescueHistory: 'Rescatada en la vereda Chenche Asoleados de Purificación.',
     healthStatus: {
       vaccinated: true,
       sterilized: true,
       dewormed: true,
-      specialCareNotes: 'Ninguna condición especial. Dieta estándar para perro adulto.'
+      specialCareNotes: 'Desparasitada, vacunada y con chequeo veterinario al día.'
     },
-    personality: ['Juguetona', 'Sociable', 'Protectora', 'Amorosa'],
+    personality: ['Juguetona', 'Cariñosa', 'Dócil', 'Alegre'],
     photos: [
-      'https://images.unsplash.com/photo-1561037404-61cd46aa615b?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1534361960057-19889db9621e?auto=format&fit=crop&w=800&q=80'
+      '/src/assets/images/mona_dog_1788225963408.jpg'
     ],
     status: 'disponible',
-    rescuerName: 'María Fernanda Ruiz (Voluntaria)',
-    rescuerContact: '+57 310 445 8892',
-    rescuerLocation: 'Barrio Camilo Torres, Purificación Tolima',
+    rescuerName: 'Equipo Voluntario Pata Amiga',
+    rescuerContact: '+57 312 890 4521',
+    rescuerLocation: 'Barrio Ospina Pérez, Purificación Tolima',
     featured: true
   },
   {
-    id: 'pet-2',
-    name: 'Simba',
-    species: 'Gato',
-    breed: 'Mestizo Atigrado',
+    id: 'pet-mateo',
+    name: 'Mateo',
+    species: 'Perro',
+    breed: 'Criollo Caramelo',
     gender: 'Macho',
-    age: '8 meses',
-    size: 'Pequeño',
-    story: 'Simba es un gatito curioso y ronroneador que adora tomar el sol y jugar con pelotitas. Se adapta fácilmente a apartamentos o casas.',
-    rescueHistory: 'Rescatado de una bodega en el sector comercial de Purificación.',
+    age: '2 años',
+    size: 'Mediano',
+    story: 'Mateo es un perro alegre, juguetón y lleno de vida. Le fascina jugar con pelotas en el pasto y es sumamente sociable con personas y otros caninos.',
+    rescueHistory: 'Rescatado en el Malecón del Río Magdalena en Purificación.',
     healthStatus: {
       vaccinated: true,
       sterilized: true,
       dewormed: true,
-      specialCareNotes: 'Test de VIF/FeLV negativo. Vacuna triple felina aplicada.'
+      specialCareNotes: 'Chequeo completo, desparasitado y esterilizado.'
     },
-    personality: ['Curioso', 'Ronroneador', 'Tranquilo', 'Cariñoso'],
+    personality: ['Sociable', 'Juguetón', 'Noble', 'Activo'],
     photos: [
-      'https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=800&q=80'
+      '/src/assets/images/mateo_rescue_story_1788226480262.jpg'
     ],
     status: 'disponible',
-    rescuerName: 'Dra. Andrea Castro (Veterinaria)',
+    rescuerName: 'Brigadistas Río Magdalena',
+    rescuerContact: '+57 312 890 4521',
+    rescuerLocation: 'Sector Malecón, Purificación Tolima',
+    featured: true
+  },
+  {
+    id: 'pet-kiara',
+    name: 'Kiara',
+    species: 'Gato',
+    breed: 'Calicó',
+    gender: 'Hembra',
+    age: '8 meses',
+    size: 'Pequeño',
+    story: 'Kiara es una gatita curiosa, ronroneadora y muy dulce. Le gusta sentarse en ventanas soleadas y recibir caricias.',
+    rescueHistory: 'Rescatada en el Barrio El Triunfo, Purificación.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: true,
+      dewormed: true,
+      specialCareNotes: 'Esterilizada y vacunada con triple felina.'
+    },
+    personality: ['Curiosa', 'Dulce', 'Tranquila', 'Cariñosa'],
+    photos: [
+      '/src/assets/images/kiara_cat_rescue_1788226493062.jpg'
+    ],
+    status: 'disponible',
+    rescuerName: 'Dra. Andrea Castro',
     rescuerContact: '+57 314 772 1093',
     rescuerLocation: 'Barrio El Triunfo, Purificación Tolima',
     featured: true
   },
   {
-    id: 'pet-3',
-    name: 'Toby',
+    id: 'pet-bruno',
+    name: 'Bruno',
     species: 'Perro',
-    breed: 'Cruce de Golden / Criollo',
+    breed: 'Pastor Mestizo',
     gender: 'Macho',
-    age: '2 años',
+    age: '3 años',
     size: 'Grande',
-    story: 'Toby es un perro noble y leal con energía para pasear y jugar a la pelota. Ideal para una familia activa o con patio.',
-    rescueHistory: 'Rescatado en la vereda Chenche Asoleados. Estaba amarrado bajo el sol sin agua. Su dueño lo cedió voluntariamente.',
+    story: 'Bruno es un guardián leal, inteligente y paciente. Ideal para familias con patio o fincas que busquen un protector noble y amoroso.',
+    rescueHistory: 'Rescatado en la vereda Chenche Asoleados.',
     healthStatus: {
       vaccinated: true,
       sterilized: true,
       dewormed: true,
-      specialCareNotes: 'Excelente condición física. Vacuna séxtuple y antirrábica vigentes.'
+      specialCareNotes: 'Completamente sano, vacunado y esterilizado.'
     },
-    personality: ['Noble', 'Guardián', 'Leal', 'Activo'],
+    personality: ['Protector', 'Inteligente', 'Leal', 'Tranquilo'],
     photos: [
-      'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=800&q=80'
+      '/src/assets/images/bruno_dog_rescue_1788226506971.jpg'
     ],
     status: 'disponible',
-    rescuerName: 'Comité de Rescate Purificación',
+    rescuerName: 'Rescate Rural Purificación',
+    rescuerContact: '+57 310 445 8892',
+    rescuerLocation: 'Purificación, Tolima',
+    featured: true
+  },
+  {
+    id: 'pet-onix',
+    name: 'Onix',
+    species: 'Gato',
+    breed: 'Criollo',
+    gender: 'Macho',
+    age: '4 años',
+    size: 'Mediano',
+    story: 'Onix es un gato negro noble y sereno. Es silencioso, observador y busca un hogar donde le brinden afecto y tranquilidad.',
+    rescueHistory: 'Rescatado en un tejado comercial de Purificación.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: true,
+      dewormed: true,
+      specialCareNotes: 'Vacunación al día y castrado.'
+    },
+    personality: ['Sereno', 'Independiente', 'Dócil', 'Leal'],
+    photos: [
+      '/src/assets/images/onix_cat_1788225421317.jpg'
+    ],
+    status: 'disponible',
+    rescuerName: 'Voluntarios Pata Amiga',
     rescuerContact: '+57 312 890 4521',
+    rescuerLocation: 'Barrio Camilo Torres, Purificación Tolima',
+    featured: true
+  },
+  {
+    id: 'pet-simba',
+    name: 'Simba',
+    species: 'Perro',
+    breed: 'Mestizo',
+    gender: 'Macho',
+    age: '3 años',
+    size: 'Mediano',
+    story: 'Simba es un perro fiel y alegre, de orejas expresivas y mirada atenta. Disfruta de caminatas matutinas y es un gran compañero de vida.',
+    rescueHistory: 'Encontrado desorientado cerca del Río Magdalena en Purificación.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: true,
+      dewormed: true,
+      specialCareNotes: 'Chequeo general perfecto, energía balanceada.'
+    },
+    personality: ['Alegre', 'Leal', 'Sociable', 'Protector'],
+    photos: [
+      '/src/assets/images/simba_dog_1788225435727.jpg'
+    ],
+    status: 'disponible',
+    rescuerName: 'María Ruiz (Voluntaria)',
+    rescuerContact: '+57 310 445 8892',
     rescuerLocation: 'Barrio Santander, Purificación Tolima',
     featured: true
   },
   {
-    id: 'pet-4',
-    name: 'Nala',
+    id: 'pet-maya',
+    name: 'Maya',
     species: 'Gato',
-    breed: 'Siamés Mestizo',
+    breed: 'Carey',
     gender: 'Hembra',
     age: '1 año',
     size: 'Pequeño',
-    story: 'Ojos azules cautivadores y personalidad tierna. Le encanta dormir sobre las piernas de sus cuidadores y es muy limpia.',
-    rescueHistory: 'Entregada por una familia de la tercera edad que ya no podía atenderla en Purificación.',
+    story: 'Maya es una gatita carey dulce y curiosa. Le fascina jugar con ramitas y dormir en los regazos mientras le acarician las orejas.',
+    rescueHistory: 'Rescatada de un lote deshabitado en Purificación.',
     healthStatus: {
       vaccinated: true,
       sterilized: true,
       dewormed: true,
-      specialCareNotes: 'Esterilizada hace 1 mes, cicatriz perfecta.'
+      specialCareNotes: 'Esterilizada y vacunada con triple felina.'
     },
-    personality: ['Dormilona', 'Vocal', 'Cariñosa', 'Apegada'],
+    personality: ['Juguetona', 'Dulce', 'Curiosa', 'Mimosa'],
     photos: [
-      'https://images.unsplash.com/photo-1513360309081-38f0762b40ab?auto=format&fit=crop&w=800&q=80'
+      '/src/assets/images/maya_cat_1788225449558.jpg'
     ],
     status: 'disponible',
-    rescuerName: 'Luisa Fernanda Polo (Voluntaria)',
+    rescuerName: 'Luisa Polo (Hogar de Paso)',
     rescuerContact: '+57 320 918 3341',
-    rescuerLocation: 'Barrio Villa del Río, Purificación Tolima',
-    featured: false
+    rescuerLocation: 'Barrio Ospina Pérez, Purificación Tolima',
+    featured: true
   },
   {
-    id: 'pet-5',
-    name: 'Pecas',
+    id: 'pet-rocky',
+    name: 'Rocky',
     species: 'Perro',
-    breed: 'Beagle Mestizo',
+    breed: 'Mestizo',
     gender: 'Macho',
-    age: '3 años',
-    size: 'Mediano',
-    story: 'Pecas es juguetón, curioso y le encantan los paseos por el campo. Es muy inteligente y aprende trucos rápidamente.',
-    rescueHistory: 'Encontrado extraviado en la zona del puente sobre el Río Magdalena. Nunca fue reclamado.',
+    age: '1 año',
+    size: 'Grande',
+    story: 'Rocky es un perro con alma de cachorro feliz. Le encanta correr, jugar a la pelota y llenar de cariño a toda su familia.',
+    rescueHistory: 'Rescatado en Chenche Asoleados.',
     healthStatus: {
       vaccinated: true,
       sterilized: true,
       dewormed: true,
-      specialCareNotes: 'Buen estado general. Peso controlado.'
+      specialCareNotes: 'Desparasitado y con esquema de vacunas al día.'
     },
-    personality: ['Olfateador', 'Alegre', 'Inteligente', 'Sociable'],
+    personality: ['Activo', 'Juguetón', 'Cariñoso', 'Noble'],
     photos: [
-      'https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?auto=format&fit=crop&w=800&q=80'
+      '/src/assets/images/rocky_labrador_1788225471339.jpg'
     ],
     status: 'disponible',
-    rescuerName: 'Albergue Amigo Purificación',
-    rescuerContact: '+57 315 670 9922',
+    rescuerName: 'Comité de Rescate Tolima',
+    rescuerContact: '+57 312 890 4521',
     rescuerLocation: 'Sector La Ponderosa, Purificación Tolima',
-    featured: false
+    featured: true
   },
   {
-    id: 'pet-6',
-    name: 'Boby',
+    id: 'pet-chopper',
+    name: 'Chopper',
     species: 'Perro',
-    breed: 'Criollo Poodle Mestizo',
+    breed: 'Criollo Rubio',
     gender: 'Macho',
-    age: '4 años',
+    age: '4 meses',
     size: 'Pequeño',
-    story: 'Boby es tranquilo, ideal para personas adultas mayores o familias que busquen un perrito faldero y muy dócil.',
-    rescueHistory: 'Rescatado tras quedar desamparado en el Barrio Ospina Pérez.',
+    story: 'Chopper es un cachorro de pelaje rubio suave y mirada tierna. Es muy dócil, aprende rápido y busca una familia amorosa.',
+    rescueHistory: 'Rescatado en el Barrio Ospina Pérez, Purificación.',
     healthStatus: {
       vaccinated: true,
-      sterilized: true,
+      sterilized: false,
       dewormed: true,
-      specialCareNotes: 'Profilaxis dental realizada recientemente.'
+      specialCareNotes: 'Con compromiso de esterilización gratuita a los 6 meses.'
     },
-    personality: ['Calmado', 'Obediente', 'Tierno', 'Compañero'],
+    personality: ['Tierno', 'Dócil', 'Juguetón', 'Compañero'],
     photos: [
-      'https://images.unsplash.com/photo-1544568100-847a948585b9?auto=format&fit=crop&w=800&q=80'
+      '/src/assets/images/chopper_rescue_1788225394304.jpg'
     ],
     status: 'disponible',
     rescuerName: 'Dra. Sofía Rescatista',
     rescuerContact: '+57 312 890 4521',
     rescuerLocation: 'Barrio Ospina Pérez, Purificación Tolima',
-    featured: false
+    featured: true
+  },
+  {
+    id: 'pet-hades',
+    name: 'Hades',
+    species: 'Perro',
+    breed: 'Mestizo',
+    gender: 'Macho',
+    age: '2 años',
+    size: 'Mediano',
+    story: 'Hades es un perrito noble y tranquilo que busca siempre contacto visual y cariño. Sociable con personas y muy agradecido.',
+    rescueHistory: 'Rescatado en la vía nacional Purificación.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: true,
+      dewormed: true,
+      specialCareNotes: 'Esterilizado y con carné de salud al día.'
+    },
+    personality: ['Noble', 'Tranquilo', 'Leal', 'Atento'],
+    photos: [
+      '/src/assets/images/hades_rescue_1788225379594.jpg'
+    ],
+    status: 'disponible',
+    rescuerName: 'Pata Amiga Purificación',
+    rescuerContact: '+57 312 890 4521',
+    rescuerLocation: 'Purificación, Tolima',
+    featured: true
   }
 ];
 
