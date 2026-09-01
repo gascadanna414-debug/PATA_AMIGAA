@@ -538,280 +538,330 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
         </div>
       </div>
 
-      {/* MODAL: PET DETAIL & ADOPTION APPLICATION FORM */}
+      {/* MODAL: FICHA COMPLETA DE ADOPCIÓN & FORMULARIO DE POSTULACIÓN */}
       {showApplicationModal && activePet && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6 animate-in fade-in duration-200">
           <div 
             id="adoption-modal-container"
-            className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-[#EAE2D5] overflow-hidden my-6 max-h-[90vh] flex flex-col"
+            className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl border border-[#EAE2D5] overflow-hidden my-auto max-h-[96vh] flex flex-col"
           >
-            {/* Modal Header */}
+            {/* Modal Header Full Width */}
             <div className="bg-[#2C1E14] px-6 py-4 text-[#FAF7F2] flex items-center justify-between shrink-0 border-b border-[#3D281D]">
-              <div className="flex items-center gap-2.5">
-                <Heart className="w-5 h-5 text-[#9E6B38] fill-[#9E6B38]" />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#9E6B38] flex items-center justify-center text-white shadow-xs">
+                  <Heart className="w-5 h-5 fill-white" />
+                </div>
                 <div>
-                  <h3 className="text-lg font-bold font-['Fraunces',serif]">
-                    Proceso de Adopción: {activePet.name}
+                  <h3 className="text-lg sm:text-xl font-bold font-['Fraunces',serif]">
+                    Ficha de Adopción: {activePet.name}
                   </h3>
                   <p className="text-xs text-[#D9C6B6]">
-                    Raza: {activePet.breed} • Purificación, Tolima
+                    {activePet.species} • {activePet.breed} • {activePet.rescuerLocation}
                   </p>
                 </div>
               </div>
               <button
                 id="close-adoption-modal-btn"
                 onClick={() => setShowApplicationModal(false)}
-                className="text-[#D9C6B6] hover:text-white p-1 rounded-full hover:bg-white/10 transition cursor-pointer"
+                className="text-[#D9C6B6] hover:text-white px-3 py-1.5 rounded-full hover:bg-white/10 transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
               >
+                <span>Cerrar</span>
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Scrollable Content */}
-            <div className="p-6 overflow-y-auto space-y-6">
-              {/* Pet Summary Card with Image */}
-              <div className="bg-[#FAF6F0] rounded-2xl p-4 border border-[#E8DFD3] flex flex-col sm:flex-row gap-4 items-center">
-                <img
-                  src={activePet.photos[0]}
-                  alt={activePet.name}
-                  className="w-24 h-24 rounded-2xl object-cover border border-[#E8DFD3] shrink-0"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="space-y-1 text-center sm:text-left flex-1">
-                  <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
-                    <span className="text-base font-bold font-['Fraunces',serif] text-[#2C1E14]">{activePet.name}</span>
-                    <span className="text-xs px-2 py-0.5 bg-white text-[#9E6B38] font-semibold rounded-full border border-[#E8DFD3]">
-                      {activePet.gender} • {activePet.age}
-                    </span>
-                    <span className="text-xs px-2 py-0.5 bg-white text-[#5C4538] font-medium rounded-full border border-[#E8DFD3]">
-                      Tamaño {activePet.size}
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#5C4538]">
-                    <strong>Rescatista encargado:</strong> {activePet.rescuerName} ({activePet.rescuerContact})
-                  </p>
-                  <p className="text-xs text-[#5C4538]">
-                    <strong>Ubicación:</strong> {activePet.rescuerLocation}
-                  </p>
-                </div>
-
-                {onNavigateToChat && (
-                  <button
-                    onClick={() => {
-                      setShowApplicationModal(false);
-                      onNavigateToChat(activePet.rescuerName);
-                    }}
-                    className="px-4 py-2 bg-white border border-[#E8DFD3] rounded-full text-xs font-semibold text-[#2C1E14] hover:bg-[#F3ECE0] flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5 text-[#9E6B38]" />
-                    <span>Contactar</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Complete Health & Story Sheet */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-bold font-['Fraunces',serif] text-[#2C1E14] uppercase tracking-wider">
-                  Historial de Salud y Rescate
-                </h4>
+            {/* Modal Scrollable Body - Spacious 2-column on desktop */}
+            <div className="p-6 sm:p-8 overflow-y-auto space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
                 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <div className="p-3 bg-[#FAF6F0] rounded-xl border border-[#E8DFD3] text-xs">
-                    <span className="font-semibold text-[#2C1E14] block">Esquema de Vacunación:</span>
-                    <span className={activePet.healthStatus.vaccinated ? 'text-[#9E6B38] font-semibold' : 'text-[#8A7568]'}>
-                      {activePet.healthStatus.vaccinated ? '✓ Al día (Séxtuple + Rabia)' : 'Pendiente refuerzo'}
-                    </span>
-                  </div>
-
-                  <div className="p-3 bg-[#FAF6F0] rounded-xl border border-[#E8DFD3] text-xs">
-                    <span className="font-semibold text-[#2C1E14] block">Esterilización:</span>
-                    <span className={activePet.healthStatus.sterilized ? 'text-[#9E6B38] font-semibold' : 'text-[#8A7568]'}>
-                      {activePet.healthStatus.sterilized ? '✓ Esterilizado(a)' : 'Con cita programada'}
-                    </span>
-                  </div>
-
-                  <div className="p-3 bg-[#FAF6F0] rounded-xl border border-[#E8DFD3] text-xs">
-                    <span className="font-semibold text-[#2C1E14] block">Desparasitación:</span>
-                    <span className={activePet.healthStatus.dewormed ? 'text-[#9E6B38] font-semibold' : 'text-[#8A7568]'}>
-                      {activePet.healthStatus.dewormed ? '✓ Interna y Externa' : 'Pendiente'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-3 bg-[#FAF6F0] rounded-xl border border-[#E8DFD3] text-xs text-[#5C4538]">
-                  <strong className="text-[#2C1E14]">Cómo llegó a nosotros:</strong> {activePet.rescueHistory}
-                </div>
-
-                {activePet.healthStatus.specialCareNotes && (
-                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900">
-                    <strong>Cuidados especiales:</strong> {activePet.healthStatus.specialCareNotes}
-                  </div>
-                )}
-              </div>
-
-              {/* APPLICATION FORM */}
-              {appSubmitted ? (
-                <div className="bg-[#FAF6F0] border border-[#E8DFD3] rounded-2xl p-6 text-center space-y-3 animate-in fade-in">
-                  <div className="w-12 h-12 bg-[#9E6B38] text-white rounded-full flex items-center justify-center mx-auto shadow-xs">
-                    <CheckCircle2 className="w-6 h-6" />
-                  </div>
-                  <h4 className="text-lg font-bold text-[#2C1E14] font-['Fraunces',serif]">
-                    ¡Solicitud de Adopción Enviada con Éxito!
-                  </h4>
-                  <p className="text-xs text-[#5C4538] max-w-md mx-auto leading-relaxed">
-                    Hemos registrado tu postulación para <strong>{activePet.name}</strong>. El rescatista <strong>{activePet.rescuerName}</strong> se comunicará contigo vía WhatsApp o llamada telefónica al número <strong>{applicantPhone}</strong> para coordinar la visita en Purificación.
-                  </p>
-                  <button
-                    onClick={() => setShowApplicationModal(false)}
-                    className="px-6 py-2.5 bg-[#9E6B38] text-white text-xs font-semibold rounded-full shadow-xs hover:bg-[#86582A] cursor-pointer"
-                  >
-                    Entendido, ¡muchas gracias!
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmitApplication} className="space-y-4 pt-2 border-t border-[#EAE2D5]">
-                  <h4 className="text-sm font-bold text-[#2C1E14] uppercase tracking-wider">
-                    Formulario de Postulación de Adopción
-                  </h4>
-
-                  {appError && (
-                    <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>{appError}</span>
+                {/* Left Column: Full Pet Details & Health Sheet */}
+                <div className="lg:col-span-6 space-y-5">
+                  {/* Large High-Res Pet Photo */}
+                  <div className="relative rounded-2xl overflow-hidden bg-[#1C120B] border border-[#EAE2D5] shadow-sm">
+                    <img
+                      src={activePet.photos[0]}
+                      alt={activePet.name}
+                      className="w-full h-72 sm:h-80 object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute top-3 left-3 bg-[#2C1E14]/80 backdrop-blur-xs text-white text-xs font-semibold px-3 py-1 rounded-full border border-white/10">
+                      {activePet.species} • {activePet.breed}
                     </div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-[#2C1E14] mb-1">
-                        Tu Nombre Completo *
-                      </label>
-                      <input
-                        id="adopt-app-name-input"
-                        type="text"
-                        required
-                        value={applicantName}
-                        onChange={(e) => setApplicantName(e.target.value)}
-                        placeholder="Ej. María García"
-                        className="w-full px-3 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
-                      />
+                    <div className="absolute top-3 right-3 bg-[#9E6B38] text-white text-xs font-bold px-3 py-1 rounded-full shadow-xs">
+                      Disponible en Purificación
                     </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#2C1E14] mb-1">
-                        Correo Electrónico *
-                      </label>
-                      <input
-                        id="adopt-app-email-input"
-                        type="email"
-                        required
-                        value={applicantEmail}
-                        onChange={(e) => setApplicantEmail(e.target.value)}
-                        placeholder="tu.correo@ejemplo.com"
-                        className="w-full px-3 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
-                      />
+                    <div className="absolute bottom-3 left-3 right-3 bg-[#2C1E14]/85 backdrop-blur-xs p-3 rounded-xl text-xs text-[#FAF6F0] flex items-center justify-between border border-white/10">
+                      <span className="font-bold text-sm text-white">{activePet.name}</span>
+                      <span className="text-[#E8DFD3]">{activePet.gender} • {activePet.age} • Tamaño {activePet.size}</span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-[#2C1E14] mb-1">
-                        Teléfono / WhatsApp de Contacto *
-                      </label>
-                      <input
-                        id="adopt-app-phone-input"
-                        type="tel"
-                        required
-                        value={applicantPhone}
-                        onChange={(e) => setApplicantPhone(e.target.value)}
-                        placeholder="312 890 4521"
-                        className="w-full px-3 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
-                      />
+                  {/* Rescuer Contact Info Bar */}
+                  <div className="bg-[#FAF6F0] p-4 rounded-2xl border border-[#E8DFD3] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] font-bold text-[#8A7568] uppercase tracking-wider block">
+                        Rescatista / Hogar de paso
+                      </span>
+                      <p className="text-sm font-bold text-[#2C1E14]">{activePet.rescuerName}</p>
+                      <p className="text-xs text-[#6E574B] flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5 text-[#9E6B38]" />
+                        <span>{activePet.rescuerLocation}</span>
+                      </p>
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-bold text-[#2C1E14] mb-1">
-                        Tipo de Vivienda *
-                      </label>
-                      <select
-                        id="adopt-app-housing-select"
-                        value={housingType}
-                        onChange={(e) => setHousingType(e.target.value as any)}
-                        className="w-full px-3 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+                    {onNavigateToChat && (
+                      <button
+                        onClick={() => {
+                          setShowApplicationModal(false);
+                          onNavigateToChat(activePet.rescuerName);
+                        }}
+                        className="px-4 py-2 bg-white hover:bg-[#F3ECE0] border border-[#E8DFD3] text-[#2C1E14] rounded-full text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition cursor-pointer self-start sm:self-auto"
                       >
-                        <option value="Casa con patio">Casa con patio (Purificación)</option>
-                        <option value="Casa sin patio">Casa sin patio</option>
-                        <option value="Apartamento">Apartamento</option>
-                        <option value="Finca">Finca / Zona Rural Tolima</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <input
-                        id="has-other-pets-checkbox"
-                        type="checkbox"
-                        checked={hasOtherPets}
-                        onChange={(e) => setHasOtherPets(e.target.checked)}
-                        className="rounded border-[#E8DFD3] text-[#9E6B38] focus:ring-[#9E6B38]"
-                      />
-                      <label htmlFor="has-other-pets-checkbox" className="text-xs font-semibold text-[#5C4538] cursor-pointer">
-                        ¿Tienes otras mascotas actualmente en casa?
-                      </label>
-                    </div>
-                    {hasOtherPets && (
-                      <input
-                        id="other-pets-details-input"
-                        type="text"
-                        value={otherPetsDetails}
-                        onChange={(e) => setOtherPetsDetails(e.target.value)}
-                        placeholder="Ej. Un perro criollo de 4 años, esterilizado y sociable."
-                        className="w-full px-3 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
-                      />
+                        <MessageSquare className="w-3.5 h-3.5 text-[#9E6B38]" />
+                        <span>Chat directo</span>
+                      </button>
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-[#2C1E14] mb-1">
-                      ¿Por qué deseas adoptar a {activePet.name}? *
-                    </label>
-                    <textarea
-                      id="adopt-reason-textarea"
-                      required
-                      rows={3}
-                      value={reasonForAdoption}
-                      onChange={(e) => setReasonForAdoption(e.target.value)}
-                      placeholder="Cuéntanos sobre tu hogar, el tiempo que compartirán y el cariño que le darán..."
-                      className="w-full px-3 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
-                    />
+                  {/* Complete Health Status Grid */}
+                  <div className="space-y-2.5">
+                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#2C1E14]">
+                      Historial Veterinario Completo
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <div className="p-3 bg-[#FAF6F0] rounded-xl border border-[#E8DFD3] text-xs space-y-1">
+                        <span className="font-bold text-[#2C1E14] block">Vacunación</span>
+                        <span className={`inline-flex items-center gap-1 font-semibold ${activePet.healthStatus.vaccinated ? 'text-[#9E6B38]' : 'text-[#8A7568]'}`}>
+                          <Check className="w-3.5 h-3.5" />
+                          {activePet.healthStatus.vaccinated ? 'Séxtuple + Rabia' : 'En proceso'}
+                        </span>
+                      </div>
+
+                      <div className="p-3 bg-[#FAF6F0] rounded-xl border border-[#E8DFD3] text-xs space-y-1">
+                        <span className="font-bold text-[#2C1E14] block">Esterilización</span>
+                        <span className={`inline-flex items-center gap-1 font-semibold ${activePet.healthStatus.sterilized ? 'text-[#9E6B38]' : 'text-[#8A7568]'}`}>
+                          <Check className="w-3.5 h-3.5" />
+                          {activePet.healthStatus.sterilized ? 'Esterilizado(a)' : 'Programado'}
+                        </span>
+                      </div>
+
+                      <div className="p-3 bg-[#FAF6F0] rounded-xl border border-[#E8DFD3] text-xs space-y-1">
+                        <span className="font-bold text-[#2C1E14] block">Desparasitación</span>
+                        <span className={`inline-flex items-center gap-1 font-semibold ${activePet.healthStatus.dewormed ? 'text-[#9E6B38]' : 'text-[#8A7568]'}`}>
+                          <Check className="w-3.5 h-3.5" />
+                          {activePet.healthStatus.dewormed ? 'Al día' : 'Pendiente'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {activePet.healthStatus.specialCareNotes && (
+                      <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed">
+                        <strong>Observaciones médicas:</strong> {activePet.healthStatus.specialCareNotes}
+                      </div>
+                    )}
                   </div>
 
-                  <div className="p-3 bg-[#FAF6F0] rounded-xl border border-[#E8DFD3] flex items-start gap-2">
-                    <input
-                      id="adopt-terms-checkbox"
-                      type="checkbox"
-                      required
-                      checked={termsAccepted}
-                      onChange={(e) => setTermsAccepted(e.target.checked)}
-                      className="mt-0.5 rounded border-[#E8DFD3] text-[#9E6B38] focus:ring-[#9E6B38]"
-                    />
-                    <label htmlFor="adopt-terms-checkbox" className="text-[11px] text-[#2C1E14] leading-snug cursor-pointer">
-                      Acepto el compromiso de tenencia responsable (alimentación adecuada, cariño, no mantener encadenado y permitir seguimiento por parte de los rescatistas de Purificación, Tolima).
-                    </label>
+                  {/* Narrative & History */}
+                  <div className="bg-[#FAF6F0] p-4 rounded-2xl border border-[#E8DFD3] space-y-2 text-xs sm:text-sm text-[#3D2C22]">
+                    <h4 className="font-bold text-[#2C1E14] uppercase tracking-wider text-xs">
+                      Historia de Vida y Carácter
+                    </h4>
+                    <p className="leading-relaxed text-[#5C4538]">
+                      {activePet.story}
+                    </p>
+                    <p className="leading-relaxed text-[#6E574B] pt-2 border-t border-[#E8DFD3]">
+                      <strong className="text-[#2C1E14]">Antecedentes de rescate:</strong> {activePet.rescueHistory}
+                    </p>
+                    
+                    {/* Personality Badges */}
+                    <div className="pt-2 flex flex-wrap gap-1.5">
+                      {activePet.personality.map((trait, idx) => (
+                        <span 
+                          key={idx} 
+                          className="text-xs bg-white text-[#9E6B38] font-semibold px-2.5 py-1 rounded-full border border-[#E8DFD3]"
+                        >
+                          #{trait}
+                        </span>
+                      ))}
+                    </div>
                   </div>
+                </div>
 
-                  <button
-                    id="submit-adoption-application-btn"
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-3 bg-[#9E6B38] hover:bg-[#86582A] text-white text-xs font-semibold rounded-full shadow-xs transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <Heart className="w-4 h-4 text-white fill-white" />
-                    <span>{isSubmitting ? 'Enviando postulación...' : `Enviar Postulación para Adoptar a ${activePet.name}`}</span>
-                  </button>
-                </form>
-              )}
+                {/* Right Column: Application Form */}
+                <div className="lg:col-span-6 bg-[#FAF6F0] p-5 sm:p-6 rounded-3xl border border-[#E8DFD3] space-y-5">
+                  {appSubmitted ? (
+                    <div className="bg-white border border-[#E8DFD3] rounded-2xl p-6 sm:p-8 text-center space-y-4 animate-in fade-in">
+                      <div className="w-14 h-14 bg-[#9E6B38] text-white rounded-full flex items-center justify-center mx-auto shadow-md">
+                        <CheckCircle2 className="w-8 h-8" />
+                      </div>
+                      <h4 className="text-xl font-bold text-[#2C1E14] font-['Fraunces',serif]">
+                        ¡Solicitud de Adopción Enviada!
+                      </h4>
+                      <p className="text-xs sm:text-sm text-[#5C4538] max-w-md mx-auto leading-relaxed">
+                        Hemos registrado con éxito tu postulación para <strong>{activePet.name}</strong>. El rescatista <strong>{activePet.rescuerName}</strong> se pondrá en contacto contigo al número <strong>{applicantPhone}</strong> para continuar el proceso y coordinar el encuentro en Purificación, Tolima.
+                      </p>
+                      <button
+                        onClick={() => setShowApplicationModal(false)}
+                        className="px-6 py-2.5 bg-[#9E6B38] text-white text-xs sm:text-sm font-semibold rounded-full shadow-xs hover:bg-[#86582A] cursor-pointer transition"
+                      >
+                        Cerrar y volver al catálogo
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleSubmitApplication} className="space-y-4">
+                      <div>
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-[#9E6B38] text-xs font-bold uppercase tracking-wider mb-2 border border-[#E8DFD3]">
+                          <Heart className="w-3.5 h-3.5 fill-[#9E6B38]" />
+                          <span>Formulario Oficial de Postulación</span>
+                        </div>
+                        <h4 className="text-lg font-bold font-['Fraunces',serif] text-[#2C1E14]">
+                          Quiero adoptar a {activePet.name}
+                        </h4>
+                        <p className="text-xs text-[#6E574B]">
+                          Diligencia este formulario para que el hogar de paso evalúe tu solicitud.
+                        </p>
+                      </div>
+
+                      {appError && (
+                        <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 shrink-0" />
+                          <span>{appError}</span>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-[#2C1E14] mb-1">
+                            Tu Nombre Completo *
+                          </label>
+                          <input
+                            id="adopt-app-name-input"
+                            type="text"
+                            required
+                            value={applicantName}
+                            onChange={(e) => setApplicantName(e.target.value)}
+                            placeholder="Ej. María García"
+                            className="w-full px-3 py-2 bg-white border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-[#2C1E14] mb-1">
+                            Correo Electrónico *
+                          </label>
+                          <input
+                            id="adopt-app-email-input"
+                            type="email"
+                            required
+                            value={applicantEmail}
+                            onChange={(e) => setApplicantEmail(e.target.value)}
+                            placeholder="tu.correo@ejemplo.com"
+                            className="w-full px-3 py-2 bg-white border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-[#2C1E14] mb-1">
+                            Teléfono / WhatsApp de Contacto *
+                          </label>
+                          <input
+                            id="adopt-app-phone-input"
+                            type="tel"
+                            required
+                            value={applicantPhone}
+                            onChange={(e) => setApplicantPhone(e.target.value)}
+                            placeholder="312 890 4521"
+                            className="w-full px-3 py-2 bg-white border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-[#2C1E14] mb-1">
+                            Tipo de Vivienda *
+                          </label>
+                          <select
+                            id="adopt-app-housing-select"
+                            value={housingType}
+                            onChange={(e) => setHousingType(e.target.value as any)}
+                            className="w-full px-3 py-2 bg-white border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+                          >
+                            <option value="Casa con patio">Casa con patio (Purificación)</option>
+                            <option value="Casa sin patio">Casa sin patio</option>
+                            <option value="Apartamento">Apartamento</option>
+                            <option value="Finca">Finca / Zona Rural Tolima</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <input
+                            id="has-other-pets-checkbox"
+                            type="checkbox"
+                            checked={hasOtherPets}
+                            onChange={(e) => setHasOtherPets(e.target.checked)}
+                            className="rounded border-[#E8DFD3] text-[#9E6B38] focus:ring-[#9E6B38]"
+                          />
+                          <label htmlFor="has-other-pets-checkbox" className="text-xs font-semibold text-[#5C4538] cursor-pointer">
+                            ¿Tienes otras mascotas actualmente en casa?
+                          </label>
+                        </div>
+                        {hasOtherPets && (
+                          <input
+                            id="other-pets-details-input"
+                            type="text"
+                            value={otherPetsDetails}
+                            onChange={(e) => setOtherPetsDetails(e.target.value)}
+                            placeholder="Ej. Un perro criollo de 4 años, esterilizado y sociable."
+                            className="w-full px-3 py-2 bg-white border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+                          />
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-[#2C1E14] mb-1">
+                          ¿Por qué deseas adoptar a {activePet.name}? *
+                        </label>
+                        <textarea
+                          id="adopt-reason-textarea"
+                          required
+                          rows={3}
+                          value={reasonForAdoption}
+                          onChange={(e) => setReasonForAdoption(e.target.value)}
+                          placeholder="Cuéntanos sobre tu hogar, el tiempo que compartirán y el cariño que le brindarán..."
+                          className="w-full px-3 py-2 bg-white border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+                        />
+                      </div>
+
+                      <div className="p-3 bg-white rounded-xl border border-[#E8DFD3] flex items-start gap-2">
+                        <input
+                          id="adopt-terms-checkbox"
+                          type="checkbox"
+                          required
+                          checked={termsAccepted}
+                          onChange={(e) => setTermsAccepted(e.target.checked)}
+                          className="mt-0.5 rounded border-[#E8DFD3] text-[#9E6B38] focus:ring-[#9E6B38]"
+                        />
+                        <label htmlFor="adopt-terms-checkbox" className="text-[11px] text-[#2C1E14] leading-snug cursor-pointer">
+                          Acepto el compromiso de tenencia responsable (alimentación adecuada, cariño, no mantener encadenado y permitir seguimiento por parte de los rescatistas de Purificación, Tolima).
+                        </label>
+                      </div>
+
+                      <button
+                        id="submit-adoption-application-btn"
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full py-3 bg-[#9E6B38] hover:bg-[#86582A] text-white text-xs sm:text-sm font-bold rounded-full shadow-xs transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        <Heart className="w-4 h-4 text-white fill-white" />
+                        <span>{isSubmitting ? 'Enviando postulación...' : `Enviar Postulación para Adoptar a ${activePet.name}`}</span>
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
