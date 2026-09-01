@@ -1,4 +1,5 @@
 import { User, UserRole } from '../types';
+import { isValidPhone10, sanitizePhone10 } from '../utils/phoneUtils';
 
 const AUTH_USER_KEY = 'pata_amiga_current_user';
 const USERS_DB_KEY = 'pata_amiga_registered_users';
@@ -14,17 +15,18 @@ export interface StoredUser extends User {
   passwordHash: string;
 }
 
-// Initial default user accounts with Danna Gascá as Admin
+// Initial default user accounts with Danna Gascá as Admin (10-digit Colombian phone format)
 const DEFAULT_USERS: StoredUser[] = [
   {
     id: 'user-demo-1',
     name: 'Danna Gascá',
     email: 'gascadanna414@gmail.com',
     role: 'admin',
-    phone: '+57 312 890 4521',
+    phone: '3128904521',
     location: 'Purificación, Tolima',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
     createdAt: '2024-01-10',
+    registeredAt: '10 Ene 2024',
     passwordHash: '123456'
   },
   {
@@ -32,10 +34,11 @@ const DEFAULT_USERS: StoredUser[] = [
     name: 'Dra. Sofía Ruiz',
     email: 'sofia.rescate@pataamiga.org',
     role: 'rescatista',
-    phone: '+57 314 772 1093',
+    phone: '3147721093',
     location: 'Barrio El Ospina Pérez, Purificación',
     avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=200&q=80',
     createdAt: '2024-01-01',
+    registeredAt: '01 Ene 2024',
     passwordHash: '123456'
   },
   {
@@ -43,10 +46,23 @@ const DEFAULT_USERS: StoredUser[] = [
     name: 'Carlos Méndez',
     email: 'carlos.voluntario@gmail.com',
     role: 'voluntario',
-    phone: '+57 310 445 8892',
+    phone: '3104458892',
     location: 'Barrio Santander, Purificación',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
     createdAt: '2024-02-15',
+    registeredAt: '15 Feb 2024',
+    passwordHash: '123456'
+  },
+  {
+    id: 'user-demo-4',
+    name: 'Mariana Gómez',
+    email: 'mariana.gomez@gmail.com',
+    role: 'ciudadano',
+    phone: '3156709922',
+    location: 'Barrio Camilo Torres, Purificación',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
+    createdAt: '2024-03-01',
+    registeredAt: '01 Mar 2024',
     passwordHash: '123456'
   }
 ];
@@ -202,17 +218,29 @@ export const AuthController = {
       };
     }
 
+    if (data.phone && data.phone.trim()) {
+      const sanitized = sanitizePhone10(data.phone);
+      if (sanitized.length !== 10) {
+        return {
+          success: false,
+          message: 'El número de teléfono debe tener exactamente 10 caracteres numéricos (ej: 3128904521).'
+        };
+      }
+    }
+
     const assignedRole: UserRole = cleanEmail === 'gascadanna414@gmail.com' ? 'admin' : (data.role || 'ciudadano');
+    const sanitizedPhone = data.phone ? sanitizePhone10(data.phone) : '';
 
     const newUser: StoredUser = {
       id: `user-${Date.now()}`,
       name: data.name.trim(),
       email: cleanEmail,
       role: assignedRole,
-      phone: data.phone || '',
+      phone: sanitizedPhone,
       location: 'Purificación, Tolima',
       avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(data.name)}`,
       createdAt: new Date().toISOString().split('T')[0],
+      registeredAt: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
       passwordHash: data.password
     };
 
@@ -227,6 +255,85 @@ export const AuthController = {
       message: '¡Cuenta creada con éxito! Bienvenido(a) a la comunidad de Pata Amiga Purificación.',
       user: publicUser
     };
+  },
+
+  createUserByAdmin(data: { name: string; email: string; phone: string; role: UserRole; password?: string }): AuthResponse {
+    const users = getStoredUsers();
+    const cleanEmail = data.email.trim().toLowerCase();
+
+    if (!data.name || !cleanEmail || !data.phone) {
+      return {
+        success: false,
+        message: 'Nombre, correo electrónico y teléfono son obligatorios.'
+      };
+    }
+
+    if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
+      return {
+        success: false,
+        message: 'Ya existe un usuario registrado con este correo electrónico.'
+      };
+    }
+
+    const sanitizedPhone = sanitizePhone10(data.phone);
+    if (sanitizedPhone.length !== 10) {
+      return {
+        success: false,
+        message: 'El teléfono debe contener exactamente 10 dígitos (ej: 3128904521).'
+      };
+    }
+
+    const newUser: StoredUser = {
+      id: `user-${Date.now()}`,
+      name: data.name.trim(),
+      email: cleanEmail,
+      role: data.role,
+      phone: sanitizedPhone,
+      location: 'Purificación, Tolima',
+      avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(data.name)}`,
+      createdAt: new Date().toISOString().split('T')[0],
+      registeredAt: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
+      passwordHash: data.password || '123456'
+    };
+
+    users.push(newUser);
+    saveUsers(users);
+
+    const { passwordHash: _, ...publicUser } = newUser;
+    return {
+      success: true,
+      message: `Usuario ${newUser.name} registrado con éxito con rol de ${newUser.role.toUpperCase()}.`,
+      user: publicUser
+    };
+  },
+
+  updateUserProfile(userId: string, updates: Partial<User>): boolean {
+    const users = getStoredUsers();
+    const userIndex = users.findIndex(u => u.id === userId);
+    if (userIndex === -1) return false;
+
+    if (updates.phone) {
+      updates.phone = sanitizePhone10(updates.phone);
+    }
+
+    users[userIndex] = {
+      ...users[userIndex],
+      ...updates
+    };
+
+    saveUsers(users);
+
+    const current = this.getCurrentUser();
+    if (current && current.id === userId) {
+      const { passwordHash: _, ...publicUser } = users[userIndex];
+      this.setCurrentUser(publicUser);
+    }
+
+    return true;
+  },
+
+  loginAsAdminDemo(): AuthResponse {
+    return this.login('gascadanna414@gmail.com', '123456');
   },
 
   requestPasswordReset(email: string): { success: boolean; message: string; simulatedCode?: string } {

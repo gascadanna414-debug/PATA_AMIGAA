@@ -9,6 +9,7 @@ export interface User {
   location?: string;
   avatar?: string;
   createdAt: string;
+  registeredAt?: string;
 }
 
 export interface AppNotification {

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { User } from '../types';
 import { StoreController } from '../controllers/storeController';
+import { sanitizePhone10, isValidPhone10 } from '../utils/phoneUtils';
 import confetti from 'canvas-confetti';
 
 interface ContactViewProps {
@@ -48,6 +49,11 @@ export const ContactView: React.FC<ContactViewProps> = ({
 
     if (!name || !email || !message) {
       setErrorMsg('Por favor ingresa tu nombre, correo y mensaje.');
+      return;
+    }
+
+    if (phone && !isValidPhone10(phone)) {
+      setErrorMsg('El número de teléfono debe tener exactamente 10 caracteres numéricos (ej: 3128904521).');
       return;
     }
 
@@ -292,14 +298,15 @@ export const ContactView: React.FC<ContactViewProps> = ({
 
                 <div>
                   <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
-                    Teléfono / WhatsApp
+                    Teléfono / WhatsApp <span className="text-[10px] text-[#8A7568] font-normal">(10 dígitos)</span>
                   </label>
                   <input
                     id="contact-phone-input"
                     type="tel"
-                    placeholder="312 890 4521"
+                    maxLength={10}
+                    placeholder="3128904521"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => setPhone(sanitizePhone10(e.target.value))}
                     className="w-full px-4 py-2.5 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs sm:text-sm text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38] transition"
                   />
                 </div>

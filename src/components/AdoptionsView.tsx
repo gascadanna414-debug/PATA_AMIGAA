@@ -15,6 +15,7 @@ import {
 import { AdoptionPet, User } from '../types';
 import { StoreController } from '../controllers/storeController';
 import { resolveImageUrl, handleImageError } from '../utils/imageUtils';
+import { sanitizePhone10, isValidPhone10 } from '../utils/phoneUtils';
 import confetti from 'canvas-confetti';
 
 interface AdoptionsViewProps {
@@ -118,6 +119,11 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
 
     if (!applicantName || !applicantEmail || !applicantPhone || !reasonForAdoption) {
       setAppError('Por favor completa todos los campos requeridos.');
+      return;
+    }
+
+    if (!isValidPhone10(applicantPhone)) {
+      setAppError('El número de teléfono/WhatsApp debe tener exactamente 10 caracteres numéricos (ej: 3128904521).');
       return;
     }
 
@@ -767,15 +773,16 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="block text-xs font-bold text-[#2C1E14] mb-1">
-                            Teléfono / WhatsApp de Contacto *
+                            Teléfono / WhatsApp de Contacto * <span className="text-[10px] text-[#8A7568] font-normal">(10 dígitos)</span>
                           </label>
                           <input
                             id="adopt-app-phone-input"
                             type="tel"
                             required
+                            maxLength={10}
                             value={applicantPhone}
-                            onChange={(e) => setApplicantPhone(e.target.value)}
-                            placeholder="312 890 4521"
+                            onChange={(e) => setApplicantPhone(sanitizePhone10(e.target.value))}
+                            placeholder="3128904521"
                             className="w-full px-3 py-2 bg-white border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
                           />
                         </div>

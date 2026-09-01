@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { HealthEvent, EventRegistration, User } from '../types';
 import { StoreController } from '../controllers/storeController';
+import { sanitizePhone10, isValidPhone10 } from '../utils/phoneUtils';
 import confetti from 'canvas-confetti';
 
 interface EventsViewProps {
@@ -61,6 +62,11 @@ export const EventsView: React.FC<EventsViewProps> = ({
 
     if (!ownerName || !ownerEmail || !ownerPhone || !petName) {
       setRegError('Por favor completa todos los campos del propietario y la mascota.');
+      return;
+    }
+
+    if (!isValidPhone10(ownerPhone)) {
+      setRegError('El número de teléfono/celular debe tener exactamente 10 caracteres numéricos (ej: 3128904521).');
       return;
     }
 
@@ -381,15 +387,16 @@ export const EventsView: React.FC<EventsViewProps> = ({
 
                       <div>
                         <label className="block text-xs font-bold text-[#2C1E14] mb-1">
-                          Celular / WhatsApp *
+                          Celular / WhatsApp * <span className="text-[10px] text-[#8A7568] font-normal">(10 dígitos)</span>
                         </label>
                         <input
                           id="reg-owner-phone-input"
                           type="tel"
                           required
+                          maxLength={10}
                           value={ownerPhone}
-                          onChange={(e) => setOwnerPhone(e.target.value)}
-                          placeholder="312 890 4521"
+                          onChange={(e) => setOwnerPhone(sanitizePhone10(e.target.value))}
+                          placeholder="3128904521"
                           className="w-full px-3 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
                         />
                       </div>

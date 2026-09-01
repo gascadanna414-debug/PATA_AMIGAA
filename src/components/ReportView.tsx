@@ -20,6 +20,7 @@ import { AnimalReport, User } from '../types';
 import { StoreController } from '../controllers/storeController';
 import { PURIFICACION_NEIGHBORHOODS } from '../data/initialData';
 import { resolveImageUrl, handleImageError } from '../utils/imageUtils';
+import { sanitizePhone10, isValidPhone10 } from '../utils/phoneUtils';
 import confetti from 'canvas-confetti';
 
 interface ReportViewProps {
@@ -129,6 +130,11 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
     if (!reporterName.trim() || !reporterEmail.trim() || !reporterPhone.trim() || !description.trim()) {
       setErrorMsg('Por favor completa todos los campos requeridos marcados con (*).');
+      return;
+    }
+
+    if (!isValidPhone10(reporterPhone)) {
+      setErrorMsg('El número de teléfono del informante debe contener exactamente 10 caracteres numéricos (ej: 3128904521).');
       return;
     }
 
@@ -308,7 +314,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
                 <div>
                   <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
-                    Teléfono / Celular de Contacto Inmediato *
+                    Teléfono / Celular de Contacto Inmediato * <span className="text-[10px] text-[#8A7568] font-normal">(10 dígitos)</span>
                   </label>
                   <div className="relative">
                     <Phone className="w-4 h-4 text-[#9E6B38] absolute left-3 top-2.5" />
@@ -316,9 +322,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                       id="report-phone-input"
                       type="tel"
                       required
-                      placeholder="Ej. 312 890 4521"
+                      maxLength={10}
+                      placeholder="Ej. 3128904521"
                       value={reporterPhone}
-                      onChange={(e) => setReporterPhone(e.target.value)}
+                      onChange={(e) => setReporterPhone(sanitizePhone10(e.target.value))}
                       className="w-full pl-9 pr-3 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
                     />
                   </div>

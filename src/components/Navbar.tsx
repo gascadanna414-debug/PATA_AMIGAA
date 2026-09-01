@@ -93,21 +93,24 @@ export const Navbar: React.FC<NavbarProps> = ({
               );
             })}
 
-            {/* Admin Panel Tab Link (Exclusive for Admins) */}
-            {isAdmin && (
-              <button
-                id="nav-link-admin"
-                onClick={() => setActiveTab('admin')}
-                className={`relative px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-150 cursor-pointer flex items-center gap-1.5 ${
-                  activeTab === 'admin'
-                    ? 'bg-[#2C1E14] text-[#FAF6F0] font-semibold shadow-xs'
-                    : 'bg-[#FAF6F0] text-[#9E6B38] border border-[#E8DFD3] hover:bg-[#F3ECE0]'
-                }`}
-              >
-                <ShieldCheck className="w-4 h-4 text-[#9E6B38]" />
-                <span>Panel Admin</span>
-              </button>
-            )}
+            {/* Admin Panel Tab Link */}
+            <button
+              id="nav-link-admin"
+              onClick={() => setActiveTab('admin')}
+              className={`relative px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-150 cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'admin'
+                  ? 'bg-[#2C1E14] text-[#FAF6F0] font-semibold shadow-xs'
+                  : isAdmin
+                    ? 'bg-[#FAF6F0] text-[#9E6B38] border border-[#E8DFD3] hover:bg-[#F3ECE0]'
+                    : 'text-[#5C4538] hover:text-[#2C1E14] hover:bg-[#F6EFE5]'
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4 text-[#9E6B38]" />
+              <span>Panel Admin</span>
+              {isAdmin && (
+                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+              )}
+            </button>
           </nav>
 
           {/* User Auth & Notification Section (Desktop) */}
@@ -265,25 +268,26 @@ export const Navbar: React.FC<NavbarProps> = ({
               );
             })}
 
-            {isAdmin && (
-              <button
-                id="mobile-nav-admin"
-                onClick={() => {
-                  setActiveTab('admin');
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`w-full px-4 py-2.5 rounded-xl text-sm font-medium transition flex items-center justify-between cursor-pointer ${
-                  activeTab === 'admin'
-                    ? 'bg-[#2C1E14] text-white font-semibold'
-                    : 'bg-white text-[#9E6B38] border border-[#E8DFD3]'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <ShieldCheck className="w-4 h-4 text-[#9E6B38]" />
-                  <span>Panel Administrador</span>
-                </div>
-              </button>
-            )}
+            <button
+              id="mobile-nav-admin"
+              onClick={() => {
+                setActiveTab('admin');
+                setIsMobileMenuOpen(false);
+              }}
+              className={`w-full px-4 py-2.5 rounded-xl text-sm font-medium transition flex items-center justify-between cursor-pointer ${
+                activeTab === 'admin'
+                  ? 'bg-[#2C1E14] text-white font-semibold'
+                  : 'bg-white text-[#9E6B38] border border-[#E8DFD3]'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="w-4 h-4 text-[#9E6B38]" />
+                <span>Panel Administrador</span>
+              </div>
+              {isAdmin && (
+                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Activo</span>
+              )}
+            </button>
           </div>
 
           {!currentUser && (

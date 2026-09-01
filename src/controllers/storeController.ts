@@ -442,6 +442,25 @@ export const StoreController = {
     return { registration: newReg, event };
   },
 
+  deleteEventRegistration(regId: string): boolean {
+    const registrations = getItem<EventRegistration[]>(REGISTRATIONS_KEY, []);
+    const reg = registrations.find(r => r.id === regId);
+    if (!reg) return false;
+
+    const filtered = registrations.filter(r => r.id !== regId);
+    setItem(REGISTRATIONS_KEY, filtered);
+
+    // Decrement event registered count
+    const events = this.getEvents();
+    const eventIndex = events.findIndex(e => e.id === reg.eventId);
+    if (eventIndex !== -1 && events[eventIndex].registeredCount > 0) {
+      events[eventIndex].registeredCount -= 1;
+      setItem(EVENTS_KEY, events);
+    }
+
+    return true;
+  },
+
   // --- NOTIFICATIONS SYSTEM ---
   getNotifications(): AppNotification[] {
     const initialNotifs: AppNotification[] = [

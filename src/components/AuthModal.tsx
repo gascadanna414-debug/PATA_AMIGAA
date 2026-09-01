@@ -14,6 +14,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import { AuthController } from '../controllers/authController';
+import { sanitizePhone10, isValidPhone10 } from '../utils/phoneUtils';
 import { Logo } from './Logo';
 
 interface AuthModalProps {
@@ -91,6 +92,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     if (!regName || !regEmail || !regPassword) {
       setErrorMsg('Nombre, correo y contraseña son obligatorios.');
+      return;
+    }
+
+    if (regPhone && !isValidPhone10(regPhone)) {
+      setErrorMsg('El número de teléfono debe tener exactamente 10 caracteres numéricos (ej: 3128904521).');
       return;
     }
 
@@ -379,16 +385,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
-                    Teléfono / WhatsApp
+                    Teléfono / WhatsApp <span className="text-[10px] text-[#8A7568] font-normal">(10 dígitos)</span>
                   </label>
                   <div className="relative">
                     <Phone className="w-4 h-4 text-[#9E6B38] absolute left-3.5 top-3" />
                     <input
                       id="register-phone-input"
                       type="tel"
-                      placeholder="312 890 4521"
+                      maxLength={10}
+                      placeholder="3128904521"
                       value={regPhone}
-                      onChange={(e) => setRegPhone(e.target.value)}
+                      onChange={(e) => setRegPhone(sanitizePhone10(e.target.value))}
                       className="w-full pl-10 pr-3 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs sm:text-sm text-[#2C1E14] placeholder-[#8A7568] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
                     />
                   </div>
