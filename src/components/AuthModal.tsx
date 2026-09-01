@@ -238,7 +238,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-semibold text-[#2C1E14]">
-                    Contraseña
+                    Contraseña (máx. 13 caracteres)
                   </label>
                   <button
                     id="goto-forgot-btn"
@@ -261,6 +261,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     id="login-password-input"
                     type={showLoginPassword ? 'text' : 'password'}
                     required
+                    maxLength={13}
                     placeholder="••••••••"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
@@ -412,7 +413,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
-                  Crear Contraseña * (mínimo 5 caracteres)
+                  Crear Contraseña * (entre 5 y 13 caracteres)
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-[#9E6B38] absolute left-3.5 top-3" />
@@ -421,7 +422,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     type={showRegPassword ? 'text' : 'password'}
                     required
                     minLength={5}
-                    placeholder="••••••••"
+                    maxLength={13}
+                    placeholder="5 a 13 caracteres"
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     className="w-full pl-10 pr-10 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs sm:text-sm text-[#2C1E14] placeholder-[#8A7568] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
@@ -439,6 +441,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       <Eye className="w-4 h-4" />
                     )}
                   </button>
+                </div>
+                <div className="flex justify-between items-center text-[10px] text-[#8A7568] mt-1">
+                  <span>Entre 5 y 13 caracteres</span>
+                  <span>{regPassword.length}/13</span>
                 </div>
               </div>
 
@@ -562,7 +568,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
-                  Nueva Contraseña
+                  Nueva Contraseña (entre 5 y 13 caracteres)
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-[#9E6B38] absolute left-3.5 top-3" />
@@ -571,7 +577,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     type={showNewPassword ? 'text' : 'password'}
                     required
                     minLength={5}
-                    placeholder="Mínimo 5 caracteres"
+                    maxLength={13}
+                    placeholder="5 a 13 caracteres"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="w-full pl-10 pr-10 py-2.5 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs sm:text-sm text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
@@ -589,6 +596,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       <Eye className="w-4 h-4" />
                     )}
                   </button>
+                </div>
+                <div className="flex justify-between items-center text-[10px] text-[#8A7568] mt-1">
+                  <span>Entre 5 y 13 caracteres</span>
+                  <span>{newPassword.length}/13</span>
                 </div>
               </div>
 

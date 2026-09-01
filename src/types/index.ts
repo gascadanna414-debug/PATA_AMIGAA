@@ -1,4 +1,4 @@
-export type UserRole = 'ciudadano' | 'voluntario' | 'rescatista' | 'veterinario';
+export type UserRole = 'admin' | 'ciudadano' | 'voluntario' | 'rescatista' | 'veterinario';
 
 export interface User {
   id: string;
@@ -9,6 +9,18 @@ export interface User {
   location?: string;
   avatar?: string;
   createdAt: string;
+}
+
+export interface AppNotification {
+  id: string;
+  userId?: string;
+  title: string;
+  message: string;
+  type: 'evento' | 'reporte' | 'adopcion' | 'sistema';
+  timestamp: string;
+  read: boolean;
+  eventId?: string;
+  linkTab?: string;
 }
 
 export interface SuccessStory {
@@ -85,6 +97,7 @@ export interface AnimalReport {
   urgency: 'urgente' | 'moderada' | 'leve';
   description: string;
   photoUrl: string;
+  photos?: string[];
   status: 'recibido' | 'en_camino' | 'en_atencion' | 'rescatado';
   reportedAt: string;
   statusNote?: string;

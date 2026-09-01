@@ -11,13 +11,15 @@ import {
   Crosshair, 
   Trash2, 
   Clock, 
-  ShieldAlert, 
   Activity, 
-  CheckCircle
+  CheckCircle,
+  Plus,
+  Image as ImageIcon
 } from 'lucide-react';
 import { AnimalReport, User } from '../types';
 import { StoreController } from '../controllers/storeController';
 import { PURIFICACION_NEIGHBORHOODS } from '../data/initialData';
+import { resolveImageUrl } from '../utils/imageUtils';
 import confetti from 'canvas-confetti';
 
 interface ReportViewProps {
@@ -40,7 +42,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
   const [animalType, setAnimalType] = useState<AnimalReport['animalType']>('Perro');
   const [urgency, setUrgency] = useState<AnimalReport['urgency']>('urgente');
   const [description, setDescription] = useState('');
-  const [photoUrl, setPhotoUrl] = useState<string>('');
+  const [photos, setPhotos] = useState<string[]>([]);
   const [isLocating, setIsLocating] = useState(false);
   const [gpsNote, setGpsNote] = useState<string | null>(null);
 
@@ -51,26 +53,48 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle local file image upload
+  // Handle local file image upload - supports multiple files
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setErrorMsg('La imagen no debe superar los 5MB.');
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileList: File[] = Array.from(files);
+    let loadedCount = 0;
+    const newPhotos: string[] = [];
+
+    fileList.forEach((file: File) => {
+      if (file.size > 8 * 1024 * 1024) {
+        setErrorMsg('Una o más imágenes superan los 8MB.');
         return;
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPhotoUrl(reader.result as string);
-        setErrorMsg(null);
+        if (reader.result) {
+          newPhotos.push(reader.result as string);
+        }
+        loadedCount++;
+        if (loadedCount === fileList.length) {
+          setPhotos(prev => [...prev, ...newPhotos]);
+          setErrorMsg(null);
+        }
       };
       reader.readAsDataURL(file);
+    });
+
+    if (e.target) {
+      e.target.value = '';
     }
   };
 
-  const handleSetSamplePhoto = (url: string) => {
-    setPhotoUrl(url);
-    setErrorMsg(null);
+  const handleAddSamplePhoto = (url: string) => {
+    if (!photos.includes(url)) {
+      setPhotos(prev => [...prev, url]);
+      setErrorMsg(null);
+    }
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleDetectLocation = () => {
@@ -92,7 +116,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
       },
       () => {
         setIsLocating(false);
-        // Fallback default coordinates for Purificación Tolima
         setGpsNote('Ubicación fijada en cabecera municipal de Purificación, Tolima.');
         setAddressDetails(prev => prev ? prev : 'Casco urbano Purificación, Tolima');
       },
@@ -109,8 +132,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
       return;
     }
 
-    if (!photoUrl) {
-      setErrorMsg('Por favor adjunta una foto o selecciona una imagen de muestra para que el equipo pueda evaluar el caso.');
+    if (photos.length === 0) {
+      setErrorMsg('Por favor adjunta al menos una foto de evidencia para que los administradores y rescatistas puedan evaluar el caso.');
       return;
     }
 
@@ -126,16 +149,17 @@ export const ReportView: React.FC<ReportViewProps> = ({
         neighborhood,
         addressDetails,
         description,
-        photoUrl
+        photoUrl: photos[0],
+        photos: photos
       });
 
       setReports(StoreController.getReports());
       setSubmittedReport(newRep);
       setIsSubmitting(false);
 
-      // Reset fields
+      // Reset form
       setDescription('');
-      setPhotoUrl('');
+      setPhotos([]);
       setAddressDetails('');
 
       try {
@@ -162,7 +186,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
             Reportar un animal en riesgo o abandono
           </h1>
           <p className="text-xs sm:text-sm text-[#6E574B] leading-relaxed">
-            Si encuentras un perro, gato u otro animal herido, atropellado o en situación crítica en Purificación o sus veredas, completa este formulario. El reporte se comparte con los voluntarios y veterinarias de la zona.
+            Tu reporte llegará inmediatamente a nuestro equipo de administradores, veterinarios y rescatistas de Purificación, Tolima. Puedes adjuntar múltiples fotos como evidencia para una atención más rápida y precisa.
           </p>
         </div>
       </div>
@@ -177,10 +201,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <CheckCircle2 className="w-9 h-9 text-[#9E6B38]" />
               </div>
               <h3 className="text-xl font-bold text-[#2C1E14] font-['Fraunces',serif]">
-                ¡Reporte registrado con éxito!
+                ¡Reporte enviado exitosamente a los administradores!
               </h3>
               <p className="text-xs sm:text-sm text-[#5C4538] max-w-md mx-auto leading-relaxed">
-                El caso fue asignado a <strong>{submittedReport.assignedRescuer}</strong>. Los voluntarios cercanos al sector <strong>{submittedReport.neighborhood}</strong> han sido notificados con la información y foto suministradas.
+                El caso fue recibido por nuestro equipo central y asignado a <strong>{submittedReport.assignedRescuer}</strong>. Los voluntarios cercanos al sector <strong>{submittedReport.neighborhood}</strong> han recibido la alerta con las fotos de evidencia.
               </p>
               
               <div className="p-4 bg-[#FAF6F0] rounded-2xl border border-[#E8DFD3] text-xs text-left max-w-md mx-auto space-y-1.5">
@@ -191,6 +215,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <div className="flex justify-between">
                   <span className="text-[#6E574B]">Animal:</span>
                   <span className="font-semibold text-[#2C1E14]">{submittedReport.animalType} ({submittedReport.urgency})</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#6E574B]">Evidencias adjuntas:</span>
+                  <span className="font-semibold text-[#2C1E14]">{submittedReport.photos?.length || 1} fotos</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#6E574B]">Ubicación:</span>
@@ -211,7 +239,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     onClick={onNavigateToChat}
                     className="px-6 py-2.5 bg-[#FAF6F0] border border-[#E8DFD3] text-xs font-semibold text-[#2C1E14] rounded-full hover:bg-[#F3ECE0] cursor-pointer"
                   >
-                    Seguir en la comunidad
+                    Ir al canal de rescate
                   </button>
                 )}
               </div>
@@ -220,10 +248,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
             <form onSubmit={handleSubmitReport} className="space-y-5">
               <div className="border-b border-[#F5EDE2] pb-3">
                 <h2 className="text-lg font-bold font-['Fraunces',serif] text-[#2C1E14]">
-                  Formulario de Reporte Ciudadano
+                  Formulario de Reporte Directo
                 </h2>
                 <p className="text-xs text-[#6E574B]">
-                  Proporciona detalles específicos para coordinar el rescate en Purificación, Tolima.
+                  Este reporte llega directamente a los administradores y brigadas de rescate en Purificación.
                 </p>
               </div>
 
@@ -413,13 +441,13 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 </div>
               </div>
 
-              {/* Step 4: Espacio para adjuntar foto del animal */}
+              {/* Step 4: Espacio para adjuntar múltiples fotos de evidencia */}
               <div className="space-y-3 pt-2 border-t border-[#EAE2D5]">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-[#9E6B38] uppercase tracking-wider">
-                    4. Adjuntar Foto o Evidencia Visual del Animal *
+                    4. Fotos o Evidencias Visuales del Animal ({photos.length} adjuntadas) *
                   </span>
-                  <span className="text-[11px] text-[#8A7568]">Requerido para el triaje</span>
+                  <span className="text-[11px] text-[#8A7568]">Puedes añadir más de una foto</span>
                 </div>
 
                 <input
@@ -427,40 +455,48 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   accept="image/*"
+                  multiple
                   className="hidden"
                 />
 
-                {photoUrl ? (
-                  <div className="relative rounded-2xl overflow-hidden border-2 border-[#9E6B38] bg-[#2C1E14] h-52 group">
-                    <img
-                      src={photoUrl}
-                      alt="Foto adjunta del animal"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="px-3 py-1.5 bg-white text-[#2C1E14] rounded-full text-xs font-semibold shadow-xs flex items-center gap-1 cursor-pointer"
-                      >
-                        <Camera className="w-3.5 h-3.5 text-[#9E6B38]" />
-                        <span>Cambiar foto</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPhotoUrl('')}
-                        className="px-3 py-1.5 bg-red-600 text-white rounded-full text-xs font-semibold shadow-xs flex items-center gap-1 cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Quitar</span>
-                      </button>
-                    </div>
-                    <div className="absolute bottom-2 left-2 bg-[#9E6B38] text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3 text-[#FAF6F0]" />
-                      <span>Foto adjuntada correctamente</span>
+                {/* Photos Gallery Grid */}
+                {photos.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {photos.map((url, idx) => (
+                      <div key={idx} className="relative group rounded-2xl overflow-hidden border-2 border-[#9E6B38] bg-[#2C1E14] aspect-square shadow-xs">
+                        <img
+                          src={resolveImageUrl(url)}
+                          alt={`Evidencia ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                        <span className="absolute top-1.5 left-1.5 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          Foto {idx + 1} {idx === 0 ? '(Principal)' : ''}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePhoto(idx)}
+                          className="absolute top-1.5 right-1.5 p-1 bg-red-600/90 text-white rounded-full hover:bg-red-700 transition cursor-pointer"
+                          title="Eliminar foto"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="border-2 border-dashed border-[#E8DFD3] hover:border-[#9E6B38] bg-[#FAF6F0] hover:bg-[#F3ECE0] rounded-2xl aspect-square flex flex-col items-center justify-center p-3 text-center cursor-pointer transition"
+                    >
+                      <Plus className="w-6 h-6 text-[#9E6B38] mb-1" />
+                      <span className="text-[11px] font-semibold text-[#2C1E14]">Añadir otra foto</span>
+                      <span className="text-[9px] text-[#8A7568]">JPG, PNG, WEBP</span>
                     </div>
                   </div>
-                ) : (
+                )}
+
+                {/* Primary Upload Dropzone if no photos yet */}
+                {photos.length === 0 && (
                   <div
                     onClick={() => fileInputRef.current?.click()}
                     className="border-2 border-dashed border-[#E8DFD3] hover:border-[#9E6B38] bg-[#FAF6F0] hover:bg-[#F3ECE0] rounded-2xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-2 group"
@@ -470,46 +506,44 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-[#2C1E14]">
-                        Haz clic aquí para seleccionar o arrastrar una foto del animal
+                        Haz clic aquí para seleccionar o arrastrar una o varias fotos del animal
                       </p>
                       <p className="text-[11px] text-[#8A7568] mt-0.5">
-                        Formatos soportados: JPG, PNG, WEBP (hasta 5MB)
+                        Formatos soportados: JPG, PNG, WEBP (puedes seleccionar varias fotos)
                       </p>
                     </div>
                   </div>
                 )}
 
-                {/* Quick test preset photos */}
-                {!photoUrl && (
-                  <div className="pt-1">
-                    <p className="text-[11px] text-[#8A7568] mb-1.5">
-                      O selecciona una foto de muestra rápida para probar el reporte:
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleSetSamplePhoto('https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80')}
-                        className="text-[11px] bg-[#FAF6F0] border border-[#E8DFD3] hover:bg-[#F3ECE0] px-3 py-1 rounded-full text-[#9E6B38] flex items-center gap-1 cursor-pointer font-medium"
-                      >
-                        🐕 Perrito criollo
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSetSamplePhoto('https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=600&q=80')}
-                        className="text-[11px] bg-[#FAF6F0] border border-[#E8DFD3] hover:bg-[#F3ECE0] px-3 py-1 rounded-full text-[#9E6B38] flex items-center gap-1 cursor-pointer font-medium"
-                      >
-                        🐱 Gatico en caja
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSetSamplePhoto('https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=600&q=80')}
-                        className="text-[11px] bg-[#FAF6F0] border border-[#E8DFD3] hover:bg-[#F3ECE0] px-3 py-1 rounded-full text-[#9E6B38] flex items-center gap-1 cursor-pointer font-medium"
-                      >
-                        🐾 Animal desorientado
-                      </button>
-                    </div>
+                {/* Quick Sample Photos */}
+                <div className="pt-1">
+                  <p className="text-[11px] text-[#8A7568] mb-1.5">
+                    O añade fotos de muestra rápida para probar el reporte múltiple:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleAddSamplePhoto('/images/mateo_rescue_story_1788226480262.jpg')}
+                      className="text-[11px] bg-[#FAF6F0] border border-[#E8DFD3] hover:bg-[#F3ECE0] px-3 py-1 rounded-full text-[#9E6B38] flex items-center gap-1 cursor-pointer font-medium"
+                    >
+                      🐕 Perrito criollo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddSamplePhoto('/images/kiara_cat_rescue_1788226493062.jpg')}
+                      className="text-[11px] bg-[#FAF6F0] border border-[#E8DFD3] hover:bg-[#F3ECE0] px-3 py-1 rounded-full text-[#9E6B38] flex items-center gap-1 cursor-pointer font-medium"
+                    >
+                      🐱 Gatico en riesgo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddSamplePhoto('/images/bruno_dog_rescue_1788226506971.jpg')}
+                      className="text-[11px] bg-[#FAF6F0] border border-[#E8DFD3] hover:bg-[#F3ECE0] px-3 py-1 rounded-full text-[#9E6B38] flex items-center gap-1 cursor-pointer font-medium"
+                    >
+                      🐾 Perro lastimado
+                    </button>
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Botón de Enviar Reporte */}
@@ -520,7 +554,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 className="w-full py-3.5 px-4 bg-[#9E6B38] hover:bg-[#86582A] text-white font-semibold rounded-full shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-xs sm:text-sm"
               >
                 <Send className="w-4 h-4" />
-                <span>{isSubmitting ? 'Enviando alerta a la red de Purificación...' : 'Enviar Reporte de Rescate'}</span>
+                <span>{isSubmitting ? 'Enviando alerta a los administradores...' : 'Enviar Reporte a los Administradores'}</span>
               </button>
             </form>
           )}
@@ -540,7 +574,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
             </div>
 
             <p className="text-xs text-[#6E574B] mb-4">
-              Seguimiento en tiempo real de los animales atendidos por los voluntarios en Tolima.
+              Seguimiento en tiempo real de los animales atendidos por los administradores y voluntarios en Tolima.
             </p>
 
             <div className="space-y-3 max-h-[580px] overflow-y-auto pr-1">
@@ -548,7 +582,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 const getStatusBadge = (status: AnimalReport['status']) => {
                   switch (status) {
                     case 'recibido':
-                      return <span className="bg-[#FAF6F0] text-[#9E6B38] border border-[#E8DFD3] text-[10px] font-semibold px-2.5 py-0.5 rounded-full">1. Recibido</span>;
+                      return <span className="bg-[#FAF6F0] text-[#9E6B38] border border-[#E8DFD3] text-[10px] font-semibold px-2.5 py-0.5 rounded-full">1. Recibido por Admin</span>;
                     case 'en_camino':
                       return <span className="bg-amber-50 text-amber-900 border border-amber-200 text-[10px] font-semibold px-2.5 py-0.5 rounded-full">2. Rescatista en camino</span>;
                     case 'en_atencion':
@@ -558,6 +592,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   }
                 };
 
+                const allEvidences = rep.photos && rep.photos.length > 0 ? rep.photos : [rep.photoUrl];
+
                 return (
                   <div 
                     key={rep.id} 
@@ -566,7 +602,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   >
                     <div className="flex gap-3">
                       <img
-                        src={rep.photoUrl}
+                        src={resolveImageUrl(rep.photoUrl)}
                         alt="Foto reporte"
                         className="w-16 h-16 rounded-xl object-cover border border-[#E8DFD3] shrink-0"
                         referrerPolicy="no-referrer"
@@ -585,6 +621,11 @@ export const ReportView: React.FC<ReportViewProps> = ({
                           }`}>
                             {rep.urgency}
                           </span>
+                          {allEvidences.length > 1 && (
+                            <span className="text-[10px] bg-white border border-[#E8DFD3] text-[#5C4538] px-1.5 py-0.2 rounded-full font-medium">
+                              📷 {allEvidences.length} fotos
+                            </span>
+                          )}
                         </div>
                         <p className="text-[11px] text-[#5C4538] line-clamp-2 leading-relaxed">
                           {rep.description}
@@ -592,10 +633,25 @@ export const ReportView: React.FC<ReportViewProps> = ({
                       </div>
                     </div>
 
+                    {/* Small thumbnail strip if multiple photos */}
+                    {allEvidences.length > 1 && (
+                      <div className="flex gap-1.5 pt-1 overflow-x-auto">
+                        {allEvidences.map((photo, pIdx) => (
+                          <img
+                            key={pIdx}
+                            src={resolveImageUrl(photo)}
+                            alt={`Evidencia ${pIdx + 1}`}
+                            className="w-10 h-10 rounded-lg object-cover border border-[#E8DFD3] shrink-0"
+                            referrerPolicy="no-referrer"
+                          />
+                        ))}
+                      </div>
+                    )}
+
                     {rep.statusNote && (
                       <div className="bg-white p-2 rounded-xl border border-[#E8DFD3] text-[11px] text-[#5C4538] flex items-start gap-1.5">
                         <Clock className="w-3.5 h-3.5 text-[#9E6B38] shrink-0 mt-0.5" />
-                        <span><strong>Avance:</strong> {rep.statusNote}</span>
+                        <span><strong>Avance Admin:</strong> {rep.statusNote}</span>
                       </div>
                     )}
                   </div>

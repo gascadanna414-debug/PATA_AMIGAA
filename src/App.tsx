@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { AuthModal } from './components/AuthModal';
+import { NotificationModal } from './components/NotificationModal';
 import { HomeView } from './components/HomeView';
 import { AdoptionsView } from './components/AdoptionsView';
 import { ReportView } from './components/ReportView';
@@ -8,6 +9,7 @@ import { EventsView } from './components/EventsView';
 import { BlogView } from './components/BlogView';
 import { ChatView } from './components/ChatView';
 import { ContactView } from './components/ContactView';
+import { AdminPanel } from './components/AdminPanel';
 import { Footer } from './components/Footer';
 import { User } from './types';
 import { AuthController } from './controllers/authController';
@@ -17,6 +19,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('inicio');
   const [currentUser, setCurrentUser] = useState<User | null>(() => AuthController.getCurrentUser());
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [targetChatRescuer, setTargetChatRescuer] = useState<string | undefined>(undefined);
   const [selectedStoryId, setSelectedStoryId] = useState<string>('story-chopper');
@@ -50,7 +53,7 @@ export default function App() {
       setPetInitialSpeciesFilter('Todos');
     }
 
-    if (tab === 'usuario') {
+    if (tab === 'admin') {
       if (!currentUser) {
         handleOpenAuth('login');
         return;
@@ -75,6 +78,7 @@ export default function App() {
         setActiveTab={handleNavigateToTab}
         currentUser={currentUser}
         onOpenAuth={handleOpenAuth}
+        onOpenNotifications={() => setIsNotificationsOpen(true)}
       />
 
       {/* Main Content View Switcher */}
@@ -135,6 +139,14 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'admin' && (
+          <AdminPanel
+            currentUser={currentUser}
+            onOpenAuth={handleOpenAuth}
+            onNavigateToTab={handleNavigateToTab}
+          />
+        )}
+
         {activeTab === 'contacto' && (
           <ContactView
             currentUser={currentUser}
@@ -162,6 +174,14 @@ export default function App() {
       {/* Footer */}
       <Footer onNavigate={handleNavigateToTab} onOpenAuth={handleOpenAuth} />
 
+      {/* Notification Center Modal */}
+      <NotificationModal
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+        currentUser={currentUser}
+        onNavigateToTab={handleNavigateToTab}
+      />
+
       {/* Auth Modal (Login / Register / Recover Password) */}
       <AuthModal
         isOpen={isAuthModalOpen}
@@ -174,4 +194,3 @@ export default function App() {
     </div>
   );
 }
-

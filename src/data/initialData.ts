@@ -14,8 +14,8 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '12 de Junio, 2024',
     healthBefore: 'Deshidratación, almohadillas lastimadas por el asfalto y parásitos.',
     healthAfter: '100% recuperado, peso ideal, esterilizado, vacunado y muy afectuoso.',
-    beforePhotoUrl: '/src/assets/images/hades_rescue_1788225379594.jpg',
-    currentPhotoUrl: '/src/assets/images/hades_rescue_1788225379594.jpg',
+    beforePhotoUrl: '/images/hades_rescue_1788225379594.jpg',
+    currentPhotoUrl: '/images/hades_rescue_1788225379594.jpg',
     rescuerName: 'Equipo Voluntario Pata Amiga',
     likes: 89
   },
@@ -32,8 +32,8 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '24 de Agosto, 2024',
     healthBefore: 'Bajo peso, anemia leve y pelaje maltratado.',
     healthAfter: 'Totalmente revitalizado, pelaje brillante, carné de vacunas completo y esterilizado.',
-    beforePhotoUrl: '/src/assets/images/chopper_rescue_1788225394304.jpg',
-    currentPhotoUrl: '/src/assets/images/chopper_rescue_1788225394304.jpg',
+    beforePhotoUrl: '/images/chopper_rescue_1788225394304.jpg',
+    currentPhotoUrl: '/images/chopper_rescue_1788225394304.jpg',
     rescuerName: 'Dra. Sofía - Rescatista Purificación',
     likes: 94
   },
@@ -50,8 +50,8 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '18 de Julio, 2024',
     healthBefore: 'Desnutrición moderada, cojera en miembro anterior izquierdo y pulgas.',
     healthAfter: 'Corre con total energía, pelaje dorado radiante, peso óptimo y vacunación completa.',
-    beforePhotoUrl: '/src/assets/images/mateo_rescue_story_1788226480262.jpg',
-    currentPhotoUrl: '/src/assets/images/mateo_rescue_story_1788226480262.jpg',
+    beforePhotoUrl: '/images/mateo_rescue_story_1788226480262.jpg',
+    currentPhotoUrl: '/images/mateo_rescue_story_1788226480262.jpg',
     rescuerName: 'Brigadistas Río Magdalena Purificación',
     likes: 67
   },
@@ -68,8 +68,8 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '05 de Septiembre, 2024',
     healthBefore: 'Hipotermia leve, asustadiza y deshidratada.',
     healthAfter: 'Esterilizada, ronroneadora experta, con peso saludable y vacunas felinas al día.',
-    beforePhotoUrl: '/src/assets/images/kiara_cat_rescue_1788226493062.jpg',
-    currentPhotoUrl: '/src/assets/images/kiara_cat_rescue_1788226493062.jpg',
+    beforePhotoUrl: '/images/kiara_cat_rescue_1788226493062.jpg',
+    currentPhotoUrl: '/images/kiara_cat_rescue_1788226493062.jpg',
     rescuerName: 'Equipo Voluntario Purificación',
     likes: 72
   },
@@ -86,8 +86,8 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '14 de Octubre, 2024',
     healthBefore: 'Dermatitis solar, bajo peso y marcas de rozamiento en el cuello.',
     healthAfter: 'Pelaje grueso y brillante, esterilizado, sociable con otros perros y muy protector.',
-    beforePhotoUrl: '/src/assets/images/bruno_dog_rescue_1788226506971.jpg',
-    currentPhotoUrl: '/src/assets/images/bruno_dog_rescue_1788226506971.jpg',
+    beforePhotoUrl: '/images/bruno_dog_rescue_1788226506971.jpg',
+    currentPhotoUrl: '/images/bruno_dog_rescue_1788226506971.jpg',
     rescuerName: 'Rescate Rural Purificación',
     likes: 81
   },
@@ -104,8 +104,8 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '02 de Noviembre, 2024',
     healthBefore: 'Lactante huérfana, baja temperatura y parásitos intestinales.',
     healthAfter: 'Cachorra juguetona y sana, con esquema completo de vacunación y microchip.',
-    beforePhotoUrl: '/src/assets/images/nala_puppy_rescue_1788226520622.jpg',
-    currentPhotoUrl: '/src/assets/images/nala_puppy_rescue_1788226520622.jpg',
+    beforePhotoUrl: '/images/nala_puppy_rescue_1788226520622.jpg',
+    currentPhotoUrl: '/images/nala_puppy_rescue_1788226520622.jpg',
     rescuerName: 'Hogar de Paso Amigos Peludos',
     likes: 98
   },
@@ -122,8 +122,8 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '15 de Mayo, 2024',
     healthBefore: 'Desnutrición severa (8kg), sarna sarcóptica y parásitos.',
     healthAfter: 'Completamente sana (16kg), pelo brillante, esterilizada y con esquema de vacunas al día.',
-    beforePhotoUrl: '/src/assets/images/canela_before_1787104655599.jpg',
-    currentPhotoUrl: '/src/assets/images/canela_after_1787104667779.jpg',
+    beforePhotoUrl: '/images/canela_before_1787104655599.jpg',
+    currentPhotoUrl: '/images/canela_after_1787104667779.jpg',
     rescuerName: 'Dra. Sofía - Rescatista Voluntaria Tolima',
     likes: 42
   },
@@ -140,8 +140,8 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '28 de Julio, 2024',
     healthBefore: 'Hipotermia, conjuntivitis neonatal y bajo peso.',
     healthAfter: '100% recuperado, castrado, desparasitado y con carné de vacunación felina al día.',
-    beforePhotoUrl: '/src/assets/images/milo_before_1787104677033.jpg',
-    currentPhotoUrl: '/src/assets/images/milo_after_1787104685898.jpg',
+    beforePhotoUrl: '/images/milo_before_1787104677033.jpg',
+    currentPhotoUrl: '/images/milo_after_1787104685898.jpg',
     rescuerName: 'Carlos Méndez - Brigadista Pata Amiga',
     likes: 38
   },
@@ -158,8 +158,8 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '10 de Noviembre, 2024',
     healthBefore: 'Fractura de pata trasera y deshidratación.',
     healthAfter: 'Corre con total normalidad, hueso completamente consolidado y con gran vitalidad.',
-    beforePhotoUrl: '/src/assets/images/rocky_before_1787104697477.jpg',
-    currentPhotoUrl: '/src/assets/images/rocky_after_1787104708249.jpg',
+    beforePhotoUrl: '/images/rocky_before_1787104697477.jpg',
+    currentPhotoUrl: '/images/rocky_after_1787104708249.jpg',
     rescuerName: 'Clínica Veterinaria San Francisco Purificación',
     likes: 56
   }
@@ -184,7 +184,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
     },
     personality: ['Juguetona', 'Cariñosa', 'Dócil', 'Alegre'],
     photos: [
-      '/src/assets/images/mona_dog_1788225963408.jpg'
+      '/images/mona_dog_1788225963408.jpg'
     ],
     status: 'disponible',
     rescuerName: 'Equipo Voluntario Pata Amiga',
@@ -210,7 +210,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
     },
     personality: ['Sociable', 'Juguetón', 'Noble', 'Activo'],
     photos: [
-      '/src/assets/images/mateo_rescue_story_1788226480262.jpg'
+      '/images/mateo_rescue_story_1788226480262.jpg'
     ],
     status: 'disponible',
     rescuerName: 'Brigadistas Río Magdalena',
@@ -236,7 +236,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
     },
     personality: ['Curiosa', 'Dulce', 'Tranquila', 'Cariñosa'],
     photos: [
-      '/src/assets/images/kiara_cat_rescue_1788226493062.jpg'
+      '/images/kiara_cat_rescue_1788226493062.jpg'
     ],
     status: 'disponible',
     rescuerName: 'Dra. Andrea Castro',
@@ -262,7 +262,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
     },
     personality: ['Protector', 'Inteligente', 'Leal', 'Tranquilo'],
     photos: [
-      '/src/assets/images/bruno_dog_rescue_1788226506971.jpg'
+      '/images/bruno_dog_rescue_1788226506971.jpg'
     ],
     status: 'disponible',
     rescuerName: 'Rescate Rural Purificación',
@@ -288,7 +288,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
     },
     personality: ['Sereno', 'Independiente', 'Dócil', 'Leal'],
     photos: [
-      '/src/assets/images/onix_cat_1788225421317.jpg'
+      '/images/onix_cat_1788225421317.jpg'
     ],
     status: 'disponible',
     rescuerName: 'Voluntarios Pata Amiga',
@@ -314,7 +314,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
     },
     personality: ['Alegre', 'Leal', 'Sociable', 'Protector'],
     photos: [
-      '/src/assets/images/simba_dog_1788225435727.jpg'
+      '/images/simba_dog_1788225435727.jpg'
     ],
     status: 'disponible',
     rescuerName: 'María Ruiz (Voluntaria)',
@@ -340,7 +340,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
     },
     personality: ['Juguetona', 'Dulce', 'Curiosa', 'Mimosa'],
     photos: [
-      '/src/assets/images/maya_cat_1788225449558.jpg'
+      '/images/maya_cat_1788225449558.jpg'
     ],
     status: 'disponible',
     rescuerName: 'Luisa Polo (Hogar de Paso)',
@@ -366,7 +366,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
     },
     personality: ['Activo', 'Juguetón', 'Cariñoso', 'Noble'],
     photos: [
-      '/src/assets/images/rocky_labrador_1788225471339.jpg'
+      '/images/rocky_labrador_1788225471339.jpg'
     ],
     status: 'disponible',
     rescuerName: 'Comité de Rescate Tolima',
@@ -392,7 +392,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
     },
     personality: ['Tierno', 'Dócil', 'Juguetón', 'Compañero'],
     photos: [
-      '/src/assets/images/chopper_rescue_1788225394304.jpg'
+      '/images/chopper_rescue_1788225394304.jpg'
     ],
     status: 'disponible',
     rescuerName: 'Dra. Sofía Rescatista',
@@ -418,7 +418,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
     },
     personality: ['Noble', 'Tranquilo', 'Leal', 'Atento'],
     photos: [
-      '/src/assets/images/hades_rescue_1788225379594.jpg'
+      '/images/hades_rescue_1788225379594.jpg'
     ],
     status: 'disponible',
     rescuerName: 'Pata Amiga Purificación',
@@ -448,8 +448,8 @@ export const INITIAL_HEALTH_EVENTS: HealthEvent[] = [
       'Gatos en guacal o canastilla segura, nunca en brazos.',
       'Llevar cobija limpia y toalla para la recuperación posquirúrgica.'
     ],
-    totalSpots: 80,
-    registeredCount: 54,
+    totalSpots: 25,
+    registeredCount: 19,
     contactPhone: '+57 312 890 4521',
     contactOrganizer: 'Alcaldía Municipal & Colectivo Pata Amiga',
     status: 'proximo'
@@ -472,8 +472,8 @@ export const INITIAL_HEALTH_EVENTS: HealthEvent[] = [
       'Llevar el carné de vacunación anterior si lo tiene.',
       'El tutor debe ser mayor de edad.'
     ],
-    totalSpots: 150,
-    registeredCount: 92,
+    totalSpots: 25,
+    registeredCount: 22,
     contactPhone: '+57 314 772 1093',
     contactOrganizer: 'Secretaría de Salud y Pata Amiga',
     status: 'proximo'
@@ -495,8 +495,8 @@ export const INITIAL_HEALTH_EVENTS: HealthEvent[] = [
       'Medicamentos vigentes.',
       'Participación de voluntarios para clasificación.'
     ],
-    totalSpots: 200,
-    registeredCount: 110,
+    totalSpots: 25,
+    registeredCount: 14,
     contactPhone: '+57 310 445 8892',
     contactOrganizer: 'Red de Voluntarios Tolimenses',
     status: 'proximo'

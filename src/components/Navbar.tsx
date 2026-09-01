@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Menu, 
   X, 
   LogOut, 
-  MessageSquare, 
   AlertCircle, 
   Calendar, 
   Mail, 
   Home, 
   BookOpen, 
-  Heart 
+  Heart,
+  Bell,
+  ShieldCheck
 } from 'lucide-react';
 import { User } from '../types';
 import { AuthController } from '../controllers/authController';
+import { StoreController } from '../controllers/storeController';
 import { Logo } from './Logo';
 
 interface NavbarProps {
@@ -20,7 +22,7 @@ interface NavbarProps {
   setActiveTab: (tab: string) => void;
   currentUser: User | null;
   onOpenAuth: (mode?: 'login' | 'register' | 'forgot') => void;
-  unreadCount?: number;
+  onOpenNotifications?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -28,9 +30,20 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveTab,
   currentUser,
   onOpenAuth,
-  unreadCount = 0
+  onOpenNotifications
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(() => StoreController.getUnreadCount());
+
+  const isAdmin = AuthController.isAdmin(currentUser);
+
+  useEffect(() => {
+    const handleDataChange = () => {
+      setUnreadCount(StoreController.getUnreadCount());
+    };
+    window.addEventListener('pata-data-change', handleDataChange);
+    return () => window.removeEventListener('pata-data-change', handleDataChange);
+  }, []);
 
   const handleLogout = () => {
     AuthController.logout();
@@ -40,8 +53,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'inicio', label: 'Inicio', icon: Home },
     { id: 'adopcion', label: 'Adoptar', icon: Heart },
     { id: 'reportar', label: 'Reportar', icon: AlertCircle },
-    { id: 'eventos', label: 'Eventos', icon: Calendar },
-    { id: 'blog', label: 'Blog', icon: BookOpen },
+    { id: 'eventos', label: 'Brigadas', icon: Calendar },
+    { id: 'blog', label: 'Historias', icon: BookOpen },
     { id: 'contacto', label: 'Contacto', icon: Mail }
   ];
 
@@ -68,7 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   key={item.id}
                   id={`nav-link-${item.id}`}
                   onClick={() => setActiveTab(item.id)}
-                  className={`relative px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-150 cursor-pointer ${
+                  className={`relative px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-150 cursor-pointer ${
                     isActive
                       ? 'border border-[#9E6B38] text-[#9E6B38] bg-[#FDFBF7] font-semibold shadow-xs'
                       : 'text-[#5C4538] hover:text-[#2C1E14] hover:bg-[#F6EFE5]'
@@ -78,10 +91,41 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               );
             })}
+
+            {/* Admin Panel Tab Link (Exclusive for Admins) */}
+            {isAdmin && (
+              <button
+                id="nav-link-admin"
+                onClick={() => setActiveTab('admin')}
+                className={`relative px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-150 cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'admin'
+                    ? 'bg-[#2C1E14] text-[#FAF6F0] font-semibold shadow-xs'
+                    : 'bg-[#FAF6F0] text-[#9E6B38] border border-[#E8DFD3] hover:bg-[#F3ECE0]'
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4 text-[#9E6B38]" />
+                <span>Panel Admin</span>
+              </button>
+            )}
           </nav>
 
-          {/* User Auth Section (Desktop) */}
-          <div className="hidden lg:flex items-center gap-2.5">
+          {/* User Auth & Notification Section (Desktop) */}
+          <div className="hidden lg:flex items-center gap-2">
+            {/* Notification Bell */}
+            <button
+              id="notification-bell-btn"
+              onClick={onOpenNotifications}
+              className="relative p-2 text-[#5C4538] hover:text-[#2C1E14] hover:bg-[#FAF6F0] rounded-full transition cursor-pointer border border-[#E8DFD3]"
+              title="Avisos y notificaciones de brigadas"
+            >
+              <Bell className="w-4 h-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
             {currentUser ? (
               <div className="flex items-center gap-2.5 bg-[#FAF6F0] pl-3 pr-2 py-1 rounded-full border border-[#E8DFD3]">
                 <div className="w-7 h-7 rounded-full bg-[#9E6B38] text-white flex items-center justify-center font-bold text-xs shadow-inner">
@@ -128,8 +172,21 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          {/* Mobile Menu Toggle Button */}
-          <div className="lg:hidden flex items-center gap-2">
+          {/* Mobile Menu & Bell Toggle */}
+          <div className="lg:hidden flex items-center gap-1.5">
+            <button
+              onClick={onOpenNotifications}
+              className="relative p-2 text-[#5C4538] hover:bg-[#FAF6F0] rounded-xl cursor-pointer border border-[#E8DFD3]"
+              title="Notificaciones"
+            >
+              <Bell className="w-4 h-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
             {!currentUser && (
               <button
                 onClick={() => onOpenAuth('login')}
@@ -138,6 +195,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Ingresar
               </button>
             )}
+
             <button
               id="mobile-menu-toggle-btn"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -199,6 +257,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               );
             })}
+
+            {isAdmin && (
+              <button
+                id="mobile-nav-admin"
+                onClick={() => {
+                  setActiveTab('admin');
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`w-full px-4 py-2.5 rounded-xl text-sm font-medium transition flex items-center justify-between cursor-pointer ${
+                  activeTab === 'admin'
+                    ? 'bg-[#2C1E14] text-white font-semibold'
+                    : 'bg-white text-[#9E6B38] border border-[#E8DFD3]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <ShieldCheck className="w-4 h-4 text-[#9E6B38]" />
+                  <span>Panel Administrador</span>
+                </div>
+              </button>
+            )}
           </div>
 
           {!currentUser && (
