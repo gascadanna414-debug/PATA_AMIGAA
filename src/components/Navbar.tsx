@@ -194,33 +194,57 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Mobile Menu & Bell Toggle */}
-          <div className="lg:hidden flex items-center gap-1.5">
+          <div className="lg:hidden flex items-center gap-1 sm:gap-2 shrink-0">
             <button
               onClick={onOpenNotifications}
-              className="relative p-1.5 sm:p-2 text-[#5C4538] hover:bg-[#FAF6F0] rounded-xl cursor-pointer border border-[#E8DFD3]"
+              className="relative p-2 text-[#5C4538] hover:bg-[#FAF6F0] rounded-xl cursor-pointer border border-[#E8DFD3] min-w-[40px] min-h-[40px] flex items-center justify-center"
               title="Notificaciones"
+              aria-label="Abrir notificaciones"
             >
               <Bell className="w-4 h-4" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-white">
                   {unreadCount}
                 </span>
               )}
             </button>
 
-            {!currentUser && (
-              <div className="flex items-center gap-1">
+            {currentUser ? (
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="flex items-center gap-1.5 p-1 bg-[#FAF6F0] rounded-full border border-[#E8DFD3] text-left cursor-pointer"
+                title="Perfil"
+              >
+                <div className="w-7 h-7 rounded-full bg-[#9E6B38] text-white flex items-center justify-center font-bold text-xs shadow-inner shrink-0">
+                  {currentUser.avatar ? (
+                    <img 
+                      src={resolveImageUrl(currentUser.avatar, 'avatar')} 
+                      alt={currentUser.name} 
+                      className="w-full h-full rounded-full object-cover"
+                      onError={(e) => handleImageError(e, 'avatar')}
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    currentUser.name.charAt(0).toUpperCase()
+                  )}
+                </div>
+                <span className="hidden xs:inline-block text-xs font-bold text-[#2C1E14] max-w-[80px] sm:max-w-[110px] truncate pr-1.5">
+                  {currentUser.name.split(' ')[0]}
+                </span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-1 sm:gap-1.5">
                 <button
                   id="mobile-open-login-btn"
                   onClick={() => onOpenAuth('login')}
-                  className="text-[11px] sm:text-xs px-2.5 py-1.5 text-[#5C4538] hover:text-[#2C1E14] border border-[#D5C8B8] rounded-full font-medium cursor-pointer"
+                  className="text-xs px-2.5 sm:px-3 py-1.5 text-[#5C4538] hover:text-[#2C1E14] border border-[#D5C8B8] rounded-full font-medium cursor-pointer transition min-h-[36px] flex items-center"
                 >
                   Ingresar
                 </button>
                 <button
                   id="mobile-open-register-btn"
                   onClick={() => onOpenAuth('register')}
-                  className="text-[11px] sm:text-xs px-2.5 py-1.5 bg-[#9E6B38] hover:bg-[#86582A] text-white font-semibold rounded-full shadow-xs cursor-pointer whitespace-nowrap"
+                  className="hidden sm:inline-flex text-xs px-3 py-1.5 bg-[#9E6B38] hover:bg-[#86582A] text-white font-semibold rounded-full shadow-xs cursor-pointer whitespace-nowrap min-h-[36px] items-center"
                 >
                   Registrarse
                 </button>
@@ -230,10 +254,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               id="mobile-menu-toggle-btn"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-1.5 sm:p-2 rounded-xl text-[#5C4538] hover:text-[#2C1E14] hover:bg-[#F5EDE2] transition cursor-pointer"
+              className="p-2 rounded-xl text-[#5C4538] hover:text-[#2C1E14] hover:bg-[#F5EDE2] transition cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center"
               aria-label="Abrir menú de navegación"
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
             </button>
           </div>
         </div>

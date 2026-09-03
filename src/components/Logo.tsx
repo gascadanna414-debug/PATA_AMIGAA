@@ -84,21 +84,26 @@ export const Logo: React.FC<LogoProps> = ({
 
       {/* Brand Typography */}
       {showText && (
-        <div className="flex flex-col text-left">
-          <div className="flex items-center gap-1.5 leading-tight">
-            <span className={`font-bold font-['Fraunces',serif] tracking-tight ${
+        <div className="flex flex-col text-left min-w-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 leading-tight">
+            <span className={`font-bold font-['Fraunces',serif] tracking-tight whitespace-nowrap ${
               variant === 'light' ? 'text-[#FAF6F0]' : 'text-[#2C1E14]'
             } ${textSizes[size]}`}>
               Pata<span className="text-[#9E6B38] italic">Amiga</span>
             </span>
-            <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#FAF6F0] text-[#2C1E14] border border-[#EAE2D5]">
+            <span className="hidden xxs:inline-block text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#FAF6F0] text-[#2C1E14] border border-[#EAE2D5]">
               Tolima
             </span>
           </div>
-          <span className={`text-[10px] font-medium tracking-wide ${
+          <span className={`text-[9px] sm:text-[10px] font-medium tracking-wide hidden sm:block truncate ${
             variant === 'light' ? 'text-[#D8C7BA]' : 'text-[#6E574B]'
           }`}>
             Purificación • Red de Bienestar Animal
+          </span>
+          <span className={`text-[9px] font-medium tracking-wide sm:hidden ${
+            variant === 'light' ? 'text-[#D8C7BA]' : 'text-[#6E574B]'
+          }`}>
+            Purificación, Tolima
           </span>
         </div>
       )}

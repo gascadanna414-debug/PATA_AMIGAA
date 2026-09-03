@@ -7,7 +7,9 @@ import {
   ShieldCheck, 
   CheckCheck, 
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  ChevronLeft,
+  Users
 } from 'lucide-react';
 import { ChatChannel, ChatMessage, User } from '../types';
 import { StoreController } from '../controllers/storeController';
@@ -30,6 +32,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [inputText, setInputText] = useState('');
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [mobileView, setMobileView] = useState<'channels' | 'chat'>('chat');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -127,13 +130,18 @@ export const ChatView: React.FC<ChatViewProps> = ({
       </div>
 
       {/* Main Chat Box Container */}
-      <div className="bg-white rounded-3xl border border-[#EAE2D5] shadow-xs overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[600px] h-[75vh]">
+      <div className="bg-white rounded-3xl border border-[#EAE2D5] shadow-xs overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[500px] sm:min-h-[600px] h-[75vh]">
         {/* Left Side: Channel / Contact list */}
-        <div className="md:col-span-4 lg:col-span-4 border-r border-[#EAE2D5] bg-[#FAF6F0] flex flex-col">
-          <div className="p-4 border-b border-[#EAE2D5] bg-white">
+        <div className={`md:col-span-5 lg:col-span-4 border-r border-[#EAE2D5] bg-[#FAF6F0] flex flex-col ${
+          mobileView === 'channels' ? 'flex' : 'hidden md:flex'
+        }`}>
+          <div className="p-3.5 sm:p-4 border-b border-[#EAE2D5] bg-white flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C1E14] font-['Fraunces',serif]">
-              Canales de Ayuda en Tolima
+              Canales de Ayuda ({channels.length})
             </h3>
+            <span className="text-[10px] bg-[#FAF6F0] text-[#9E6B38] font-bold px-2 py-0.5 rounded-full border border-[#E8DFD3]">
+              Purificación
+            </span>
           </div>
 
           <div className="overflow-y-auto flex-1 divide-y divide-[#EAE2D5]">
@@ -143,8 +151,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 <button
                   key={chan.id}
                   id={`chat-channel-btn-${chan.id}`}
-                  onClick={() => setActiveChannelId(chan.id)}
-                  className={`w-full p-4 text-left transition flex items-start gap-3 cursor-pointer ${
+                  onClick={() => {
+                    setActiveChannelId(chan.id);
+                    setMobileView('chat');
+                  }}
+                  className={`w-full p-3.5 sm:p-4 text-left transition flex items-start gap-3 cursor-pointer ${
                     isActive 
                       ? 'bg-white border-l-4 border-l-[#9E6B38] shadow-xs' 
                       : 'hover:bg-white/60'
@@ -154,12 +165,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     <img
                       src={resolveImageUrl(chan.avatar, 'volunteer')}
                       alt={chan.name}
-                      className="w-11 h-11 rounded-full object-cover border border-[#EAE2D5]"
+                      className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border border-[#EAE2D5]"
                       onError={(e) => handleImageError(e, 'volunteer')}
                       referrerPolicy="no-referrer"
                     />
                     {chan.online && (
-                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-amber-600 border-2 border-white rounded-full" />
+                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-amber-600 border-2 border-white rounded-full" />
                     )}
                   </div>
 
@@ -210,15 +221,27 @@ export const ChatView: React.FC<ChatViewProps> = ({
         </div>
 
         {/* Right Side: Active Chat Stream & Message Input */}
-        <div className="md:col-span-8 lg:col-span-8 flex flex-col bg-[#FAF6F0]/40">
+        <div className={`md:col-span-7 lg:col-span-8 flex-col bg-[#FAF6F0]/40 ${
+          mobileView === 'chat' ? 'flex' : 'hidden md:flex'
+        }`}>
           {/* Active Chat Header */}
-          <div className="p-4 border-b border-[#EAE2D5] bg-white flex items-center justify-between shadow-xs">
-            <div className="flex items-center gap-3">
-              <div className="relative">
+          <div className="p-3 sm:p-4 border-b border-[#EAE2D5] bg-white flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              {/* Back to Channels button on mobile */}
+              <button
+                onClick={() => setMobileView('channels')}
+                className="md:hidden p-1.5 -ml-1 text-[#6E574B] hover:text-[#2C1E14] hover:bg-[#FAF6F0] rounded-lg cursor-pointer flex items-center gap-0.5 text-xs font-semibold shrink-0"
+                title="Ver lista de canales"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>Canales</span>
+              </button>
+
+              <div className="relative shrink-0">
                 <img
                   src={resolveImageUrl(activeChannel.avatar, 'volunteer')}
                   alt={activeChannel.name}
-                  className="w-10 h-10 rounded-full object-cover border border-[#EAE2D5]"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border border-[#EAE2D5]"
                   onError={(e) => handleImageError(e, 'volunteer')}
                   referrerPolicy="no-referrer"
                 />
@@ -226,18 +249,18 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-amber-600 border border-white rounded-full" />
                 )}
               </div>
-              <div>
-                <h3 className="text-sm font-semibold text-[#2C1E14] flex items-center gap-1.5">
-                  <span>{activeChannel.name}</span>
-                  <ShieldCheck className="w-4 h-4 text-[#9E6B38]" />
+              <div className="min-w-0">
+                <h3 className="text-xs sm:text-sm font-semibold text-[#2C1E14] flex items-center gap-1.5 truncate">
+                  <span className="truncate">{activeChannel.name}</span>
+                  <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#9E6B38] shrink-0" />
                 </h3>
-                <p className="text-xs text-[#8A7568]">
+                <p className="text-[11px] sm:text-xs text-[#8A7568] truncate">
                   {activeChannel.roleDescription} • <span className="text-[#9E6B38] font-medium">En línea</span>
                 </p>
               </div>
             </div>
 
-            <div className="text-xs text-[#8A7568] hidden sm:block">
+            <div className="text-xs text-[#8A7568] hidden sm:block shrink-0">
               Tel: <strong className="text-[#2C1E14]">{activeChannel.phone}</strong>
             </div>
           </div>
