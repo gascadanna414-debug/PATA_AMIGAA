@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Menu, 
   X, 
@@ -334,22 +335,26 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       )}
 
-      {/* Modal de Confirmación de Cierre de Sesión */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+      {/* Modal de Confirmación de Cierre de Sesión (Portal al body para centrado perfecto) */}
+      {showLogoutConfirm && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setShowLogoutConfirm(false)}
+        >
           <div 
             id="logout-confirm-modal"
-            className="relative w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-[#EAE2D5] space-y-4 text-center"
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-sm bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-[#EAE2D5] space-y-4 text-center transform animate-in zoom-in-95 duration-200"
           >
-            <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto border border-rose-100 shadow-inner">
-              <LogOut className="w-6 h-6" />
+            <div className="w-14 h-14 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto border border-rose-100 shadow-inner">
+              <LogOut className="w-7 h-7" />
             </div>
 
-            <div className="space-y-1.5">
-              <h3 className="text-base sm:text-lg font-bold font-['Fraunces',serif] text-[#2C1E14]">
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold font-['Fraunces',serif] text-[#2C1E14]">
                 ¿Estás seguro de que deseas cerrar sesión?
               </h3>
-              <p className="text-xs text-[#6E574B] leading-relaxed">
+              <p className="text-xs sm:text-sm text-[#6E574B] leading-relaxed">
                 Tu sesión activa en Pata Amiga Purificación se cerrará. Podrás volver a iniciar sesión en cualquier momento.
               </p>
             </div>
@@ -359,7 +364,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 id="cancel-logout-btn"
                 type="button"
                 onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 py-2.5 px-4 bg-[#FAF6F0] hover:bg-[#EFE6DA] text-[#5C4538] text-xs font-semibold rounded-full border border-[#E8DFD3] transition cursor-pointer"
+                className="flex-1 py-2.5 px-4 bg-[#FAF6F0] hover:bg-[#EFE6DA] text-[#5C4538] text-xs sm:text-sm font-semibold rounded-full border border-[#E8DFD3] transition cursor-pointer"
               >
                 Cancelar
               </button>
@@ -367,13 +372,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 id="confirm-logout-btn"
                 type="button"
                 onClick={handleConfirmLogout}
-                className="flex-1 py-2.5 px-4 bg-rose-700 hover:bg-rose-800 text-white text-xs font-semibold rounded-full shadow-xs transition cursor-pointer"
+                className="flex-1 py-2.5 px-4 bg-rose-700 hover:bg-rose-800 text-white text-xs sm:text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition cursor-pointer"
               >
                 Sí, cerrar sesión
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );
