@@ -26,7 +26,8 @@ import {
   ExternalLink,
   Sparkles,
   Filter,
-  Check
+  Check,
+  EyeOff
 } from 'lucide-react';
 import { 
   User, 
@@ -36,13 +37,15 @@ import {
   SuccessStory, 
   AnimalReport, 
   EventRegistration,
-  AdoptionApplication
+  AdoptionApplication,
+  ContactMessage
 } from '../types';
 import { AuthController } from '../controllers/authController';
 import { StoreController } from '../controllers/storeController';
 import { PURIFICACION_NEIGHBORHOODS } from '../data/initialData';
 import { resolveImageUrl, handleImageError } from '../utils/imageUtils';
-import { sanitizePhone10, isValidPhone10, formatPhone10 } from '../utils/phoneUtils';
+import { sanitizePhone10, isValidPhone10, formatPhone10, parsePhoneWithCountry } from '../utils/phoneUtils';
+import { PhoneInput } from './PhoneInput';
 
 interface AdminPanelProps {
   currentUser: User | null;
@@ -57,7 +60,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 }) => {
   const isAdmin = AuthController.isAdmin(currentUser);
 
-  const [activeAdminTab, setActiveAdminTab] = useState<'reportes' | 'usuarios' | 'brigadas' | 'adopciones' | 'historias' | 'solicitudes'>('reportes');
+  const [activeAdminTab, setActiveAdminTab] = useState<'reportes' | 'usuarios' | 'brigadas' | 'adopciones' | 'historias' | 'solicitudes' | 'mensajes'>('reportes');
   
   // Data states
   const [usersList, setUsersList] = useState<User[]>(() => AuthController.getAllUsers());
@@ -67,12 +70,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [storiesList, setStoriesList] = useState<SuccessStory[]>(() => StoreController.getSuccessStories());
   const [appsList, setAppsList] = useState<AdoptionApplication[]>(() => StoreController.getAdoptionApplications());
   const [registrationsList, setRegistrationsList] = useState<EventRegistration[]>(() => StoreController.getEventRegistrations());
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>(() => StoreController.getContactMessages());
 
   // Search & filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('todos');
   const [speciesFilter, setSpeciesFilter] = useState<string>('todos');
   const [reportStatusFilter, setReportStatusFilter] = useState<string>('todos');
+  const [messageFilter, setMessageFilter] = useState<'todos' | 'no_leidos' | 'leidos'>('todos');
 
   // Modals & Form States
   const [isAddingUser, setIsAddingUser] = useState(false);
@@ -80,7 +85,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPhone, setNewUserPhone] = useState('');
   const [newUserRole, setNewUserRole] = useState<UserRole>('voluntario');
-  const [newUserPassword, setNewUserPassword] = useState('123456');
+  const [newUserPassword, setNewUserPassword] = useState('');
   const [userModalError, setUserModalError] = useState<string | null>(null);
 
   const [editingPet, setEditingPet] = useState<Partial<AdoptionPet> | null>(null);
@@ -89,9 +94,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [selectedReportDetail, setSelectedReportDetail] = useState<AnimalReport | null>(null);
   const [viewingRegistrationsEventId, setViewingRegistrationsEventId] = useState<string | null>(null);
 
-  // Quick Login State for non-admins viewing the tab
-  const [quickLoginEmail, setQuickLoginEmail] = useState('gascadanna414@gmail.com');
-  const [quickLoginPass, setQuickLoginPass] = useState('123456');
+  // Login State for non-admins viewing the tab (no demo hardcoding)
+  const [quickLoginEmail, setQuickLoginEmail] = useState('');
+  const [quickLoginPass, setQuickLoginPass] = useState('');
+  const [showQuickLoginPass, setShowQuickLoginPass] = useState(false);
   const [quickLoginError, setQuickLoginError] = useState<string | null>(null);
 
   // Success message banner
@@ -110,6 +116,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setStoriesList(StoreController.getSuccessStories());
     setAppsList(StoreController.getAdoptionApplications());
     setRegistrationsList(StoreController.getEventRegistrations());
+    setContactMessages(StoreController.getContactMessages());
   };
 
   useEffect(() => {
@@ -138,22 +145,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     e.preventDefault();
     setUserModalError(null);
 
-    if (!newUserName.trim() || !newUserEmail.trim() || !newUserPhone.trim()) {
-      setUserModalError('Por favor completa todos los campos requeridos.');
+    if (!newUserName.trim() || !newUserEmail.trim() || !newUserPhone.trim() || !newUserPassword.trim()) {
+      setUserModalError('Por favor completa todos los campos obligatorios.');
       return;
     }
 
-    if (!isValidPhone10(newUserPhone)) {
-      setUserModalError('El número de teléfono debe tener exactamente 10 caracteres numéricos (ej: 3128904521).');
+    if (newUserPassword.trim().length < 5 || newUserPassword.trim().length > 13) {
+      setUserModalError('La contraseña debe tener entre 5 y 13 caracteres.');
+      return;
+    }
+
+    const phoneValidation = parsePhoneWithCountry(newUserPhone);
+    if (!phoneValidation.isValid) {
+      setUserModalError(phoneValidation.message);
       return;
     }
 
     const res = AuthController.createUserByAdmin({
-      name: newUserName,
-      email: newUserEmail,
-      phone: newUserPhone,
+      name: newUserName.trim(),
+      email: newUserEmail.trim(),
+      phone: newUserPhone.trim(),
       role: newUserRole,
-      password: newUserPassword
+      password: newUserPassword.trim()
     });
 
     if (res.success) {
@@ -161,11 +174,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       setNewUserName('');
       setNewUserEmail('');
       setNewUserPhone('');
-      setNewUserPassword('123456');
+      setNewUserPassword('');
       refreshAllData();
       showNotification(res.message);
     } else {
       setUserModalError(res.message);
+    }
+  };
+
+  const handleMarkMessageRead = (msgId: string) => {
+    StoreController.markContactMessageRead(msgId);
+    refreshAllData();
+    showNotification('Mensaje marcado como leído.');
+  };
+
+  const handleDeleteContactMessage = (msgId: string, senderName: string) => {
+    if (confirm(`¿Estás seguro de eliminar el mensaje de ${senderName}?`)) {
+      StoreController.deleteContactMessage(msgId);
+      refreshAllData();
+      showNotification('Mensaje eliminado.');
     }
   };
 
@@ -329,18 +356,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
   };
 
-  // Quick Demo Admin Login Action
-  const handleAdminQuickLogin = () => {
+  // Admin Login Action (without demo bypass)
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
     setQuickLoginError(null);
-    const res = AuthController.login(quickLoginEmail, quickLoginPass);
+
+    if (!quickLoginEmail.trim() || !quickLoginPass.trim()) {
+      setQuickLoginError('Por favor ingresa tu correo y contraseña de administrador.');
+      return;
+    }
+
+    const res = AuthController.login(quickLoginEmail.trim(), quickLoginPass.trim());
     if (res.success) {
-      refreshAllData();
+      const user = AuthController.getCurrentUser();
+      if (user && AuthController.isAdmin(user)) {
+        refreshAllData();
+        showNotification(`Bienvenido(a) al Panel Administrativo, ${user.name}`);
+      } else {
+        setQuickLoginError('Esta cuenta no cuenta con permisos de Administrador.');
+      }
     } else {
       setQuickLoginError(res.message);
     }
   };
 
-  // If NOT ADMIN: Show friendly 1-click Admin Access Banner
+  // If NOT ADMIN: Show secure Administrator Access Gate
   if (!currentUser || !isAdmin) {
     return (
       <div className="py-12 px-4 max-w-xl mx-auto space-y-6">
@@ -351,10 +391,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
           <div className="space-y-2">
             <h2 className="text-2xl font-bold font-['Fraunces',serif] text-[#2C1E14]">
-              Acceso al Panel de Administración
+              Panel de Administración
             </h2>
             <p className="text-xs sm:text-sm text-[#6E574B] leading-relaxed">
-              Este módulo permite administrar los usuarios registrados, modificar los animales en adopción, gestionar reportes ciudadanos y editar las brigadas de salud (límite 25 cupos) en Purificación, Tolima.
+              Módulo exclusivo para administradores autorizados de Pata Amiga Purificación. Permite gestionar usuarios registrados, animales en adopción, reportes ciudadanos, brigadas de salud y mensajes de contacto.
             </p>
           </div>
 
@@ -364,34 +404,80 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           )}
 
-          {/* 1-Click Fast Admin Access Button */}
-          <div className="p-4 bg-[#FAF6F0] rounded-2xl border border-[#E8DFD3] space-y-3">
-            <div className="text-xs text-[#5C4538] text-left space-y-1">
-              <p className="font-bold text-[#2C1E14] flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-[#9E6B38]" />
-                Acceso Rápido Administrador (Danna Gascá)
-              </p>
-              <p className="text-[11px] text-[#8A7568]">
-                Haz clic en el botón a continuación para autenticarte instantáneamente como Administradora Central:
-              </p>
+          {/* Secure Admin Login Form */}
+          <form onSubmit={handleAdminLogin} className="p-5 bg-[#FAF6F0] rounded-2xl border border-[#E8DFD3] space-y-3.5 text-left">
+            <div>
+              <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
+                Correo Electrónico de Administrador
+              </label>
+              <input
+                id="admin-login-email"
+                type="email"
+                required
+                value={quickLoginEmail}
+                onChange={(e) => setQuickLoginEmail(e.target.value)}
+                placeholder="ejemplo@pataamiga.org"
+                autoComplete="email"
+                className="w-full px-3.5 py-2.5 bg-white border border-[#D5C8B8] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
+                Contraseña
+              </label>
+              <div className="relative">
+                <input
+                  id="admin-login-password"
+                  type={showQuickLoginPass ? 'text' : 'password'}
+                  required
+                  value={quickLoginPass}
+                  onChange={(e) => setQuickLoginPass(e.target.value)}
+                  placeholder="Tu contraseña"
+                  autoComplete="current-password"
+                  className="w-full pl-3.5 pr-10 py-2.5 bg-white border border-[#D5C8B8] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowQuickLoginPass(!showQuickLoginPass)}
+                  className="absolute right-3 top-2.5 p-0.5 text-[#8A7568] hover:text-[#9E6B38] focus:outline-none cursor-pointer"
+                  title={showQuickLoginPass ? 'Ocultar contraseña' : 'Ver contraseña'}
+                >
+                  {showQuickLoginPass ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <button
-              id="admin-quick-login-btn"
-              onClick={handleAdminQuickLogin}
+              id="admin-login-submit-btn"
+              type="submit"
               className="w-full py-3 px-4 bg-[#2C1E14] hover:bg-[#3D2C1F] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
             >
               <ShieldCheck className="w-4 h-4 text-[#9E6B38]" />
-              <span>Ingresar como Administrador (gascadanna414@gmail.com)</span>
+              <span>Ingresar al Panel Administrativo</span>
             </button>
-          </div>
+          </form>
 
           {currentUser && !isAdmin && (
             <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 text-left space-y-1">
               <p>Sesión activa actual: <strong>{currentUser.name}</strong> ({currentUser.email})</p>
-              <p>Rol: <strong className="uppercase">{currentUser.role}</strong>. Inicia como Administrador para acceder al panel.</p>
+              <p>Rol: <strong className="uppercase">{currentUser.role}</strong>. Inicia sesión con una cuenta de Administrador para acceder.</p>
             </div>
           )}
+
+          <div className="pt-2 text-center">
+            <button
+              type="button"
+              onClick={() => onOpenAuth('login')}
+              className="text-xs text-[#9E6B38] hover:underline font-semibold"
+            >
+              ¿Deseas iniciar sesión desde el diálogo general? Haz clic aquí
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -448,14 +534,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       )}
 
       {/* Admin Tabs Navigation */}
-      <div className="flex flex-wrap items-center gap-2 bg-[#FAF6F0] p-1.5 rounded-full border border-[#E8DFD3]">
+      <div className="flex flex-wrap items-center gap-2 bg-[#FAF6F0] p-1.5 rounded-2xl sm:rounded-full border border-[#E8DFD3]">
         {[
-          { id: 'reportes', label: `Reportes Ciudadanos (${reportsList.length})`, icon: AlertCircle },
-          { id: 'usuarios', label: `Personas Registradas (${usersList.length})`, icon: Users },
-          { id: 'adopciones', label: `Animales en Adopción (${petsList.length})`, icon: Heart },
-          { id: 'brigadas', label: `Modificar Brigadas (${eventsList.length})`, icon: Calendar },
-          { id: 'solicitudes', label: `Solicitudes Adopción (${appsList.length})`, icon: UserCheck },
-          { id: 'historias', label: `Historias Rescate (${storiesList.length})`, icon: BookOpen }
+          { id: 'reportes', label: `Reportes Ciudadanos (${reportsList.length})`, icon: AlertCircle, count: 0 },
+          { id: 'usuarios', label: `Personas Registradas (${usersList.length})`, icon: Users, count: 0 },
+          { id: 'adopciones', label: `Animales en Adopción (${petsList.length})`, icon: Heart, count: 0 },
+          { id: 'brigadas', label: `Modificar Brigadas (${eventsList.length})`, icon: Calendar, count: 0 },
+          { id: 'solicitudes', label: `Solicitudes Adopción (${appsList.length})`, icon: UserCheck, count: 0 },
+          { id: 'mensajes', label: `Mensajes de Contacto (${contactMessages.length})`, icon: Mail, count: contactMessages.filter(m => !m.read).length },
+          { id: 'historias', label: `Historias Rescate (${storiesList.length})`, icon: BookOpen, count: 0 }
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeAdminTab === tab.id;
@@ -467,7 +554,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 setActiveAdminTab(tab.id as any);
                 setSearchQuery('');
               }}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-2 ${
+              className={`px-3.5 py-2 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-2 ${
                 isActive
                   ? 'bg-[#9E6B38] text-white shadow-xs'
                   : 'text-[#6E574B] hover:text-[#2C1E14] hover:bg-white/60'
@@ -475,6 +562,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             >
               <Icon className="w-3.5 h-3.5" />
               <span>{tab.label}</span>
+              {tab.count > 0 && (
+                <span className="ml-0.5 px-1.5 py-0.2 bg-red-600 text-white text-[10px] font-bold rounded-full animate-pulse">
+                  {tab.count}
+                </span>
+              )}
             </button>
           );
         })}
@@ -704,7 +796,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <tr>
                     <th className="px-4 py-3">Nombre Completo</th>
                     <th className="px-4 py-3">Correo Electrónico</th>
-                    <th className="px-4 py-3">Teléfono (10 Dígitos)</th>
+                    <th className="px-4 py-3">Teléfono / Celular</th>
                     <th className="px-4 py-3">Rol</th>
                     <th className="px-4 py-3">Fecha Registro</th>
                     <th className="px-4 py-3 text-right">Acciones</th>
@@ -721,7 +813,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       return matchQuery && matchRole;
                     })
                     .map(user => {
-                      const cleanPhone = user.phone ? sanitizePhone10(user.phone) : '';
+                      const cleanPhone = user.phone ? user.phone.replace(/[^0-9]/g, '') : '';
+                      const waPhone = cleanPhone.startsWith('57') ? cleanPhone : cleanPhone.length === 10 ? `57${cleanPhone}` : cleanPhone;
 
                       return (
                         <tr key={user.id} className="hover:bg-[#FAF6F0]/60 transition">
@@ -741,10 +834,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             {user.phone ? (
                               <div className="flex items-center gap-2">
                                 <span className="font-mono text-xs text-[#9E6B38] bg-[#FAF6F0] px-2 py-0.5 rounded-md border border-[#E8DFD3]">
-                                  {formatPhone10(user.phone)}
+                                  {user.phone}
                                 </span>
                                 <a
-                                  href={`https://wa.me/57${cleanPhone}`}
+                                  href={`https://wa.me/${waPhone}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-emerald-600 hover:text-emerald-700 p-1"
@@ -1233,6 +1326,205 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       )}
 
       {/* ========================================================================= */}
+      {/* TAB 7: MENSAJES DE CONTACTO CIUDADANO (Buzón de Atención) */}
+      {/* ========================================================================= */}
+      {activeAdminTab === 'mensajes' && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#EAE2D5]">
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold font-['Fraunces',serif] text-[#2C1E14]">
+                  Buzón de Mensajes de Contacto ({contactMessages.length})
+                </h2>
+                {contactMessages.filter(m => !m.read).length > 0 && (
+                  <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 font-bold px-2 py-0.5 rounded-full">
+                    {contactMessages.filter(m => !m.read).length} sin leer
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-[#6E574B]">
+                Consultas, solicitudes de rescate y mensajes enviados por la comunidad a través del formulario de contacto.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <select
+                value={messageFilter}
+                onChange={(e) => setMessageFilter(e.target.value as any)}
+                className="px-3 py-1.5 bg-[#FAF6F0] border border-[#E8DFD3] rounded-full text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+              >
+                <option value="todos">Todos los mensajes</option>
+                <option value="no_leidos">Solo no leídos</option>
+                <option value="leidos">Solo leídos</option>
+              </select>
+
+              <div className="relative flex-1 sm:w-60">
+                <Search className="w-3.5 h-3.5 text-[#8A7568] absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="Buscar remitente, asunto o texto..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 bg-[#FAF6F0] border border-[#E8DFD3] rounded-full text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {contactMessages
+              .filter(msg => {
+                const matchFilter = 
+                  messageFilter === 'todos' || 
+                  (messageFilter === 'no_leidos' && !msg.read) || 
+                  (messageFilter === 'leidos' && msg.read);
+
+                const matchQuery = !searchQuery ||
+                  msg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  msg.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  msg.phone.includes(searchQuery) ||
+                  msg.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  msg.message.toLowerCase().includes(searchQuery.toLowerCase());
+
+                return matchFilter && matchQuery;
+              })
+              .map(msg => {
+                const cleanPhone = msg.phone ? msg.phone.replace(/[^0-9]/g, '') : '';
+                const waPhone = cleanPhone.startsWith('57') ? cleanPhone : cleanPhone.length === 10 ? `57${cleanPhone}` : cleanPhone;
+
+                return (
+                  <div 
+                    key={msg.id}
+                    className={`bg-white rounded-2xl border transition shadow-xs overflow-hidden ${
+                      !msg.read ? 'border-[#9E6B38] ring-1 ring-[#9E6B38]/20 bg-[#FDFBF7]' : 'border-[#EAE2D5]'
+                    }`}
+                  >
+                    <div className="p-4 sm:p-5 space-y-3">
+                      {/* Top bar: Sender info & status */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#F0E8DC] pb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-[#9E6B38] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                            {msg.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-sm text-[#2C1E14]">{msg.name}</span>
+                              {!msg.read ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping" />
+                                  Nuevo
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-medium bg-[#FAF6F0] text-[#8A7568] px-2 py-0.5 rounded-full border border-[#E8DFD3]">
+                                  Leído
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-[#8A7568] flex items-center gap-1 mt-0.5">
+                              <Clock className="w-3 h-3 text-[#9E6B38]" />
+                              {msg.submittedAt}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Contact details tags */}
+                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                          <a
+                            href={`mailto:${msg.email}?subject=Re: ${encodeURIComponent(msg.subject)}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#FAF6F0] hover:bg-[#EFE6DA] text-[#5C4538] rounded-lg border border-[#E8DFD3] transition"
+                            title="Enviar correo"
+                          >
+                            <Mail className="w-3 h-3 text-[#9E6B38]" />
+                            <span className="font-mono text-[11px]">{msg.email}</span>
+                          </a>
+
+                          {msg.phone && (
+                            <a
+                              href={`https://wa.me/${waPhone}?text=${encodeURIComponent(`Hola ${msg.name}, te escribimos desde Pata Amiga Purificación respecto a tu mensaje sobre "${msg.subject}".`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg border border-emerald-200 transition font-semibold text-[11px]"
+                              title="Responder por WhatsApp"
+                            >
+                              <MessageCircle className="w-3 h-3 text-emerald-600" />
+                              <span className="font-mono">{msg.phone}</span>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Subject and body */}
+                      <div className="space-y-1.5">
+                        <div className="text-xs font-bold text-[#9E6B38] uppercase tracking-wide flex items-center gap-1.5">
+                          <span>Asunto:</span>
+                          <span className="text-[#2C1E14] font-semibold normal-case text-sm">{msg.subject}</span>
+                        </div>
+                        <div className="bg-[#FAF6F0] p-3.5 rounded-xl border border-[#E8DFD3] text-xs text-[#4A382D] leading-relaxed whitespace-pre-line">
+                          {msg.message}
+                        </div>
+                      </div>
+
+                      {/* Actions footer */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                        <div className="flex items-center gap-2">
+                          {!msg.read && (
+                            <button
+                              onClick={() => handleMarkMessageRead(msg.id)}
+                              className="px-3 py-1.5 bg-[#FAF6F0] hover:bg-[#EFE6DA] text-[#5C4538] hover:text-[#2C1E14] text-xs font-semibold rounded-lg border border-[#D5C8B8] flex items-center gap-1.5 transition cursor-pointer"
+                            >
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Marcar como leído</span>
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {msg.phone && (
+                            <a
+                              href={`https://wa.me/${waPhone}?text=${encodeURIComponent(`Hola ${msg.name}, te escribimos desde Pata Amiga Purificación respecto a tu consulta: ${msg.subject}`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                              <span>WhatsApp</span>
+                            </a>
+                          )}
+                          <a
+                            href={`mailto:${msg.email}?subject=Re: ${encodeURIComponent(msg.subject)}`}
+                            className="px-3 py-1.5 bg-[#9E6B38] hover:bg-[#86582A] text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+                          >
+                            <Mail className="w-3.5 h-3.5" />
+                            <span>Responder</span>
+                          </a>
+                          <button
+                            onClick={() => handleDeleteContactMessage(msg.id, msg.name)}
+                            className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg border border-red-200 transition cursor-pointer"
+                            title="Eliminar mensaje"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+            {contactMessages.length === 0 && (
+              <div className="bg-white rounded-2xl p-8 border border-[#EAE2D5] text-center space-y-2">
+                <Mail className="w-8 h-8 text-[#8A7568] mx-auto opacity-50" />
+                <h3 className="text-sm font-bold text-[#2C1E14]">No hay mensajes de contacto registrados aún</h3>
+                <p className="text-xs text-[#6E574B]">
+                  Los mensajes que los ciudadanos envíen mediante el formulario de contacto aparecerán automáticamente aquí.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
       {/* MODAL: REGISTRAR NUEVO USUARIO */}
       {/* ========================================================================= */}
       {isAddingUser && (
@@ -1284,16 +1576,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
               <div>
                 <label className="block font-semibold text-[#2C1E14] mb-1">
-                  Teléfono / Celular * <span className="text-[10px] text-[#8A7568] font-normal">(Exactamente 10 dígitos)</span>
+                  Teléfono / Celular *
                 </label>
-                <input
-                  type="tel"
-                  required
-                  maxLength={10}
+                <PhoneInput
+                  id="admin-create-user-phone"
                   value={newUserPhone}
-                  onChange={e => setNewUserPhone(sanitizePhone10(e.target.value))}
-                  placeholder="3128904521"
-                  className="w-full px-3 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+                  onChange={setNewUserPhone}
+                  required
                 />
               </div>
 
@@ -1313,15 +1602,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-[#2C1E14] mb-1">Contraseña Inicial</label>
+                  <label className="block font-semibold text-[#2C1E14] mb-1">Contraseña (mínimo 4 car.) *</label>
                   <input
-                    type="text"
+                    type="password"
                     required
-                    minLength={5}
-                    maxLength={13}
+                    minLength={4}
                     value={newUserPassword}
                     onChange={e => setNewUserPassword(e.target.value)}
-                    placeholder="123456"
+                    placeholder="Contraseña"
                     className="w-full px-3 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-[#2C1E14]"
                   />
                 </div>

@@ -184,6 +184,7 @@ export default function App() {
 
       {/* Auth Modal (Login / Register / Recover Password) */}
       <AuthModal
+        key={`auth-modal-${authMode}-${isAuthModalOpen}`}
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         initialMode={authMode}

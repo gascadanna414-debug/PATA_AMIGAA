@@ -8,13 +8,13 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     breed: 'Mestizo de Pitbull',
     estimatedAge: '2 años',
     rescueLocation: 'Vía hacia Saldaña, Purificación Tolima',
-    rescueStory: 'Hades no siempre tuvo nombre. Durante mucho tiempo fue solo una sombra más al borde del camino, moviéndose rápido entre el ruido de los motores y el olor a asfalto caliente. Había aprendido a sobrevivir esquivando ruedas, buscando restos de comida y confiando solo en su instinto. Pero lo curioso de Hades es que, incluso en medio de todo eso, nunca perdió algo muy suyo: la curiosidad y la nobleza.',
-    adoptionStory: 'Un día se detuvo frente a un taller donde una voluntaria de Pata Amiga le ofreció agua limpia. No huyó. Se quedó esperando, con los ojos atentos y la cola moviéndose apenas un poco. Tras su chequeo veterinario y esterilización, fue adoptado por Don Fernando y su familia en Purificación, donde hoy duerme tranquilo en su propio patio.',
+    rescueStory: 'Hades no siempre tuvo nombre. Durante mucho tiempo fue solo una sombra más al borde del camino, moviéndose rápido entre el ruido de los motores y el olor a asfalto caliente. Había aprendido a sobrevivir esquivando ruedas, buscando restos de comida y confiando solo en su instinto. Pero lo curioso de Hades es que nunca perdió la curiosidad ni la nobleza.',
+    adoptionStory: 'Un día se detuvo frente a un taller donde una voluntaria de Pata Amiga le ofreció agua limpia. No huyó. Se quedó esperando con los ojos atentos y la cola moviéndose apenas un poco. Tras su chequeo veterinario y esterilización, fue adoptado por Don Fernando y su familia en Purificación, donde hoy duerme tranquilo en su propio patio.',
     adoptedFamilyName: 'Familia Ramírez Gómez',
     adoptedDate: '12 de Junio, 2024',
-    healthBefore: 'Deshidratación, almohadillas lastimadas por el asfalto y parásitos.',
+    healthBefore: 'Deshidratación severa, almohadillas lastimadas por el asfalto caliente y parásitos.',
     healthAfter: '100% recuperado, peso ideal, esterilizado, vacunado y muy afectuoso.',
-    beforePhotoUrl: '/images/hades_rescue_1788225379594.jpg',
+    beforePhotoUrl: 'https://images.unsplash.com/photo-1534361960057-19889db98a1e?auto=format&fit=crop&w=800&q=80',
     currentPhotoUrl: '/images/hades_rescue_1788225379594.jpg',
     rescuerName: 'Equipo Voluntario Pata Amiga',
     likes: 89
@@ -26,13 +26,13 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     breed: 'Criollo Mestizo',
     estimatedAge: '1 año',
     rescueLocation: 'Barrio Ospina Pérez, Purificación Tolima',
-    rescueStory: 'El refugio estaba casi en silencio aquella tarde. Afuera, el viento movía las hojas secas como si contaran secretos que nadie escuchaba. Dentro, entre jaulas limpias pero frías, había un perro que no ladraba. No era el más grande ni el más llamativo. Tenía el pelaje opaco, cicatrices que hablaban de un pasado difícil y una mirada tranquila, demasiado tranquila para alguien tan joven.',
-    adoptionStory: 'A diferencia de los demás, no saltaba cuando alguien se acercaba. Solo observaba con ternura. Los voluntarios decían que había llegado solo una mañana sentado frente a la puerta esperando. Hoy Chopper es el consentido indiscutible de la familia Castro Morales en su finca campestre.',
+    rescueStory: 'Afuera, el viento movía las hojas secas en el refugio. Había un perro que no ladraba; tenía el pelaje opaco, cicatrices que hablaban de un pasado difícil y una mirada tranquila, demasiado tranquila para alguien tan joven.',
+    adoptionStory: 'A diferencia de los demás, no saltaba cuando alguien se acercaba. Solo observaba con ternura. Los voluntarios decían que había llegado solo una mañana sentado frente a la puerta esperando. Hoy Chopper es el consentido indiscutible de la familia Castro Morales en su finca campestre en Purificación.',
     adoptedFamilyName: 'Familia Castro Morales',
     adoptedDate: '24 de Agosto, 2024',
-    healthBefore: 'Bajo peso, anemia leve y pelaje maltratado.',
+    healthBefore: 'Bajo peso, anemia leve, cicatrices y pelaje maltratado.',
     healthAfter: 'Totalmente revitalizado, pelaje brillante, carné de vacunas completo y esterilizado.',
-    beforePhotoUrl: '/images/chopper_rescue_1788225394304.jpg',
+    beforePhotoUrl: 'https://images.unsplash.com/photo-1507146426996-ef05306b995a?auto=format&fit=crop&w=800&q=80',
     currentPhotoUrl: '/images/chopper_rescue_1788225394304.jpg',
     rescuerName: 'Dra. Sofía - Rescatista Purificación',
     likes: 94
@@ -50,7 +50,7 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '18 de Julio, 2024',
     healthBefore: 'Desnutrición moderada, cojera en miembro anterior izquierdo y pulgas.',
     healthAfter: 'Corre con total energía, pelaje dorado radiante, peso óptimo y vacunación completa.',
-    beforePhotoUrl: '/images/mateo_rescue_story_1788226480262.jpg',
+    beforePhotoUrl: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=800&q=80',
     currentPhotoUrl: '/images/mateo_rescue_story_1788226480262.jpg',
     rescuerName: 'Brigadistas Río Magdalena Purificación',
     likes: 67
@@ -66,9 +66,9 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptionStory: 'Con ayuda de la comunidad y una escalera alta, fue rescatada a salvo. Resultó ser una gata increíblemente dulce y cariñosa. Fue adoptada por una pareja de jóvenes médicos que buscaban una compañera hogareña.',
     adoptedFamilyName: 'Dra. Valentina & Dr. Camilo',
     adoptedDate: '05 de Septiembre, 2024',
-    healthBefore: 'Hipotermia leve, asustadiza y deshidratada.',
+    healthBefore: 'Hipotermia leve, asustadiza, pelaje húmedo y deshidratada.',
     healthAfter: 'Esterilizada, ronroneadora experta, con peso saludable y vacunas felinas al día.',
-    beforePhotoUrl: '/images/kiara_cat_rescue_1788226493062.jpg',
+    beforePhotoUrl: 'https://images.unsplash.com/photo-1561948955-570b270e7c36?auto=format&fit=crop&w=800&q=80',
     currentPhotoUrl: '/images/kiara_cat_rescue_1788226493062.jpg',
     rescuerName: 'Equipo Voluntario Purificación',
     likes: 72
@@ -86,7 +86,7 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '14 de Octubre, 2024',
     healthBefore: 'Dermatitis solar, bajo peso y marcas de rozamiento en el cuello.',
     healthAfter: 'Pelaje grueso y brillante, esterilizado, sociable con otros perros y muy protector.',
-    beforePhotoUrl: '/images/bruno_dog_rescue_1788226506971.jpg',
+    beforePhotoUrl: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=800&q=80',
     currentPhotoUrl: '/images/bruno_dog_rescue_1788226506971.jpg',
     rescuerName: 'Rescate Rural Purificación',
     likes: 81
@@ -98,13 +98,13 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     breed: 'Cachorrita Mestiza',
     estimatedAge: '6 meses',
     rescueLocation: 'Sector Santander, Purificación Tolima',
-    rescueStory: 'Nala fue abandonada en una caja de cartón cerca de la escuela del barrio Santander junto con dos de sus hermanitos cuando apenas tenían unas pocas semanas de vida.',
+    rescueStory: 'Nala fue abandonada en una caja de cartón cerca de la escuela del barrio Santander junto con sus hermanitos cuando apenas tenían unas pocas semanas de vida.',
     adoptionStory: 'Fueron alimentados con biberón en un hogar de paso voluntario. Nala fue la primera en ser adoptada por la familia Pineda, quienes tienen dos niños que ahora son sus compañeros inseparables de juegos.',
     adoptedFamilyName: 'Familia Pineda Ruiz',
     adoptedDate: '02 de Noviembre, 2024',
     healthBefore: 'Lactante huérfana, baja temperatura y parásitos intestinales.',
     healthAfter: 'Cachorra juguetona y sana, con esquema completo de vacunación y microchip.',
-    beforePhotoUrl: '/images/nala_puppy_rescue_1788226520622.jpg',
+    beforePhotoUrl: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=800&q=80',
     currentPhotoUrl: '/images/nala_puppy_rescue_1788226520622.jpg',
     rescuerName: 'Hogar de Paso Amigos Peludos',
     likes: 98
@@ -129,21 +129,21 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
   },
   {
     id: 'story-2',
-    petName: 'Milo & Bigotes',
+    petName: 'Bigotes',
     species: 'Gato',
     breed: 'Mestizo Atigrado Naranja',
     estimatedAge: '1 año',
-    rescueLocation: 'Sector de la Galería Municipal, Purificación',
-    rescueStory: 'Era un gatito cachorro abandonado en una caja de cartón bajo la lluvia. Fue alimentado con biberón por el equipo voluntario durante sus primeras 4 semanas.',
-    adoptionStory: 'Fue adoptado por Don Hernando y su hija Mariana. Ahora es el consentido del hogar, duerme cómodo en los sillones y es sumamente juguetón.',
+    rescueLocation: 'Sector de la Galería Municipal, Purificación Tolima',
+    rescueStory: 'Bigotes fue encontrado en una caja de cartón bajo la lluvia en el sector de la Galería Municipal de Purificación. Era un pequeño felino débil, con conjuntivitis severa y sin fuerzas para maullar. Gracias a los cuidados las 24 horas del equipo voluntario de Pata Amiga, sus hermosos bigotes blancos y mirada despierta comenzaron a brillar.',
+    adoptionStory: 'Fue adoptado por Don Hernando y su hija Mariana en Purificación. Ahora es el consentido indiscutible del hogar, duerme en su propio cojín mullido y alegra a toda la familia con sus travesuras y ronroneos cariñosos.',
     adoptedFamilyName: 'Hernando & Mariana Lozano',
     adoptedDate: '28 de Julio, 2024',
-    healthBefore: 'Hipotermia, conjuntivitis neonatal y bajo peso.',
+    healthBefore: 'Hipotermia, conjuntivitis neonatal, desnutrición y bajo peso.',
     healthAfter: '100% recuperado, castrado, desparasitado y con carné de vacunación felina al día.',
     beforePhotoUrl: '/images/milo_before_1787104677033.jpg',
     currentPhotoUrl: '/images/milo_after_1787104685898.jpg',
     rescuerName: 'Carlos Méndez - Brigadista Pata Amiga',
-    likes: 38
+    likes: 85
   },
   {
     id: 'story-3',
@@ -183,9 +183,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
       specialCareNotes: 'Desparasitada, vacunada y con chequeo veterinario al día.'
     },
     personality: ['Juguetona', 'Cariñosa', 'Dócil', 'Alegre'],
-    photos: [
-      '/images/mona_dog_1788225963408.jpg'
-    ],
+    photos: ['/images/mona_dog_1788225963408.jpg'],
     status: 'disponible',
     rescuerName: 'Equipo Voluntario Pata Amiga',
     rescuerContact: '+57 312 890 4521',
@@ -209,9 +207,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
       specialCareNotes: 'Chequeo completo, desparasitado y esterilizado.'
     },
     personality: ['Sociable', 'Juguetón', 'Noble', 'Activo'],
-    photos: [
-      '/images/mateo_rescue_story_1788226480262.jpg'
-    ],
+    photos: ['/images/mateo_rescue_story_1788226480262.jpg'],
     status: 'disponible',
     rescuerName: 'Brigadistas Río Magdalena',
     rescuerContact: '+57 312 890 4521',
@@ -235,9 +231,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
       specialCareNotes: 'Esterilizada y vacunada con triple felina.'
     },
     personality: ['Curiosa', 'Dulce', 'Tranquila', 'Cariñosa'],
-    photos: [
-      '/images/kiara_cat_rescue_1788226493062.jpg'
-    ],
+    photos: ['/images/kiara_cat_rescue_1788226493062.jpg'],
     status: 'disponible',
     rescuerName: 'Dra. Andrea Castro',
     rescuerContact: '+57 314 772 1093',
@@ -261,10 +255,8 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
       specialCareNotes: 'Completamente sano, vacunado y esterilizado.'
     },
     personality: ['Protector', 'Inteligente', 'Leal', 'Tranquilo'],
-    photos: [
-      '/images/bruno_dog_rescue_1788226506971.jpg'
-    ],
-    status: 'disponible',
+    photos: ['/images/bruno_dog_rescue_1788226506971.jpg'],
+    status: 'en_proceso',
     rescuerName: 'Rescate Rural Purificación',
     rescuerContact: '+57 310 445 8892',
     rescuerLocation: 'Purificación, Tolima',
@@ -287,9 +279,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
       specialCareNotes: 'Vacunación al día y castrado.'
     },
     personality: ['Sereno', 'Independiente', 'Dócil', 'Leal'],
-    photos: [
-      '/images/onix_cat_1788225421317.jpg'
-    ],
+    photos: ['/images/onix_cat_1788225421317.jpg'],
     status: 'disponible',
     rescuerName: 'Voluntarios Pata Amiga',
     rescuerContact: '+57 312 890 4521',
@@ -300,7 +290,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
     id: 'pet-simba',
     name: 'Simba',
     species: 'Perro',
-    breed: 'Mestizo',
+    breed: 'Mestizo Dorado',
     gender: 'Macho',
     age: '3 años',
     size: 'Mediano',
@@ -313,9 +303,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
       specialCareNotes: 'Chequeo general perfecto, energía balanceada.'
     },
     personality: ['Alegre', 'Leal', 'Sociable', 'Protector'],
-    photos: [
-      '/images/simba_dog_1788225435727.jpg'
-    ],
+    photos: ['/images/simba_dog_1788225435727.jpg'],
     status: 'disponible',
     rescuerName: 'María Ruiz (Voluntaria)',
     rescuerContact: '+57 310 445 8892',
@@ -339,9 +327,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
       specialCareNotes: 'Esterilizada y vacunada con triple felina.'
     },
     personality: ['Juguetona', 'Dulce', 'Curiosa', 'Mimosa'],
-    photos: [
-      '/images/maya_cat_1788225449558.jpg'
-    ],
+    photos: ['/images/maya_cat_1788225449558.jpg'],
     status: 'disponible',
     rescuerName: 'Luisa Polo (Hogar de Paso)',
     rescuerContact: '+57 320 918 3341',
@@ -352,7 +338,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
     id: 'pet-rocky',
     name: 'Rocky',
     species: 'Perro',
-    breed: 'Mestizo',
+    breed: 'Mestizo Labrador',
     gender: 'Macho',
     age: '1 año',
     size: 'Grande',
@@ -365,66 +351,204 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
       specialCareNotes: 'Desparasitado y con esquema de vacunas al día.'
     },
     personality: ['Activo', 'Juguetón', 'Cariñoso', 'Noble'],
-    photos: [
-      '/images/rocky_labrador_1788225471339.jpg'
-    ],
-    status: 'disponible',
+    photos: ['/images/rocky_labrador_1788225471339.jpg'],
+    status: 'en_proceso',
     rescuerName: 'Comité de Rescate Tolima',
     rescuerContact: '+57 312 890 4521',
     rescuerLocation: 'Sector La Ponderosa, Purificación Tolima',
     featured: true
   },
   {
-    id: 'pet-chopper',
-    name: 'Chopper',
-    species: 'Perro',
-    breed: 'Criollo Rubio',
-    gender: 'Macho',
-    age: '4 meses',
+    id: 'pet-pelusa',
+    name: 'Pelusa',
+    species: 'Gato',
+    breed: 'Angora Mestizo',
+    gender: 'Hembra',
+    age: '3 meses',
     size: 'Pequeño',
-    story: 'Chopper es un cachorro de pelaje rubio suave y mirada tierna. Es muy dócil, aprende rápido y busca una familia amorosa.',
-    rescueHistory: 'Rescatado en el Barrio Ospina Pérez, Purificación.',
+    story: 'Pelusa es una gatita blanca y gris de pelaje esponjoso y ojos grandes. Muy mimosa, le encanta acurrucarse en almohadas y ronronear.',
+    rescueHistory: 'Rescatada en una bodega del centro de Purificación.',
     healthStatus: {
       vaccinated: true,
       sterilized: false,
       dewormed: true,
-      specialCareNotes: 'Con compromiso de esterilización gratuita a los 6 meses.'
+      specialCareNotes: 'Con compromiso de esterilización a los 5 meses.'
     },
-    personality: ['Tierno', 'Dócil', 'Juguetón', 'Compañero'],
-    photos: [
-      '/images/chopper_rescue_1788225394304.jpg'
-    ],
+    personality: ['Tierna', 'Tranquila', 'Curiosa', 'Mimosa'],
+    photos: ['https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=800&q=80'],
     status: 'disponible',
-    rescuerName: 'Dra. Sofía Rescatista',
-    rescuerContact: '+57 312 890 4521',
-    rescuerLocation: 'Barrio Ospina Pérez, Purificación Tolima',
-    featured: true
+    rescuerName: 'Hogar de Paso Felinos Purificación',
+    rescuerContact: '+57 314 772 1093',
+    rescuerLocation: 'Centro, Purificación Tolima',
+    featured: false
   },
   {
-    id: 'pet-hades',
-    name: 'Hades',
+    id: 'pet-toby',
+    name: 'Toby',
     species: 'Perro',
-    breed: 'Mestizo',
+    breed: 'Criollo Sabueso',
     gender: 'Macho',
-    age: '2 años',
+    age: '6 años',
     size: 'Mediano',
-    story: 'Hades es un perrito noble y tranquilo que busca siempre contacto visual y cariño. Sociable con personas y muy agradecido.',
-    rescueHistory: 'Rescatado en la vía nacional Purificación.',
+    story: 'Toby es un perro adulto sabio, sereno y muy agradecido. Ideal para hogares tranquilos o personas mayores que deseen compañía leal y calmada.',
+    rescueHistory: 'Rescatado tras haber sido abandonado en la vía a Cunday.',
     healthStatus: {
       vaccinated: true,
       sterilized: true,
       dewormed: true,
-      specialCareNotes: 'Esterilizado y con carné de salud al día.'
+      specialCareNotes: 'Desparasitado, esterilizado y en perfecto estado de salud.'
     },
-    personality: ['Noble', 'Tranquilo', 'Leal', 'Atento'],
-    photos: [
-      '/images/hades_rescue_1788225379594.jpg'
-    ],
+    personality: ['Tranquilo', 'Noble', 'Obediente', 'Fiel'],
+    photos: ['https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=800&q=80'],
     status: 'disponible',
-    rescuerName: 'Pata Amiga Purificación',
+    rescuerName: 'Equipo Voluntario Pata Amiga',
+    rescuerContact: '+57 312 890 4521',
+    rescuerLocation: 'Barrio Ospina Pérez, Purificación',
+    featured: false
+  },
+  {
+    id: 'pet-luna',
+    name: 'Luna',
+    species: 'Perro',
+    breed: 'Cruce Border Collie',
+    gender: 'Hembra',
+    age: '2 años',
+    size: 'Mediano',
+    story: 'Luna es una perrita inteligente, ágil y muy despierta. Aprende trucos con rapidez y es excelente compañera de caminatas al aire libre.',
+    rescueHistory: 'Rescatada en la vereda Villa Esperanza de Purificación.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: true,
+      dewormed: true,
+      specialCareNotes: 'Esterilizada y vacunada con séxtuple canina.'
+    },
+    personality: ['Inteligente', 'Activa', 'Sociable', 'Cariñosa'],
+    photos: ['https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=800&q=80'],
+    status: 'disponible',
+    rescuerName: 'Dra. Sofía Ruiz',
+    rescuerContact: '+57 314 772 1093',
+    rescuerLocation: 'Barrio El Ospina Pérez, Purificación',
+    featured: false
+  },
+  {
+    id: 'pet-copito',
+    name: 'Copito',
+    species: 'Gato',
+    breed: 'Criollo Blanco',
+    gender: 'Macho',
+    age: '4 meses',
+    size: 'Pequeño',
+    story: 'Copito es un gatito blanco como la nieve, vivaz, juguetón y lleno de ternura. Ronronea con solo mirarlo.',
+    rescueHistory: 'Rescatado en el Barrio Santa Bárbara de Purificación.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: false,
+      dewormed: true,
+      specialCareNotes: 'Desparasitado y con primera dosis de vacunas.'
+    },
+    personality: ['Juguetón', 'Tierno', 'Curioso', 'Sociable'],
+    photos: ['https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=800&q=80'],
+    status: 'disponible',
+    rescuerName: 'Hogar de Paso Amigos Peludos',
+    rescuerContact: '+57 315 670 9922',
+    rescuerLocation: 'Barrio Santa Bárbara, Purificación',
+    featured: false
+  },
+  {
+    id: 'pet-max',
+    name: 'Max',
+    species: 'Perro',
+    breed: 'Cachorro Criollo Atigrado',
+    gender: 'Macho',
+    age: '5 meses',
+    size: 'Mediano',
+    story: 'Max tiene un pelaje atigrado espectacular y una energía contagiosa. Le fascina correr y convive en armonía con otros animales.',
+    rescueHistory: 'Rescatado en la plaza de mercado de Purificación.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: true,
+      dewormed: true,
+      specialCareNotes: 'Esterilizado tempranamente y desparasitado.'
+    },
+    personality: ['Alegre', 'Enérgico', 'Sociable', 'Valiente'],
+    photos: ['https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=800&q=80'],
+    status: 'disponible',
+    rescuerName: 'Voluntarios del Río',
+    rescuerContact: '+57 310 445 8892',
+    rescuerLocation: 'Malecón Purificación',
+    featured: false
+  },
+  {
+    id: 'pet-princesa',
+    name: 'Princesa',
+    species: 'Perro',
+    breed: 'Poodle Criollo',
+    gender: 'Hembra',
+    age: '4 años',
+    size: 'Pequeño',
+    story: 'Princesa es una perrita faldera amorosa, tranquila y muy limpia. Su adopción ya fue concretada con éxito por una amorosa familia tolimense.',
+    rescueHistory: 'Rescatada en el Barrio Santander.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: true,
+      dewormed: true,
+      specialCareNotes: 'Esterilizada y adoptada felizmente.'
+    },
+    personality: ['Cariñosa', 'Tranquila', 'Obediente', 'Fiel'],
+    photos: ['https://images.unsplash.com/photo-1591160690555-5debfba289f0?auto=format&fit=crop&w=800&q=80'],
+    status: 'adoptado',
+    rescuerName: 'Dra. Sofía Ruiz',
+    rescuerContact: '+57 314 772 1093',
+    rescuerLocation: 'Purificación, Tolima',
+    featured: false
+  },
+  {
+    id: 'pet-oliver',
+    name: 'Oliver',
+    species: 'Gato',
+    breed: 'Siamés Mestizo',
+    gender: 'Macho',
+    age: '1 año',
+    size: 'Pequeño',
+    story: 'Oliver tiene ojos azul cielo profundos y un pelaje suave color crema con puntas café. Es muy parlanchín y busca atención afectuosa.',
+    rescueHistory: 'Rescatado de una casa deshabitada en Purificación.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: true,
+      dewormed: true,
+      specialCareNotes: 'Castrado y con vacunas felinas completas.'
+    },
+    personality: ['Parlanchín', 'Afectuoso', 'Inteligente', 'Leal'],
+    photos: ['https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&w=800&q=80'],
+    status: 'disponible',
+    rescuerName: 'Rescatistas Purificación',
+    rescuerContact: '+57 312 890 4521',
+    rescuerLocation: 'Barrio Ospina Pérez, Purificación',
+    featured: false
+  },
+  {
+    id: 'pet-negrita',
+    name: 'Negrita',
+    species: 'Perro',
+    breed: 'Criolla Tolimense',
+    gender: 'Hembra',
+    age: '7 años',
+    size: 'Mediano',
+    story: 'Negrita es una perrita madura y noble. Ha pasado por muchas dificultades pero conserva un corazón bondadoso que solo anhela una caricia y un rincón seguro para descansar.',
+    rescueHistory: 'Rescatada en la vereda Chenche Asoleados.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: true,
+      dewormed: true,
+      specialCareNotes: 'Chequeo geriátrico perfecto, articulaciones sanas, esterilizada.'
+    },
+    personality: ['Serena', 'Dulce', 'Agradecida', 'Leal'],
+    photos: ['https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=800&q=80'],
+    status: 'disponible',
+    rescuerName: 'Equipo Voluntario Pata Amiga',
     rescuerContact: '+57 312 890 4521',
     rescuerLocation: 'Purificación, Tolima',
-    featured: true
+    featured: false
   }
 ];
 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Heart, 
   Search, 
@@ -15,7 +15,8 @@ import {
 import { AdoptionPet, User } from '../types';
 import { StoreController } from '../controllers/storeController';
 import { resolveImageUrl, handleImageError } from '../utils/imageUtils';
-import { sanitizePhone10, isValidPhone10 } from '../utils/phoneUtils';
+import { parsePhoneWithCountry } from '../utils/phoneUtils';
+import { PhoneInput } from './PhoneInput';
 import confetti from 'canvas-confetti';
 
 interface AdoptionsViewProps {
@@ -33,15 +34,24 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
   initialSpeciesFilter = 'Todos',
   onNavigateToTab
 }) => {
-  const [pets] = useState<AdoptionPet[]>(() => StoreController.getAdoptionPets());
+  const [pets, setPets] = useState<AdoptionPet[]>(() => StoreController.getAdoptionPets());
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecies, setSelectedSpecies] = useState<'Todos' | 'Perro' | 'Gato'>(initialSpeciesFilter);
   const [selectedSize, setSelectedSize] = useState<'Todos' | 'Pequeño' | 'Mediano' | 'Grande'>('Todos');
   const [selectedGender, setSelectedGender] = useState<'Todos' | 'Macho' | 'Hembra'>('Todos');
   const [selectedTrait, setSelectedTrait] = useState<string>('Todos');
   
+  // Real-time synchronization when pets change status (e.g. "en_proceso")
+  useEffect(() => {
+    const handleDataChange = () => {
+      setPets(StoreController.getAdoptionPets());
+    };
+    window.addEventListener('pata-data-change', handleDataChange);
+    return () => window.removeEventListener('pata-data-change', handleDataChange);
+  }, []);
+
   // Update species filter if prop changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (initialSpeciesFilter) {
       setSelectedSpecies(initialSpeciesFilter);
     }
@@ -117,13 +127,14 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
     if (!activePet) return;
     setAppError(null);
 
-    if (!applicantName || !applicantEmail || !applicantPhone || !reasonForAdoption) {
-      setAppError('Por favor completa todos los campos requeridos.');
+    if (!applicantName.trim() || !applicantEmail.trim() || !applicantPhone.trim() || !reasonForAdoption.trim()) {
+      setAppError('Por favor completa todos los campos obligatorios del formulario.');
       return;
     }
 
-    if (!isValidPhone10(applicantPhone)) {
-      setAppError('El número de teléfono/WhatsApp debe tener exactamente 10 caracteres numéricos (ej: 3128904521).');
+    const phoneValidation = parsePhoneWithCountry(applicantPhone);
+    if (!phoneValidation.isValid) {
+      setAppError(phoneValidation.message);
       return;
     }
 
@@ -137,14 +148,14 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
       StoreController.submitAdoptionApplication({
         petId: activePet.id,
         petName: activePet.name,
-        applicantName,
-        applicantEmail,
-        applicantPhone,
+        applicantName: applicantName.trim(),
+        applicantEmail: applicantEmail.trim(),
+        applicantPhone: applicantPhone.trim(),
         applicantCity,
         housingType,
         hasOtherPets,
         otherPetsDetails,
-        reasonForAdoption
+        reasonForAdoption: reasonForAdoption.trim()
       });
 
       setIsSubmitting(false);
@@ -461,9 +472,20 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
                         <span>{pet.species} • {pet.breed}</span>
                       </div>
 
-                      <div className="absolute top-3 right-3 bg-[#9E6B38] text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-full shadow-xs">
-                        En Adopción
-                      </div>
+                      {pet.status === 'en_proceso' ? (
+                        <div className="absolute top-3 right-3 bg-amber-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-md flex items-center gap-1.5 animate-pulse">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                          <span>En proceso de adopción</span>
+                        </div>
+                      ) : pet.status === 'adoptado' ? (
+                        <div className="absolute top-3 right-3 bg-emerald-700 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-xs">
+                          ¡Adoptado!
+                        </div>
+                      ) : (
+                        <div className="absolute top-3 right-3 bg-[#9E6B38] text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-full shadow-xs">
+                          Disponible
+                        </div>
+                      )}
 
                       <div className="absolute bottom-2 left-2 right-2 bg-[#2C1E14]/80 backdrop-blur-xs px-3 py-1.5 rounded-xl text-[11px] text-[#FAF6F0] flex items-center justify-between border border-white/10">
                         <span className="font-medium">{pet.gender} • {pet.age}</span>
@@ -596,9 +618,20 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
                     <div className="absolute top-3 left-3 bg-[#2C1E14]/80 backdrop-blur-xs text-white text-xs font-semibold px-3 py-1 rounded-full border border-white/10">
                       {activePet.species} • {activePet.breed}
                     </div>
-                    <div className="absolute top-3 right-3 bg-[#9E6B38] text-white text-xs font-bold px-3 py-1 rounded-full shadow-xs">
-                      Disponible en Purificación
-                    </div>
+                    {activePet.status === 'en_proceso' ? (
+                      <div className="absolute top-3 right-3 bg-amber-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md flex items-center gap-1.5 animate-pulse">
+                        <span className="w-2 h-2 rounded-full bg-white" />
+                        <span>En proceso de adopción</span>
+                      </div>
+                    ) : activePet.status === 'adoptado' ? (
+                      <div className="absolute top-3 right-3 bg-emerald-700 text-white text-xs font-bold px-3 py-1 rounded-full shadow-xs">
+                        ¡Adoptado!
+                      </div>
+                    ) : (
+                      <div className="absolute top-3 right-3 bg-[#9E6B38] text-white text-xs font-bold px-3 py-1 rounded-full shadow-xs">
+                        Disponible en Purificación
+                      </div>
+                    )}
                     <div className="absolute bottom-3 left-3 right-3 bg-[#2C1E14]/85 backdrop-blur-xs p-3 rounded-xl text-xs text-[#FAF6F0] flex items-center justify-between border border-white/10">
                       <span className="font-bold text-sm text-white">{activePet.name}</span>
                       <span className="text-[#E8DFD3]">{activePet.gender} • {activePet.age} • Tamaño {activePet.size}</span>
@@ -770,22 +803,15 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-bold text-[#2C1E14] mb-1">
-                            Teléfono / WhatsApp de Contacto * <span className="text-[10px] text-[#8A7568] font-normal">(10 dígitos)</span>
-                          </label>
-                          <input
-                            id="adopt-app-phone-input"
-                            type="tel"
-                            required
-                            maxLength={10}
-                            value={applicantPhone}
-                            onChange={(e) => setApplicantPhone(sanitizePhone10(e.target.value))}
-                            placeholder="3128904521"
-                            className="w-full px-3 py-2 bg-white border border-[#E8DFD3] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
-                          />
-                        </div>
+                      <div className="space-y-3">
+                        <PhoneInput
+                          id="adopt-app-phone-input"
+                          label="Teléfono / WhatsApp de Contacto"
+                          value={applicantPhone}
+                          onChange={setApplicantPhone}
+                          required={true}
+                          helperText="Selecciona tu país e ingresa tu número para que el rescatista te contacte"
+                        />
 
                         <div>
                           <label className="block text-xs font-bold text-[#2C1E14] mb-1">

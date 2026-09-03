@@ -35,6 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState<number>(() => StoreController.getUnreadCount());
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const isAdmin = AuthController.isAdmin(currentUser);
 
@@ -46,8 +47,16 @@ export const Navbar: React.FC<NavbarProps> = ({
     return () => window.removeEventListener('pata-data-change', handleDataChange);
   }, []);
 
-  const handleLogout = () => {
+  const handleRequestLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setShowLogoutConfirm(false);
     AuthController.logout();
+    if (activeTab === 'admin') {
+      setActiveTab('inicio');
+    }
   };
 
   const navItems = [
@@ -155,7 +164,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
                 <button
                   id="logout-btn"
-                  onClick={handleLogout}
+                  onClick={handleRequestLogout}
                   title="Cerrar sesión"
                   className="p-1 text-[#8A7568] hover:text-rose-600 rounded-full hover:bg-[#EFE6DA] transition cursor-pointer"
                 >
@@ -186,7 +195,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="lg:hidden flex items-center gap-1.5">
             <button
               onClick={onOpenNotifications}
-              className="relative p-2 text-[#5C4538] hover:bg-[#FAF6F0] rounded-xl cursor-pointer border border-[#E8DFD3]"
+              className="relative p-1.5 sm:p-2 text-[#5C4538] hover:bg-[#FAF6F0] rounded-xl cursor-pointer border border-[#E8DFD3]"
               title="Notificaciones"
             >
               <Bell className="w-4 h-4" />
@@ -198,18 +207,28 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             {!currentUser && (
-              <button
-                onClick={() => onOpenAuth('login')}
-                className="text-xs px-3 py-1.5 bg-[#9E6B38] text-white font-medium rounded-full cursor-pointer"
-              >
-                Ingresar
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  id="mobile-open-login-btn"
+                  onClick={() => onOpenAuth('login')}
+                  className="text-[11px] sm:text-xs px-2.5 py-1.5 text-[#5C4538] hover:text-[#2C1E14] border border-[#D5C8B8] rounded-full font-medium cursor-pointer"
+                >
+                  Ingresar
+                </button>
+                <button
+                  id="mobile-open-register-btn"
+                  onClick={() => onOpenAuth('register')}
+                  className="text-[11px] sm:text-xs px-2.5 py-1.5 bg-[#9E6B38] hover:bg-[#86582A] text-white font-semibold rounded-full shadow-xs cursor-pointer whitespace-nowrap"
+                >
+                  Registrarse
+                </button>
+              </div>
             )}
 
             <button
               id="mobile-menu-toggle-btn"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-xl text-[#5C4538] hover:text-[#2C1E14] hover:bg-[#F5EDE2] transition cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-xl text-[#5C4538] hover:text-[#2C1E14] hover:bg-[#F5EDE2] transition cursor-pointer"
               aria-label="Abrir menú de navegación"
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -233,11 +252,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </div>
               <button
-                onClick={handleLogout}
+                onClick={handleRequestLogout}
                 className="text-xs text-rose-700 hover:text-rose-800 font-semibold px-2.5 py-1 bg-rose-50 rounded-lg cursor-pointer flex items-center gap-1 border border-rose-200"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                <span>Salir</span>
+                <span>Cerrar sesión</span>
               </button>
             </div>
           )}
@@ -312,6 +331,48 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Modal de Confirmación de Cierre de Sesión */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div 
+            id="logout-confirm-modal"
+            className="relative w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-[#EAE2D5] space-y-4 text-center"
+          >
+            <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto border border-rose-100 shadow-inner">
+              <LogOut className="w-6 h-6" />
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="text-base sm:text-lg font-bold font-['Fraunces',serif] text-[#2C1E14]">
+                ¿Estás seguro de que deseas cerrar sesión?
+              </h3>
+              <p className="text-xs text-[#6E574B] leading-relaxed">
+                Tu sesión activa en Pata Amiga Purificación se cerrará. Podrás volver a iniciar sesión en cualquier momento.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                id="cancel-logout-btn"
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 py-2.5 px-4 bg-[#FAF6F0] hover:bg-[#EFE6DA] text-[#5C4538] text-xs font-semibold rounded-full border border-[#E8DFD3] transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                id="confirm-logout-btn"
+                type="button"
+                onClick={handleConfirmLogout}
+                className="flex-1 py-2.5 px-4 bg-rose-700 hover:bg-rose-800 text-white text-xs font-semibold rounded-full shadow-xs transition cursor-pointer"
+              >
+                Sí, cerrar sesión
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </header>

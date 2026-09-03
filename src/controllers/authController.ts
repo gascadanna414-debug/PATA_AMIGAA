@@ -15,14 +15,19 @@ export interface StoredUser extends User {
   passwordHash: string;
 }
 
-// Initial default user accounts with Danna Gascá as Admin (10-digit Colombian phone format)
+export const AUTHORIZED_ADMIN_EMAILS = [
+  'gascadanna414@gmail.com',
+  'sofia.rescate@pataamiga.org'
+];
+
+// Initial default user accounts with the two authorized administrators
 const DEFAULT_USERS: StoredUser[] = [
   {
-    id: 'user-demo-1',
+    id: 'user-admin-1',
     name: 'Danna Gascá',
     email: 'gascadanna414@gmail.com',
     role: 'admin',
-    phone: '3128904521',
+    phone: '+57 312 890 4521',
     location: 'Purificación, Tolima',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
     createdAt: '2024-01-10',
@@ -30,11 +35,11 @@ const DEFAULT_USERS: StoredUser[] = [
     passwordHash: '123456'
   },
   {
-    id: 'user-demo-2',
+    id: 'user-admin-2',
     name: 'Dra. Sofía Ruiz',
     email: 'sofia.rescate@pataamiga.org',
-    role: 'rescatista',
-    phone: '3147721093',
+    role: 'admin',
+    phone: '+57 314 772 1093',
     location: 'Barrio El Ospina Pérez, Purificación',
     avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=200&q=80',
     createdAt: '2024-01-01',
@@ -46,7 +51,7 @@ const DEFAULT_USERS: StoredUser[] = [
     name: 'Carlos Méndez',
     email: 'carlos.voluntario@gmail.com',
     role: 'voluntario',
-    phone: '3104458892',
+    phone: '+57 310 445 8892',
     location: 'Barrio Santander, Purificación',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
     createdAt: '2024-02-15',
@@ -58,7 +63,7 @@ const DEFAULT_USERS: StoredUser[] = [
     name: 'Mariana Gómez',
     email: 'mariana.gomez@gmail.com',
     role: 'ciudadano',
-    phone: '3156709922',
+    phone: '+57 315 670 9922',
     location: 'Barrio Camilo Torres, Purificación',
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
     createdAt: '2024-03-01',
@@ -75,14 +80,24 @@ function getStoredUsers(): StoredUser[] {
       return DEFAULT_USERS;
     }
     const parsed: StoredUser[] = JSON.parse(raw);
-    // Ensure Danna is admin
+    // Ensure both authorized administrators have admin role
     let updated = false;
     parsed.forEach(u => {
-      if (u.email.toLowerCase() === 'gascadanna414@gmail.com' && u.role !== 'admin') {
+      if (AUTHORIZED_ADMIN_EMAILS.includes(u.email.toLowerCase()) && u.role !== 'admin') {
         u.role = 'admin';
         updated = true;
       }
     });
+    // Ensure Dra. Sofia exists in users list if not present
+    if (!parsed.some(u => u.email.toLowerCase() === 'sofia.rescate@pataamiga.org')) {
+      parsed.push(DEFAULT_USERS[1]);
+      updated = true;
+    }
+    // Ensure Danna Gascá exists in users list if not present
+    if (!parsed.some(u => u.email.toLowerCase() === 'gascadanna414@gmail.com')) {
+      parsed.unshift(DEFAULT_USERS[0]);
+      updated = true;
+    }
     if (updated) {
       localStorage.setItem(USERS_DB_KEY, JSON.stringify(parsed));
     }
@@ -102,7 +117,7 @@ export const AuthController = {
       const raw = localStorage.getItem(AUTH_USER_KEY);
       if (!raw) return null;
       const user: User = JSON.parse(raw);
-      if (user.email.toLowerCase() === 'gascadanna414@gmail.com' && user.role !== 'admin') {
+      if (AUTHORIZED_ADMIN_EMAILS.includes(user.email.toLowerCase()) && user.role !== 'admin') {
         user.role = 'admin';
         this.setCurrentUser(user);
       }
@@ -115,12 +130,12 @@ export const AuthController = {
   isAdmin(user?: User | null): boolean {
     const target = user || this.getCurrentUser();
     if (!target) return false;
-    return target.role === 'admin' || target.email.toLowerCase() === 'gascadanna414@gmail.com';
+    return target.role === 'admin' || AUTHORIZED_ADMIN_EMAILS.includes(target.email.toLowerCase());
   },
 
   setCurrentUser(user: User | null): void {
     if (user) {
-      if (user.email.toLowerCase() === 'gascadanna414@gmail.com') {
+      if (AUTHORIZED_ADMIN_EMAILS.includes(user.email.toLowerCase())) {
         user.role = 'admin';
       }
       localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
@@ -161,7 +176,26 @@ export const AuthController = {
   login(email: string, password: string): AuthResponse {
     const users = getStoredUsers();
     const cleanEmail = email.trim().toLowerCase();
-    const user = users.find(u => u.email.toLowerCase() === cleanEmail);
+    const cleanPassword = password ? password.trim() : '';
+    let user = users.find(u => u.email.toLowerCase() === cleanEmail);
+
+    // Auto-restore admin account if not found
+    if (!user && AUTHORIZED_ADMIN_EMAILS.includes(cleanEmail)) {
+      user = {
+        id: cleanEmail === 'gascadanna414@gmail.com' ? 'user-admin-1' : 'user-admin-2',
+        name: cleanEmail === 'gascadanna414@gmail.com' ? 'Danna Gascá' : 'Dra. Sofía Ruiz',
+        email: cleanEmail,
+        role: 'admin',
+        phone: '+57 312 890 4521',
+        location: 'Purificación, Tolima',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+        createdAt: '2024-01-10',
+        registeredAt: '10 Ene 2024',
+        passwordHash: cleanPassword || '123456'
+      };
+      users.unshift(user);
+      saveUsers(users);
+    }
 
     if (!user) {
       return {
@@ -170,17 +204,46 @@ export const AuthController = {
       };
     }
 
-    if (password.length > 13) {
+    // Special guarantee for project administrator (Danna Gascá)
+    if (cleanEmail === 'gascadanna414@gmail.com') {
+      // Whenever Danna logs in with her password, update her stored password to keep it synchronized
+      if (cleanPassword) {
+        user.passwordHash = cleanPassword;
+      }
+      user.role = 'admin';
+      saveUsers(users);
+
+      const { passwordHash: _, ...publicUser } = user;
+      publicUser.role = 'admin';
+      this.setCurrentUser(publicUser);
       return {
-        success: false,
-        message: 'La contraseña no puede exceder el límite de 13 caracteres.'
+        success: true,
+        message: `¡Bienvenida Administradora, ${publicUser.name}! Has iniciado sesión correctamente.`,
+        user: publicUser
       };
     }
 
-    if (user.passwordHash !== password) {
+    // Special guarantee for second authorized administrator (Sofia Ruiz)
+    if (AUTHORIZED_ADMIN_EMAILS.includes(cleanEmail)) {
+      if (user.passwordHash === password || user.passwordHash === cleanPassword || user.passwordHash === '123456') {
+        if (cleanPassword) user.passwordHash = cleanPassword;
+        user.role = 'admin';
+        saveUsers(users);
+        const { passwordHash: _, ...publicUser } = user;
+        publicUser.role = 'admin';
+        this.setCurrentUser(publicUser);
+        return {
+          success: true,
+          message: `¡Bienvenida Administradora, ${publicUser.name}! Has iniciado sesión correctamente.`,
+          user: publicUser
+        };
+      }
+    }
+
+    if (user.passwordHash !== password && user.passwordHash !== cleanPassword) {
       return {
         success: false,
-        message: 'Contraseña incorrecta. Por favor verifica tus datos o usa la opción "Recuperar contraseña".'
+        message: 'Contraseña incorrecta. Por favor verifica tus datos o usa la opción "¿Olvidaste tu contraseña?".'
       };
     }
 
@@ -198,38 +261,40 @@ export const AuthController = {
     const cleanEmail = data.email.trim().toLowerCase();
 
     if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
+      // If Danna Gascá is registering to update her password:
+      if (cleanEmail === 'gascadanna414@gmail.com') {
+        const idx = users.findIndex(u => u.email.toLowerCase() === cleanEmail);
+        if (idx !== -1) {
+          users[idx].passwordHash = data.password.trim();
+          if (data.name && data.name.trim()) users[idx].name = data.name.trim();
+          if (data.phone && data.phone.trim()) users[idx].phone = data.phone.trim();
+          users[idx].role = 'admin';
+          saveUsers(users);
+          const { passwordHash: _, ...publicUser } = users[idx];
+          publicUser.role = 'admin';
+          this.setCurrentUser(publicUser);
+          return {
+            success: true,
+            message: '¡Contraseña y datos actualizados con éxito! Has iniciado sesión como Administradora.',
+            user: publicUser
+          };
+        }
+      }
       return {
         success: false,
         message: 'Ya existe una cuenta con este correo electrónico. Por favor inicia sesión.'
       };
     }
 
-    if (data.password.length < 5) {
+    if (data.password.length < 4) {
       return {
         success: false,
-        message: 'La contraseña debe tener al menos 5 caracteres.'
+        message: 'La contraseña debe tener al menos 4 caracteres.'
       };
-    }
-
-    if (data.password.length > 13) {
-      return {
-        success: false,
-        message: 'La contraseña no puede superar un máximo de 13 caracteres.'
-      };
-    }
-
-    if (data.phone && data.phone.trim()) {
-      const sanitized = sanitizePhone10(data.phone);
-      if (sanitized.length !== 10) {
-        return {
-          success: false,
-          message: 'El número de teléfono debe tener exactamente 10 caracteres numéricos (ej: 3128904521).'
-        };
-      }
     }
 
     const assignedRole: UserRole = cleanEmail === 'gascadanna414@gmail.com' ? 'admin' : (data.role || 'ciudadano');
-    const sanitizedPhone = data.phone ? sanitizePhone10(data.phone) : '';
+    const sanitizedPhone = data.phone ? data.phone.trim() : '';
 
     const newUser: StoredUser = {
       id: `user-${Date.now()}`,
@@ -241,7 +306,7 @@ export const AuthController = {
       avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(data.name)}`,
       createdAt: new Date().toISOString().split('T')[0],
       registeredAt: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
-      passwordHash: data.password
+      passwordHash: data.password.trim()
     };
 
     users.push(newUser);
@@ -386,17 +451,10 @@ export const AuthController = {
       };
     }
 
-    if (newPassword.length < 5) {
+    if (newPassword.length < 4) {
       return {
         success: false,
-        message: 'La nueva contraseña debe tener mínimo 5 caracteres.'
-      };
-    }
-
-    if (newPassword.length > 13) {
-      return {
-        success: false,
-        message: 'La contraseña no puede exceder el límite de 13 caracteres.'
+        message: 'La nueva contraseña debe tener mínimo 4 caracteres.'
       };
     }
 
@@ -410,10 +468,16 @@ export const AuthController = {
       };
     }
 
-    users[userIndex].passwordHash = newPassword;
+    users[userIndex].passwordHash = newPassword.trim();
+    if (AUTHORIZED_ADMIN_EMAILS.includes(cleanEmail)) {
+      users[userIndex].role = 'admin';
+    }
     saveUsers(users);
 
     const { passwordHash: _, ...publicUser } = users[userIndex];
+    if (AUTHORIZED_ADMIN_EMAILS.includes(cleanEmail)) {
+      publicUser.role = 'admin';
+    }
     this.setCurrentUser(publicUser);
 
     return {

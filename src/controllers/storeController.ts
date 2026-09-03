@@ -231,16 +231,19 @@ export const StoreController = {
     apps.unshift(newApp);
     setItem(ADOPTION_APPS_KEY, apps);
 
+    // AUTOMATIC STATUS UPDATE: The selected pet immediately changes to 'en_proceso'
+    this.updatePetStatus(appData.petId, 'en_proceso');
+
     // Notify rescuers
     this.sendSystemChatMessage(
       'channel-rescatistas',
-      `🐾 ¡Nueva solicitud de adopción! ${appData.applicantName} ha postulado para adoptar a ${appData.petName}. Ciudad: ${appData.applicantCity}, Teléfono: ${appData.applicantPhone}.`
+      `🐾 ¡Nueva solicitud de adopción! ${appData.applicantName} ha postulado para adoptar a ${appData.petName}. Ciudad: ${appData.applicantCity}, Teléfono: ${appData.applicantPhone}. Estado actualizado a 'En proceso de adopción'.`
     );
 
     // Add in-app notification
     this.addNotification({
       title: 'Solicitud de Adopción Registrada',
-      message: `Tu solicitud para adoptar a ${appData.petName} fue enviada con éxito. Nuestro equipo se comunicará contigo al ${appData.applicantPhone}.`,
+      message: `Tu solicitud para adoptar a ${appData.petName} fue enviada con éxito. La mascota ahora está 'En proceso de adopción'. Nuestro equipo se comunicará contigo al ${appData.applicantPhone}.`,
       type: 'adopcion',
       linkTab: 'adopciones'
     });
@@ -254,6 +257,17 @@ export const StoreController = {
     if (idx === -1) return false;
     apps[idx].status = status;
     setItem(ADOPTION_APPS_KEY, apps);
+
+    const targetPetId = apps[idx].petId;
+    if (status === 'aprobada') {
+      this.updatePetStatus(targetPetId, 'adoptado');
+    } else if (status === 'rechazada') {
+      const otherPending = apps.some(a => a.petId === targetPetId && a.id !== appId && a.status === 'pendiente');
+      if (!otherPending) {
+        this.updatePetStatus(targetPetId, 'disponible');
+      }
+    }
+
     return true;
   },
 
@@ -645,15 +659,45 @@ export const StoreController = {
   },
 
   // --- CONTACT MESSAGES ---
-  submitContactMessage(data: Omit<ContactMessage, 'id' | 'submittedAt'>): ContactMessage {
+  getContactMessages(): ContactMessage[] {
+    return getItem<ContactMessage[]>(CONTACTS_KEY, []);
+  },
+
+  submitContactMessage(data: Omit<ContactMessage, 'id' | 'submittedAt' | 'read'>): ContactMessage {
     const contacts = getItem<ContactMessage[]>(CONTACTS_KEY, []);
     const newContact: ContactMessage = {
       ...data,
       id: `contact-${Date.now()}`,
+      read: false,
       submittedAt: new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     };
     contacts.unshift(newContact);
     setItem(CONTACTS_KEY, contacts);
+
+    // Add in-app notification for administrators
+    this.addNotification({
+      title: 'Nuevo Mensaje de Contacto',
+      message: `${data.name} (${data.phone}) ha enviado un mensaje: "${data.subject}"`,
+      type: 'sistema',
+      linkTab: 'admin'
+    });
+
     return newContact;
+  },
+
+  deleteContactMessage(id: string): boolean {
+    const contacts = this.getContactMessages();
+    const filtered = contacts.filter(c => c.id !== id);
+    setItem(CONTACTS_KEY, filtered);
+    return true;
+  },
+
+  markContactMessageRead(id: string): boolean {
+    const contacts = this.getContactMessages();
+    const idx = contacts.findIndex(c => c.id === id);
+    if (idx === -1) return false;
+    contacts[idx].read = true;
+    setItem(CONTACTS_KEY, contacts);
+    return true;
   }
 };

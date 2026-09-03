@@ -173,4 +173,5 @@ export interface ContactMessage {
   subject: string;
   message: string;
   submittedAt: string;
+  read?: boolean;
 }

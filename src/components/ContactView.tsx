@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import { User } from '../types';
 import { StoreController } from '../controllers/storeController';
-import { sanitizePhone10, isValidPhone10 } from '../utils/phoneUtils';
+import { parsePhoneWithCountry } from '../utils/phoneUtils';
+import { PhoneInput } from './PhoneInput';
 import confetti from 'canvas-confetti';
 
 interface ContactViewProps {
@@ -47,24 +48,27 @@ export const ContactView: React.FC<ContactViewProps> = ({
     e.preventDefault();
     setErrorMsg(null);
 
-    if (!name || !email || !message) {
-      setErrorMsg('Por favor ingresa tu nombre, correo y mensaje.');
+    if (!name.trim() || !email.trim() || !message.trim()) {
+      setErrorMsg('Por favor completa todos los campos requeridos: Nombre, correo y mensaje.');
       return;
     }
 
-    if (phone && !isValidPhone10(phone)) {
-      setErrorMsg('El número de teléfono debe tener exactamente 10 caracteres numéricos (ej: 3128904521).');
-      return;
+    if (phone) {
+      const phoneValidation = parsePhoneWithCountry(phone);
+      if (!phoneValidation.isValid) {
+        setErrorMsg(phoneValidation.message);
+        return;
+      }
     }
 
     setIsSubmitting(true);
     setTimeout(() => {
       StoreController.submitContactMessage({
-        name,
-        email,
-        phone,
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
         subject,
-        message
+        message: message.trim()
       });
 
       setIsSubmitting(false);
@@ -280,7 +284,7 @@ export const ContactView: React.FC<ContactViewProps> = ({
               </div>
 
               {/* Correo y Teléfono */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
                     Correo Electrónico *
@@ -296,20 +300,14 @@ export const ContactView: React.FC<ContactViewProps> = ({
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
-                    Teléfono / WhatsApp <span className="text-[10px] text-[#8A7568] font-normal">(10 dígitos)</span>
-                  </label>
-                  <input
-                    id="contact-phone-input"
-                    type="tel"
-                    maxLength={10}
-                    placeholder="3128904521"
-                    value={phone}
-                    onChange={(e) => setPhone(sanitizePhone10(e.target.value))}
-                    className="w-full px-4 py-2.5 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-xs sm:text-sm text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38] transition"
-                  />
-                </div>
+                <PhoneInput
+                  id="contact-phone-input"
+                  label="Teléfono / WhatsApp"
+                  value={phone}
+                  onChange={setPhone}
+                  required={false}
+                  helperText="Selecciona el indicativo del país e ingresa tu número de contacto"
+                />
               </div>
 
               {/* Asunto */}
