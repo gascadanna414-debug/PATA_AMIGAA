@@ -103,6 +103,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // Success message banner
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
+  // In-app confirmation dialog for safe deletion (replaces blocked window.confirm in iframes)
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: 'contact' | 'event' | 'pet' | 'user' | 'report' | 'story' | 'attendee' | 'application';
+    id: string;
+    name: string;
+    detail?: string;
+  } | null>(null);
+
+  // Adoption application review modal to send notifications and custom messages
+  const [reviewAppModal, setReviewAppModal] = useState<{
+    app: AdoptionApplication;
+    action: 'aprobada' | 'rechazada';
+  } | null>(null);
+  const [reviewCustomNote, setReviewCustomNote] = useState<string>('');
+
   const showNotification = (msg: string) => {
     setActionSuccess(msg);
     setTimeout(() => setActionSuccess(null), 3500);
@@ -188,35 +203,52 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     showNotification('Mensaje marcado como leído.');
   };
 
-  const handleDeleteContactMessage = (msgId: string, senderName: string) => {
-    if (confirm(`¿Estás seguro de eliminar el mensaje de ${senderName}?`)) {
-      StoreController.deleteContactMessage(msgId);
-      refreshAllData();
-      showNotification('Mensaje eliminado.');
-    }
+  const handleDeleteContactMessage = (msgId: string, senderName: string, subject?: string) => {
+    setDeleteTarget({
+      type: 'contact',
+      id: msgId,
+      name: `Mensaje de ${senderName}`,
+      detail: subject ? `Asunto: "${subject}"` : undefined
+    });
   };
 
   const handleToggleAdminRole = (userId: string) => {
     const targetUser = usersList.find(u => u.id === userId);
     if (!targetUser) return;
-    const newRole = targetUser.role === 'admin' ? 'voluntario' : 'admin';
-    AuthController.updateUserRole(userId, newRole);
-    refreshAllData();
-    showNotification(`Rol de ${targetUser.name} actualizado a ${newRole.toUpperCase()}`);
+    if (targetUser.email.toLowerCase() !== 'gascadanna414@gmail.com') {
+      showNotification('Por seguridad, solo la Administradora autorizada puede gestionar el Panel.');
+      return;
+    }
+    showNotification('No se puede revocar el rol a la Administradora principal.');
   };
 
   const handleChangeRole = (userId: string, newRole: UserRole) => {
+    const targetUser = usersList.find(u => u.id === userId);
+    if (!targetUser) return;
+    if (newRole === 'admin' && targetUser.email.toLowerCase() !== 'gascadanna414@gmail.com') {
+      showNotification('Por seguridad, solo la Administradora autorizada puede tener este rol.');
+      return;
+    }
+    if (targetUser.email.toLowerCase() === 'gascadanna414@gmail.com' && newRole !== 'admin') {
+      showNotification('No se puede alterar el rol de la Administradora principal.');
+      return;
+    }
     AuthController.updateUserRole(userId, newRole);
     refreshAllData();
     showNotification(`Rol actualizado a ${newRole.toUpperCase()}`);
   };
 
-  const handleDeleteUser = (userId: string, userName: string) => {
-    if (confirm(`¿Estás seguro de eliminar al usuario ${userName}?`)) {
-      AuthController.deleteUser(userId);
-      refreshAllData();
-      showNotification(`Usuario ${userName} eliminado del sistema.`);
+  const handleDeleteUser = (userId: string, userName: string, email?: string) => {
+    if (email?.toLowerCase() === 'gascadanna414@gmail.com') {
+      showNotification('No se puede eliminar a la Administradora principal del sistema.');
+      return;
     }
+    setDeleteTarget({
+      type: 'user',
+      id: userId,
+      name: userName,
+      detail: email ? `Correo: ${email}` : undefined
+    });
   };
 
   // --- ACTIONS: REPORT MANAGEMENT ---
@@ -229,25 +261,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     showNotification(`Estado del reporte actualizado a ${status.toUpperCase()}`);
   };
 
-  const handleDeleteReport = (reportId: string) => {
-    if (confirm('¿Deseas eliminar este reporte?')) {
-      StoreController.deleteReport(reportId);
-      refreshAllData();
-      setSelectedReportDetail(null);
-      showNotification('Reporte eliminado con éxito.');
-    }
+  const handleDeleteReport = (reportId: string, neighborhood?: string, animalType?: string) => {
+    setDeleteTarget({
+      type: 'report',
+      id: reportId,
+      name: `Reporte de ${animalType || 'animal'}`,
+      detail: neighborhood ? `Ubicación: ${neighborhood}, Purificación` : undefined
+    });
   };
 
   // --- ACTIONS: EVENTS / BRIGADAS (Limit 25) ---
   const handleSaveEvent = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingEvent?.title || !editingEvent.date || !editingEvent.time || !editingEvent.locationName) {
-      alert('Por favor completa todos los campos requeridos de la brigada.');
+      showNotification('Por favor completa todos los campos requeridos de la brigada.');
       return;
     }
 
     if (editingEvent.contactPhone && !isValidPhone10(editingEvent.contactPhone)) {
-      alert('El teléfono de contacto de la brigada debe tener exactamente 10 caracteres (ej: 3128904521).');
+      showNotification('El teléfono de contacto de la brigada debe tener exactamente 10 caracteres (ej: 3128904521).');
       return;
     }
 
@@ -267,32 +299,34 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     showNotification('Brigada de salud guardada exitosamente con límite de 25 cupos.');
   };
 
-  const handleDeleteEvent = (eventId: string) => {
-    if (confirm('¿Seguro que deseas eliminar esta brigada de salud?')) {
-      StoreController.deleteHealthEvent(eventId);
-      refreshAllData();
-      showNotification('Brigada eliminada del sistema.');
-    }
+  const handleDeleteEvent = (eventId: string, title?: string) => {
+    setDeleteTarget({
+      type: 'event',
+      id: eventId,
+      name: title || 'Brigada de salud',
+      detail: 'Se removerá la jornada del calendario y del panel.'
+    });
   };
 
-  const handleDeleteAttendee = (regId: string, attendeeName: string) => {
-    if (confirm(`¿Deseas anular la inscripción de ${attendeeName} para liberar 1 cupo?`)) {
-      StoreController.deleteEventRegistration(regId);
-      refreshAllData();
-      showNotification(`Inscripción de ${attendeeName} cancelada. Cupo liberado.`);
-    }
+  const handleDeleteAttendee = (regId: string, attendeeName: string, petName?: string) => {
+    setDeleteTarget({
+      type: 'attendee',
+      id: regId,
+      name: `Inscripción de ${attendeeName}`,
+      detail: petName ? `Mascota: ${petName} — Se liberará 1 cupo.` : 'Se liberará 1 cupo en la brigada.'
+    });
   };
 
   // --- ACTIONS: ADOPTIONS (PETS) ---
   const handleSavePet = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPet?.name || !editingPet.species || !editingPet.breed || !editingPet.story) {
-      alert('Por favor completa los campos principales del animal en adopción.');
+      showNotification('Por favor completa los campos principales del animal en adopción.');
       return;
     }
 
     if (editingPet.rescuerContact && !isValidPhone10(editingPet.rescuerContact)) {
-      alert('El teléfono de contacto del rescatista debe tener exactamente 10 dígitos (ej: 3128904521).');
+      showNotification('El teléfono de contacto del rescatista debe tener exactamente 10 dígitos (ej: 3128904521).');
       return;
     }
 
@@ -312,12 +346,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     showNotification('Ficha de adopción guardada con éxito.');
   };
 
-  const handleDeletePet = (petId: string) => {
-    if (confirm('¿Deseas eliminar este animal del catálogo de adopciones?')) {
-      StoreController.deleteAdoptionPet(petId);
-      refreshAllData();
-      showNotification('Animal eliminado del catálogo de adopciones.');
-    }
+  const handleDeletePet = (petId: string, petName?: string, details?: string) => {
+    setDeleteTarget({
+      type: 'pet',
+      id: petId,
+      name: petName || 'Animal en adopción',
+      detail: details || 'Se removerá de la lista de adopciones activas.'
+    });
   };
 
   const handleQuickTogglePetStatus = (pet: AdoptionPet) => {
@@ -331,7 +366,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const handleSaveStory = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingStory?.petName || !editingStory.breed || !editingStory.rescueStory || !editingStory.adoptionStory) {
-      alert('Por favor completa los campos de la historia de rescate.');
+      showNotification('Por favor completa los campos de la historia de rescate.');
       return;
     }
 
@@ -348,11 +383,70 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     showNotification('Historia de rescate guardada con éxito.');
   };
 
-  const handleDeleteStory = (storyId: string) => {
-    if (confirm('¿Deseas eliminar esta historia de rescate?')) {
-      StoreController.deleteSuccessStory(storyId);
+  const handleDeleteStory = (storyId: string, petName?: string) => {
+    setDeleteTarget({
+      type: 'story',
+      id: storyId,
+      name: petName ? `Historia de ${petName}` : 'Historia de rescate',
+      detail: 'Se removerá la publicación de casos de éxito.'
+    });
+  };
+
+  const handleDeleteApplication = (appId: string, applicantName: string, petName: string) => {
+    setDeleteTarget({
+      type: 'application',
+      id: appId,
+      name: `Postulación de ${applicantName}`,
+      detail: `Mascota: ${petName} — Se eliminará esta solicitud de adopción.`
+    });
+  };
+
+  // EXECUTE CONFIRMED DELETION
+  const handleConfirmDelete = () => {
+    if (!deleteTarget) return;
+
+    try {
+      switch (deleteTarget.type) {
+        case 'contact':
+          StoreController.deleteContactMessage(deleteTarget.id);
+          showNotification('Mensaje de contacto eliminado con éxito.');
+          break;
+        case 'event':
+          StoreController.deleteHealthEvent(deleteTarget.id);
+          showNotification('Brigada de salud eliminada del sistema.');
+          break;
+        case 'pet':
+          StoreController.deleteAdoptionPet(deleteTarget.id);
+          showNotification('Animal eliminado del catálogo de adopciones.');
+          break;
+        case 'user':
+          AuthController.deleteUser(deleteTarget.id);
+          showNotification('Usuario eliminado del sistema.');
+          break;
+        case 'report':
+          StoreController.deleteReport(deleteTarget.id);
+          setSelectedReportDetail(null);
+          showNotification('Reporte ciudadano eliminado con éxito.');
+          break;
+        case 'story':
+          StoreController.deleteSuccessStory(deleteTarget.id);
+          showNotification('Historia de rescate eliminada con éxito.');
+          break;
+        case 'attendee':
+          StoreController.deleteEventRegistration(deleteTarget.id);
+          showNotification('Inscripción anulada y cupo liberado con éxito.');
+          break;
+        case 'application':
+          StoreController.deleteAdoptionApplication(deleteTarget.id);
+          showNotification('Postulación de adopción eliminada con éxito.');
+          break;
+      }
+    } catch (err) {
+      console.error('Error during deletion:', err);
+      showNotification('Error al procesar la eliminación.');
+    } finally {
+      setDeleteTarget(null);
       refreshAllData();
-      showNotification('Historia de rescate eliminada.');
     }
   };
 
@@ -361,17 +455,30 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     e.preventDefault();
     setQuickLoginError(null);
 
-    if (!quickLoginEmail.trim() || !quickLoginPass.trim()) {
+    const email = quickLoginEmail.trim().toLowerCase();
+    const pass = quickLoginPass.trim();
+
+    if (!email || !pass) {
       setQuickLoginError('Por favor ingresa tu correo y contraseña de administrador.');
       return;
     }
 
-    const res = AuthController.login(quickLoginEmail.trim(), quickLoginPass.trim());
+    if (email !== 'gascadanna414@gmail.com') {
+      setQuickLoginError('Acceso denegado: El correo ingresado no cuenta con permisos de administración.');
+      return;
+    }
+
+    if (pass !== 'DannaGasca180610') {
+      setQuickLoginError('Contraseña de administrador incorrecta. Acceso no autorizado.');
+      return;
+    }
+
+    const res = AuthController.login(email, pass);
     if (res.success) {
       const user = AuthController.getCurrentUser();
       if (user && AuthController.isAdmin(user)) {
         refreshAllData();
-        showNotification(`Bienvenido(a) al Panel Administrativo, ${user.name}`);
+        showNotification(`Bienvenida al Panel Administrativo, ${user.name}`);
       } else {
         setQuickLoginError('Esta cuenta no cuenta con permisos de Administrador.');
       }
@@ -394,7 +501,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               Panel de Administración
             </h2>
             <p className="text-xs sm:text-sm text-[#6E574B] leading-relaxed">
-              Módulo exclusivo para administradores autorizados de Pata Amiga Purificación. Permite gestionar usuarios registrados, animales en adopción, reportes ciudadanos, brigadas de salud y mensajes de contacto.
+              Módulo de acceso restringido exclusivo para la administración autorizada de Pata Amiga Purificación. Permite gestionar usuarios registrados, animales en adopción, reportes ciudadanos, brigadas de salud y mensajes de contacto.
             </p>
           </div>
 
@@ -416,7 +523,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 required
                 value={quickLoginEmail}
                 onChange={(e) => setQuickLoginEmail(e.target.value)}
-                placeholder="ejemplo@pataamiga.org"
+                placeholder="correo@ejemplo.com"
                 autoComplete="email"
                 className="w-full px-3.5 py-2.5 bg-white border border-[#D5C8B8] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
               />
@@ -465,7 +572,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {currentUser && !isAdmin && (
             <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 text-left space-y-1">
               <p>Sesión activa actual: <strong>{currentUser.name}</strong> ({currentUser.email})</p>
-              <p>Rol: <strong className="uppercase">{currentUser.role}</strong>. Inicia sesión con una cuenta de Administrador para acceder.</p>
+              <p>Tu cuenta actual no cuenta con permisos de Administrador(a). Inicia sesión con las credenciales autorizadas de administración.</p>
             </div>
           )}
 
@@ -722,7 +829,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         <span>Ver evidencia ({report.photos?.length || 1} fotos)</span>
                       </button>
                       <button
-                        onClick={() => handleDeleteReport(report.id)}
+                        onClick={() => handleDeleteReport(report.id, report.neighborhood, report.animalType)}
                         className="text-xs text-red-600 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 cursor-pointer"
                         title="Eliminar reporte"
                       >
@@ -1027,7 +1134,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         <span>Editar</span>
                       </button>
                       <button
-                        onClick={() => handleDeletePet(pet.id)}
+                        onClick={() => handleDeletePet(pet.id, pet.name, `${pet.species} • ${pet.breed} (${pet.age})`)}
                         className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg border border-red-200 cursor-pointer"
                         title="Eliminar animal"
                       >
@@ -1096,9 +1203,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#2C1E14] text-white">
                         {event.type}
                       </span>
-                      <span className="text-xs font-bold text-[#9E6B38] bg-[#FAF6F0] px-2.5 py-0.5 rounded-full border border-[#E8DFD3]">
-                        {event.registeredCount}/25 cupos ({spotsLeft} libres)
-                      </span>
+                      {spotsLeft <= 0 ? (
+                        <span className="text-xs font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
+                          Cupos agotados (25/25)
+                        </span>
+                      ) : (
+                        <span className="text-xs font-bold text-[#9E6B38] bg-[#FAF6F0] px-2.5 py-0.5 rounded-full border border-[#E8DFD3]">
+                          {event.registeredCount}/25 cupos ({spotsLeft} libres)
+                        </span>
+                      )}
                     </div>
 
                     <h3 className="text-base font-bold font-['Fraunces',serif] text-[#2C1E14]">
@@ -1134,7 +1247,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() => handleDeleteEvent(event.id)}
+                        onClick={() => handleDeleteEvent(event.id, event.title)}
                         className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg border border-red-200 cursor-pointer"
                         title="Eliminar brigada"
                       >
@@ -1189,28 +1302,47 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       "{app.reasonForAdoption}"
                     </p>
                     <span className="text-[10px] text-[#8A7568] block">Fecha de envío: {app.submittedAt}</span>
+
+                    {app.statusNote && (
+                      <div className="text-xs bg-[#FAF6F0] p-2.5 rounded-xl border border-[#E8DFD3] text-[#5C4538] space-y-1 mt-1">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-[#9E6B38]">
+                          <span>💬 Notificación / Mensaje enviado al usuario:</span>
+                          {app.reviewedAt && (
+                            <span className="text-[#8A7568] font-normal">Revisado: {app.reviewedAt}</span>
+                          )}
+                        </div>
+                        <p className="italic">"{app.statusNote}"</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
                     <button
                       onClick={() => {
-                        StoreController.updateApplicationStatus(app.id, 'aprobada');
-                        refreshAllData();
-                        showNotification(`Solicitud de ${app.applicantName} APROBADA con éxito.`);
+                        setReviewAppModal({ app, action: 'aprobada' });
+                        setReviewCustomNote(`¡Felicidades, ${app.applicantName}! Tu postulación para adoptar a ${app.petName} fue aprobada con éxito por la administración de Pata Amiga Purificación. Nos comunicaremos contigo al ${formatPhone10(app.applicantPhone)} para coordinar la entrega y firma del acta de adopción.`);
                       }}
-                      className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-full cursor-pointer"
+                      className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-full cursor-pointer transition shadow-xs flex items-center gap-1"
+                      title="Aprobar postulación y enviar notificación al usuario"
                     >
                       Aprobar
                     </button>
                     <button
                       onClick={() => {
-                        StoreController.updateApplicationStatus(app.id, 'rechazada');
-                        refreshAllData();
-                        showNotification(`Solicitud de ${app.applicantName} rechazada.`);
+                        setReviewAppModal({ app, action: 'rechazada' });
+                        setReviewCustomNote(`Hola ${app.applicantName}, gracias por postularte para adoptar a ${app.petName}. En esta oportunidad la solicitud no pudo ser aprobada por el equipo evaluador. Te invitamos a conocer otros peluditos en Purificación.`);
                       }}
-                      className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-full cursor-pointer"
+                      className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-full cursor-pointer transition shadow-xs flex items-center gap-1"
+                      title="Rechazar postulación y notificar al usuario"
                     >
                       Rechazar
+                    </button>
+                    <button
+                      onClick={() => handleDeleteApplication(app.id, app.applicantName, app.petName)}
+                      className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg border border-red-200 transition cursor-pointer"
+                      title="Eliminar postulación de adopción"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -1311,7 +1443,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => handleDeleteStory(story.id)}
+                      onClick={() => handleDeleteStory(story.id, story.petName)}
                       className="p-1 text-red-600 hover:bg-red-50 rounded border border-red-200 cursor-pointer"
                       title="Eliminar historia"
                     >
@@ -1498,7 +1630,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             <span>Responder</span>
                           </a>
                           <button
-                            onClick={() => handleDeleteContactMessage(msg.id, msg.name)}
+                            onClick={() => handleDeleteContactMessage(msg.id, msg.name, msg.subject)}
                             className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg border border-red-200 transition cursor-pointer"
                             title="Eliminar mensaje"
                           >
@@ -2052,7 +2184,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           {reg.confirmationCode}
                         </span>
                         <button
-                          onClick={() => handleDeleteAttendee(reg.id, reg.ownerName)}
+                          onClick={() => handleDeleteAttendee(reg.id, reg.ownerName, reg.petName)}
                           className="text-[10px] text-red-600 hover:text-red-700 font-semibold p-1 hover:bg-red-50 rounded"
                           title="Anular inscripción y liberar cupo"
                         >
@@ -2133,6 +2265,150 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 className="px-5 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-full text-xs font-semibold text-[#2C1E14] cursor-pointer"
               >
                 Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: CONFIRMACIÓN DE ELIMINACIÓN SEGURA (Sin window.confirm de navegador) */}
+      {/* ========================================================================= */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 border border-[#EAE2D5] shadow-2xl">
+            <div className="flex items-start gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold font-['Fraunces',serif] text-[#2C1E14]">
+                  {deleteTarget.type === 'pet' && '¿Eliminar animal en adopción?'}
+                  {deleteTarget.type === 'event' && '¿Eliminar brigada de salud?'}
+                  {deleteTarget.type === 'contact' && '¿Eliminar mensaje de contacto?'}
+                  {deleteTarget.type === 'user' && '¿Eliminar usuario del sistema?'}
+                  {deleteTarget.type === 'report' && '¿Eliminar reporte ciudadano?'}
+                  {deleteTarget.type === 'story' && '¿Eliminar historia de rescate?'}
+                  {deleteTarget.type === 'attendee' && '¿Anular inscripción a brigada?'}
+                  {deleteTarget.type === 'application' && '¿Eliminar postulación de adopción?'}
+                </h3>
+                <p className="text-xs text-[#8A7568]">
+                  Esta acción eliminará el registro de la plataforma de Purificación de forma definitiva.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-[#FAF6F0] p-3.5 rounded-2xl border border-[#E8DFD3] text-xs space-y-1">
+              <p className="font-semibold text-[#2C1E14] text-sm">{deleteTarget.name}</p>
+              {deleteTarget.detail && (
+                <p className="text-[#6E574B] leading-relaxed">{deleteTarget.detail}</p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#EAE2D5]">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 bg-[#FAF6F0] hover:bg-[#F3ECE0] border border-[#E8DFD3] rounded-full text-xs font-semibold text-[#5C4538] transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-full text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Sí, eliminar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: APROBAR O RECHAZAR POSTULACIÓN Y ENVIAR NOTIFICACIÓN AL USUARIO */}
+      {/* ========================================================================= */}
+      {reviewAppModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 border border-[#EAE2D5] shadow-2xl">
+            <div className="flex items-start justify-between gap-3 border-b border-[#F5EDE2] pb-3">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-xs ${
+                  reviewAppModal.action === 'aprobada' ? 'bg-emerald-600' : 'bg-rose-600'
+                }`}>
+                  {reviewAppModal.action === 'aprobada' ? '🎉' : '⚠️'}
+                </div>
+                <div>
+                  <h3 className="text-base font-bold font-['Fraunces',serif] text-[#2C1E14]">
+                    {reviewAppModal.action === 'aprobada'
+                      ? 'Aprobar Solicitud y Notificar al Usuario'
+                      : 'Rechazar Solicitud y Notificar al Usuario'}
+                  </h3>
+                  <p className="text-xs text-[#8A7568]">
+                    {reviewAppModal.app.applicantName} • Postula para {reviewAppModal.app.petName}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setReviewAppModal(null)}
+                className="text-[#8A7568] hover:text-[#2C1E14] p-1 rounded-full hover:bg-[#FAF6F0] transition cursor-pointer"
+                title="Cerrar"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="bg-[#FAF6F0] p-3.5 rounded-2xl border border-[#E8DFD3] text-xs space-y-1 text-[#6E574B]">
+              <p>👤 <strong>Adoptante:</strong> {reviewAppModal.app.applicantName}</p>
+              <p>📞 <strong>Teléfono de contacto:</strong> {formatPhone10(reviewAppModal.app.applicantPhone)}</p>
+              <p>✉️ <strong>Correo electrónico:</strong> {reviewAppModal.app.applicantEmail}</p>
+              <p>🐾 <strong>Mascota solicitada:</strong> {reviewAppModal.app.petName}</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-[#2C1E14]">
+                Mensaje personalizado que se enviará en la notificación al usuario:
+              </label>
+              <textarea
+                value={reviewCustomNote}
+                onChange={(e) => setReviewCustomNote(e.target.value)}
+                rows={4}
+                className="w-full text-xs p-3.5 rounded-2xl border border-[#E8DFD3] focus:ring-2 focus:ring-[#9E6B38] focus:outline-none bg-white text-[#2C1E14] leading-relaxed"
+                placeholder="Escribe el mensaje u observaciones para el postulante..."
+              />
+              <p className="text-[11px] text-[#8A7568] flex items-center gap-1">
+                <span>🔔 El postulante recibirá esta notificación directamente en su campana de avisos y en el sistema de Pata Amiga Purificación.</span>
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#EAE2D5]">
+              <button
+                type="button"
+                onClick={() => setReviewAppModal(null)}
+                className="px-4 py-2 bg-[#FAF6F0] hover:bg-[#F3ECE0] border border-[#E8DFD3] rounded-full text-xs font-semibold text-[#5C4538] transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  StoreController.updateApplicationStatus(
+                    reviewAppModal.app.id,
+                    reviewAppModal.action,
+                    reviewCustomNote.trim() || undefined
+                  );
+                  refreshAllData();
+                  showNotification(`Solicitud de ${reviewAppModal.app.applicantName} ${reviewAppModal.action.toUpperCase()} y notificación enviada con éxito.`);
+                  setReviewAppModal(null);
+                }}
+                className={`px-5 py-2 text-white rounded-full text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer ${
+                  reviewAppModal.action === 'aprobada'
+                    ? 'bg-emerald-600 hover:bg-emerald-700'
+                    : 'bg-rose-600 hover:bg-rose-700'
+                }`}
+              >
+                <span>{reviewAppModal.action === 'aprobada' ? 'Confirmar Aprobación y Notificar' : 'Confirmar Rechazo y Notificar'}</span>
               </button>
             </div>
           </div>

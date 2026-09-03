@@ -35,18 +35,19 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenNotifications
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState<number>(() => StoreController.getUnreadCount());
+  const [unreadCount, setUnreadCount] = useState<number>(() => StoreController.getUnreadCount(currentUser));
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const isAdmin = AuthController.isAdmin(currentUser);
 
   useEffect(() => {
+    setUnreadCount(StoreController.getUnreadCount(currentUser));
     const handleDataChange = () => {
-      setUnreadCount(StoreController.getUnreadCount());
+      setUnreadCount(StoreController.getUnreadCount(currentUser));
     };
     window.addEventListener('pata-data-change', handleDataChange);
     return () => window.removeEventListener('pata-data-change', handleDataChange);
-  }, []);
+  }, [currentUser]);
 
   const handleRequestLogout = () => {
     setShowLogoutConfirm(true);

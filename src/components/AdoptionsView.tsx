@@ -12,7 +12,7 @@ import {
   Sparkles,
   SlidersHorizontal
 } from 'lucide-react';
-import { AdoptionPet, User } from '../types';
+import { AdoptionPet, AdoptionApplication, User } from '../types';
 import { StoreController } from '../controllers/storeController';
 import { resolveImageUrl, handleImageError } from '../utils/imageUtils';
 import { parsePhoneWithCountry } from '../utils/phoneUtils';
@@ -41,14 +41,20 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
   const [selectedGender, setSelectedGender] = useState<'Todos' | 'Macho' | 'Hembra'>('Todos');
   const [selectedTrait, setSelectedTrait] = useState<string>('Todos');
   
-  // Real-time synchronization when pets change status (e.g. "en_proceso")
+  // User's own applications tracking with real-time sync
+  const [userApplications, setUserApplications] = useState<AdoptionApplication[]>(() =>
+    StoreController.getUserAdoptionApplications(currentUser)
+  );
+
+  // Real-time synchronization when pets or applications change status
   useEffect(() => {
     const handleDataChange = () => {
       setPets(StoreController.getAdoptionPets());
+      setUserApplications(StoreController.getUserAdoptionApplications(currentUser));
     };
     window.addEventListener('pata-data-change', handleDataChange);
     return () => window.removeEventListener('pata-data-change', handleDataChange);
-  }, []);
+  }, [currentUser]);
 
   // Update species filter if prop changes
   useEffect(() => {
@@ -146,6 +152,7 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
     setIsSubmitting(true);
     setTimeout(() => {
       StoreController.submitAdoptionApplication({
+        userId: currentUser?.id,
         petId: activePet.id,
         petName: activePet.name,
         applicantName: applicantName.trim(),
@@ -278,6 +285,85 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
 
         {/* Right Column: Dedicated Animal Search Section & Pet Grid */}
         <div className="lg:col-span-9 space-y-6">
+          {/* USER ADOPTION APPLICATIONS TRACKING & STATUS */}
+          {userApplications.length > 0 && (
+            <div className="bg-[#FAF6F0] p-5 sm:p-6 rounded-3xl border border-[#E8DFD3] shadow-xs space-y-4 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between border-b border-[#E8DFD3] pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#9E6B38] border border-[#E8DFD3] shadow-xs">
+                    <Heart className="w-4 h-4 fill-[#9E6B38]" />
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-bold font-['Fraunces',serif] text-[#2C1E14]">
+                      Mis Postulaciones de Adopción ({userApplications.length})
+                    </h2>
+                    <p className="text-[11px] text-[#8A7568]">
+                      Estado en tiempo real y respuestas de la administración de Pata Amiga Purificación
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {userApplications.map((app) => {
+                  const isApproved = app.status === 'aprobada';
+                  const isRejected = app.status === 'rechazada';
+
+                  return (
+                    <div
+                      key={app.id}
+                      className={`p-4 rounded-2xl border transition ${
+                        isApproved
+                          ? 'bg-emerald-50/80 border-emerald-200'
+                          : isRejected
+                            ? 'bg-rose-50/70 border-rose-200'
+                            : 'bg-white border-[#E8DFD3]'
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-[#2C1E14]">
+                              Postulación para {app.petName}
+                            </span>
+                            <span
+                              className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
+                                isApproved
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : isRejected
+                                    ? 'bg-rose-100 text-rose-800'
+                                    : 'bg-amber-100 text-amber-800'
+                              }`}
+                            >
+                              {isApproved ? '🎉 Aprobada' : isRejected ? 'No aprobada' : '⏳ En revisión'}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-[#8A7568] block mt-0.5">
+                            Radicada el: {app.submittedAt}
+                          </span>
+                        </div>
+                      </div>
+
+                      {app.statusNote && (
+                        <div className="mt-3 p-3 bg-white/90 rounded-xl border border-[#E8DFD3] text-xs text-[#5C4538] space-y-1">
+                          <div className="flex items-center justify-between text-[11px] font-bold text-[#9E6B38]">
+                            <span>💬 Mensaje oficial de la administración:</span>
+                            {app.reviewedAt && (
+                              <span className="text-[#8A7568] font-normal text-[10px]">
+                                {app.reviewedAt}
+                              </span>
+                            )}
+                          </div>
+                          <p className="italic leading-relaxed">"{app.statusNote}"</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* APARTADO EXCLUSIVO PARA BUSCAR LOS ANIMALES */}
           <div 
             id="animal-search-section"

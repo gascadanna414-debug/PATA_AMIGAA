@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calendar, 
   Clock, 
@@ -7,7 +7,8 @@ import {
   CheckCircle2, 
   Check, 
   Sparkles, 
-  X
+  X,
+  AlertCircle
 } from 'lucide-react';
 import { HealthEvent, EventRegistration, User } from '../types';
 import { StoreController } from '../controllers/storeController';
@@ -24,6 +25,15 @@ export const EventsView: React.FC<EventsViewProps> = ({
 }) => {
   const [events, setEvents] = useState<HealthEvent[]>(() => StoreController.getEvents());
   const [selectedType, setSelectedType] = useState<string>('todos');
+
+  // Synchronize events if updated elsewhere
+  useEffect(() => {
+    const handleDataChange = () => {
+      setEvents(StoreController.getEvents());
+    };
+    window.addEventListener('pata-data-change', handleDataChange);
+    return () => window.removeEventListener('pata-data-change', handleDataChange);
+  }, []);
   
   // Registration Modal State
   const [selectedEvent, setSelectedEvent] = useState<HealthEvent | null>(null);
@@ -128,6 +138,7 @@ export const EventsView: React.FC<EventsViewProps> = ({
           { id: 'todos', label: 'Todas las jornadas' },
           { id: 'esterilizacion', label: 'Esterilización' },
           { id: 'vacunacion', label: 'Vacunación y Desparasitación' },
+          { id: 'brigada_salud', label: 'Brigadas de Salud Veredal' },
           { id: 'donacion_alimento', label: 'Colectas de Alimento' }
         ].map((tab) => (
           <button
@@ -156,7 +167,9 @@ export const EventsView: React.FC<EventsViewProps> = ({
             <div
               key={event.id}
               id={`event-card-${event.id}`}
-              className="bg-white rounded-3xl border border-[#EAE2D5] overflow-hidden shadow-xs hover:shadow-md hover:border-[#9E6B38] transition duration-200 flex flex-col justify-between"
+              className={`bg-white rounded-3xl border overflow-hidden shadow-xs hover:shadow-md transition duration-200 flex flex-col justify-between ${
+                isSoldOut ? 'border-rose-200 ring-1 ring-rose-100' : 'border-[#EAE2D5] hover:border-[#9E6B38]'
+              }`}
             >
               <div>
                 {/* Card Top Tag */}
@@ -165,11 +178,21 @@ export const EventsView: React.FC<EventsViewProps> = ({
                     <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#2C1E14] text-[#FAF6F0]">
                       {event.type === 'esterilizacion' && 'Cirugía de Esterilización'}
                       {event.type === 'vacunacion' && 'Vacunación & Desparasitación'}
+                      {event.type === 'brigada_salud' && 'Brigada de Salud Veredal'}
                       {event.type === 'donacion_alimento' && 'Colectatón Comunitaria'}
                     </span>
-                    <span className="text-[11px] font-semibold text-[#9E6B38] bg-white px-2 py-0.5 rounded-full border border-[#E8DFD3]">
-                      {event.isFree ? '100% Gratuito / SISBÉN' : 'Aporte Solidario'}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {isSoldOut ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1 shadow-xs">
+                          <AlertCircle className="w-3 h-3 text-rose-600 shrink-0" />
+                          Cupos agotados
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-semibold text-[#9E6B38] bg-white px-2 py-0.5 rounded-full border border-[#E8DFD3]">
+                          {event.isFree ? '100% Gratuito / SISBÉN' : 'Aporte Solidario'}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <h3 className="text-lg font-bold font-['Fraunces',serif] text-[#2C1E14] leading-snug">
@@ -179,6 +202,24 @@ export const EventsView: React.FC<EventsViewProps> = ({
 
                 {/* Event Core Details */}
                 <div className="p-6 space-y-4">
+                  {/* Mensaje de Cupos Agotados destacado */}
+                  {isSoldOut && (
+                    <div 
+                      id={`sold-out-alert-${event.id}`}
+                      className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 flex items-start gap-2.5 text-rose-950 shadow-xs"
+                    >
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-bold text-rose-900">
+                          Cupos agotados
+                        </p>
+                        <p className="text-[11px] text-rose-700 leading-snug">
+                          Se ha completado el cupo máximo de {event.totalSpots} mascotas para esta brigada en Purificación. Te invitamos a consultar las otras brigadas disponibles que aún tienen cupos libres.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Date, Time & Location */}
                   <div className="space-y-2.5 text-xs text-[#5C4538] bg-[#FAF6F0] p-4 rounded-2xl border border-[#E8DFD3]">
                     <div className="flex items-start gap-2.5">
@@ -231,14 +272,21 @@ export const EventsView: React.FC<EventsViewProps> = ({
                   <div className="space-y-1.5 pt-2">
                     <div className="flex justify-between text-xs font-medium">
                       <span className="text-[#6E574B]">Cupos asignados:</span>
-                      <span className={isSoldOut ? 'text-red-700 font-semibold' : 'text-[#9E6B38]'}>
-                        {event.registeredCount} de {event.totalSpots} ({spotsLeft} disponibles)
-                      </span>
+                      {isSoldOut ? (
+                        <span className="text-rose-700 font-bold flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5 text-rose-600 inline shrink-0" />
+                          {event.totalSpots} de {event.totalSpots} (Cupos agotados)
+                        </span>
+                      ) : (
+                        <span className="text-[#9E6B38] font-semibold">
+                          {event.registeredCount} de {event.totalSpots} ({spotsLeft} disponibles)
+                        </span>
+                      )}
                     </div>
                     <div className="w-full h-2 bg-[#FAF6F0] rounded-full overflow-hidden border border-[#E8DFD3]">
                       <div 
                         className={`h-full rounded-full transition-all duration-300 ${
-                          isSoldOut ? 'bg-red-500' : 'bg-[#9E6B38]'
+                          isSoldOut ? 'bg-rose-600' : 'bg-[#9E6B38]'
                         }`}
                         style={{ width: `${progressPercent}%` }}
                       />
@@ -252,15 +300,24 @@ export const EventsView: React.FC<EventsViewProps> = ({
                 <button
                   id={`register-event-btn-${event.id}`}
                   disabled={isSoldOut}
-                  onClick={() => handleOpenRegistration(event)}
-                  className={`w-full py-3 px-4 rounded-full font-semibold text-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer ${
+                  onClick={() => !isSoldOut && handleOpenRegistration(event)}
+                  className={`w-full py-3 px-4 rounded-full font-bold text-xs transition duration-150 flex items-center justify-center gap-2 ${
                     isSoldOut 
-                      ? 'bg-[#FAF6F0] text-[#8A7568] cursor-not-allowed border border-[#E8DFD3]'
-                      : 'bg-[#9E6B38] hover:bg-[#86582A] text-white shadow-xs'
+                      ? 'bg-rose-50 text-rose-700 border border-rose-200 cursor-not-allowed shadow-none'
+                      : 'bg-[#9E6B38] hover:bg-[#86582A] text-white shadow-xs cursor-pointer'
                   }`}
                 >
-                  <Users className="w-4 h-4 text-white" />
-                  <span>{isSoldOut ? 'Cupos agotados' : 'Inscribir a mi mascota'}</span>
+                  {isSoldOut ? (
+                    <>
+                      <AlertCircle className="w-4 h-4 text-rose-600" />
+                      <span>Cupos agotados</span>
+                    </>
+                  ) : (
+                    <>
+                      <Users className="w-4 h-4 text-white" />
+                      <span>Inscribir a mi mascota</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

@@ -549,6 +549,198 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
     rescuerContact: '+57 312 890 4521',
     rescuerLocation: 'Purificación, Tolima',
     featured: false
+  },
+  {
+    id: 'pet-milo',
+    name: 'Milo',
+    species: 'Perro',
+    breed: 'Cachorro Criollo Canela',
+    gender: 'Macho',
+    age: '3 meses',
+    size: 'Pequeño',
+    story: 'Milo es un cachorrito sumamente dulce, vivaz y juguetón. Le fascina recibir caricias en su pancita y jugar con pelotas de trapo. Es muy receptivo y sociable con otros animales.',
+    rescueHistory: 'Rescatado en una cajita cerca a la Plaza de Mercado de Purificación.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: false,
+      dewormed: true,
+      specialCareNotes: 'Desparasitado, primera vacuna séxtuple y compromiso de esterilización a los 5 meses.'
+    },
+    personality: ['Juguetón', 'Tierno', 'Curioso', 'Dócil'],
+    photos: ['https://images.unsplash.com/photo-1593134257782-e89567b7718a?auto=format&fit=crop&w=800&q=80'],
+    status: 'disponible',
+    rescuerName: 'Laura Morales (Hogar de Paso)',
+    rescuerContact: '+57 312 890 4521',
+    rescuerLocation: 'Barrio Ospina Pérez, Purificación',
+    featured: true
+  },
+  {
+    id: 'pet-canela',
+    name: 'Canela',
+    species: 'Perro',
+    breed: 'Mestiza Golden Retriever',
+    gender: 'Hembra',
+    age: '1 año y medio',
+    size: 'Mediano',
+    story: 'Canela es una perrita de mirada tierna, dócil y llena de energía positiva. Ama caminar junto al río, socializar con niños y es sumamente afectuosa.',
+    rescueHistory: 'Rescatada desorientada en el sector Malecón del Río Magdalena en Purificación.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: true,
+      dewormed: true,
+      specialCareNotes: 'Esterilizada, vacunación completa séxtuple y antirrábica al día.'
+    },
+    personality: ['Sociable', 'Noble', 'Activa', 'Cariñosa'],
+    photos: ['https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=800&q=80'],
+    status: 'disponible',
+    rescuerName: 'Comité de Rescate Malecón',
+    rescuerContact: '+57 310 445 8892',
+    rescuerLocation: 'Sector Malecón, Purificación Tolima',
+    featured: true
+  },
+  {
+    id: 'pet-thor',
+    name: 'Thor',
+    species: 'Perro',
+    breed: 'Mestizo Pastor Guardián',
+    gender: 'Macho',
+    age: '4 años',
+    size: 'Grande',
+    story: 'Thor es un perro noble, imponente y protector pero con un corazón tierno. Es excelente vigilando con serenidad y buscando siempre la aprobación de su familia humana.',
+    rescueHistory: 'Rescatado en predio rural de la vereda San Antonio tras haber quedado abandonado.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: true,
+      dewormed: true,
+      specialCareNotes: 'Castrado, chequeo articular perfecto, vacunas anuales al día.'
+    },
+    personality: ['Protector', 'Leal', 'Obediente', 'Tranquilo'],
+    photos: ['https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?auto=format&fit=crop&w=800&q=80'],
+    status: 'disponible',
+    rescuerName: 'Red Veterinaria Rural Purificación',
+    rescuerContact: '+57 314 772 1093',
+    rescuerLocation: 'Vereda San Antonio, Purificación Tolima',
+    featured: false
+  },
+  {
+    id: 'pet-dulce',
+    name: 'Dulce',
+    species: 'Perro',
+    breed: 'Criolla Abuelita Tolimense',
+    gender: 'Hembra',
+    age: '8 años',
+    size: 'Mediano',
+    story: 'Dulce es una perrita sénior amorosa, pacífica y profundamente agradecida. Después de años viviendo a la intemperie, busca un hogar calmado donde recibir afecto y dormir tranquila.',
+    rescueHistory: 'Rescatada en el Barrio Santa Bárbara de Purificación.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: true,
+      dewormed: true,
+      specialCareNotes: 'Esterilizada, chequeo geriátrico favorable y suplementos preventivos para articulaciones.'
+    },
+    personality: ['Pacífica', 'Tierna', 'Silenciosa', 'Agradecida'],
+    photos: ['https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?auto=format&fit=crop&w=800&q=80'],
+    status: 'disponible',
+    rescuerName: 'Colectivo Pata Amiga Purificación',
+    rescuerContact: '+57 312 890 4521',
+    rescuerLocation: 'Barrio Santa Bárbara, Purificación',
+    featured: false
+  },
+  {
+    id: 'pet-mia',
+    name: 'Mia',
+    species: 'Gato',
+    breed: 'Gatita Atigrada Gris',
+    gender: 'Hembra',
+    age: '3 meses',
+    size: 'Pequeño',
+    story: 'Mia es una gatita pequeñita, curiosa y muy juguetona con patitas blancas. Le fascina trepar rascadores, perseguir hilos y ronronear intensamente en el pecho al dormir.',
+    rescueHistory: 'Rescatada del tejado de una panadería en el centro de Purificación.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: false,
+      dewormed: true,
+      specialCareNotes: 'Desparasitada interna y externamente, con compromiso de esterilización a los 5 meses.'
+    },
+    personality: ['Juguetona', 'Ronroneadora', 'Curiosa', 'Tierna'],
+    photos: ['https://images.unsplash.com/photo-1543852786-1cf6624b9987?auto=format&fit=crop&w=800&q=80'],
+    status: 'disponible',
+    rescuerName: 'Hogar Felino Purificación',
+    rescuerContact: '+57 315 670 9922',
+    rescuerLocation: 'Barrio Centro, Purificación Tolima',
+    featured: true
+  },
+  {
+    id: 'pet-tom',
+    name: 'Tom',
+    species: 'Gato',
+    breed: 'Criollo Naranja Atigrado',
+    gender: 'Macho',
+    age: '1 año',
+    size: 'Pequeño',
+    story: 'Tom es un gato rubio carismático, súper sociable y alegre. Le encanta recibir caricias detrás de las orejas y es muy amigable con personas y otros gatos.',
+    rescueHistory: 'Rescatado en el Barrio Camilo Torres en Purificación.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: true,
+      dewormed: true,
+      specialCareNotes: 'Castrado, esquema de vacunas felinas completo y test viral negativo.'
+    },
+    personality: ['Cariñoso', 'Curioso', 'Sociable', 'Divertido'],
+    photos: ['https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=800&q=80'],
+    status: 'disponible',
+    rescuerName: 'Dra. Andrea Castro',
+    rescuerContact: '+57 314 772 1093',
+    rescuerLocation: 'Barrio Camilo Torres, Purificación',
+    featured: false
+  },
+  {
+    id: 'pet-cleo',
+    name: 'Cleo',
+    species: 'Gato',
+    breed: 'Carey Elegante',
+    gender: 'Hembra',
+    age: '3 años',
+    size: 'Pequeño',
+    story: 'Cleo es una gata tricolor de pelaje brillante y ojos almendrados. Es sumamente limpia, tranquila e independiente, pero disfruta profundamente de las sesiones de mimos.',
+    rescueHistory: 'Rescatada en la vereda Chenche Asoleados.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: true,
+      dewormed: true,
+      specialCareNotes: 'Esterilizada, vacunada y con perfecto estado nutricional.'
+    },
+    personality: ['Tranquila', 'Equilibrada', 'Afectuosa', 'Limpia'],
+    photos: ['https://images.unsplash.com/photo-1513245543132-31f507417b26?auto=format&fit=crop&w=800&q=80'],
+    status: 'disponible',
+    rescuerName: 'Voluntarios Chenche',
+    rescuerContact: '+57 310 445 8892',
+    rescuerLocation: 'Purificación, Tolima',
+    featured: false
+  },
+  {
+    id: 'pet-bigotes',
+    name: 'Bigotes',
+    species: 'Gato',
+    breed: 'Bicolor Smoking (Tuxedo)',
+    gender: 'Macho',
+    age: '7 años',
+    size: 'Mediano',
+    story: 'Bigotes es un señor gato tuxedo de porte elegante, bigotes blancos prominentes y carácter apacible. Es silencioso, cariñoso y el compañero perfecto para la lectura.',
+    rescueHistory: 'Rescatado en el Barrio El Triunfo en Purificación.',
+    healthStatus: {
+      vaccinated: true,
+      sterilized: true,
+      dewormed: true,
+      specialCareNotes: 'Castrado, vacunas al día y perfil geriátrico excelente.'
+    },
+    personality: ['Sereno', 'Sabio', 'Dormilón', 'Afectuoso'],
+    photos: ['https://images.unsplash.com/photo-1561948955-570b270e7c36?auto=format&fit=crop&w=800&q=80'],
+    status: 'disponible',
+    rescuerName: 'Equipo Voluntario Pata Amiga',
+    rescuerContact: '+57 312 890 4521',
+    rescuerLocation: 'Barrio El Triunfo, Purificación Tolima',
+    featured: false
   }
 ];
 
@@ -573,7 +765,7 @@ export const INITIAL_HEALTH_EVENTS: HealthEvent[] = [
       'Llevar cobija limpia y toalla para la recuperación posquirúrgica.'
     ],
     totalSpots: 25,
-    registeredCount: 19,
+    registeredCount: 25, // Única brigada con cupos agotados
     contactPhone: '+57 312 890 4521',
     contactOrganizer: 'Alcaldía Municipal & Colectivo Pata Amiga',
     status: 'proximo'
@@ -597,7 +789,7 @@ export const INITIAL_HEALTH_EVENTS: HealthEvent[] = [
       'El tutor debe ser mayor de edad.'
     ],
     totalSpots: 25,
-    registeredCount: 22,
+    registeredCount: 16, // Cupos disponibles (9 libres)
     contactPhone: '+57 314 772 1093',
     contactOrganizer: 'Secretaría de Salud y Pata Amiga',
     status: 'proximo'
@@ -620,9 +812,33 @@ export const INITIAL_HEALTH_EVENTS: HealthEvent[] = [
       'Participación de voluntarios para clasificación.'
     ],
     totalSpots: 25,
-    registeredCount: 14,
+    registeredCount: 12, // Cupos disponibles (13 libres)
     contactPhone: '+57 310 445 8892',
     contactOrganizer: 'Red de Voluntarios Tolimenses',
+    status: 'proximo'
+  },
+  {
+    id: 'event-4',
+    title: 'Brigada de Salud Integral y Valoración Veterinaria Veredal',
+    type: 'brigada_salud',
+    date: 'Sábado, 9 de Noviembre 2024',
+    time: '08:00 AM - 02:00 PM',
+    locationName: 'Salón Comunal y Cancha Múltiple, Vereda San Antonio',
+    address: 'Vía Principal Vereda San Antonio, Sector La Escuela',
+    municipality: 'Purificación, Tolima',
+    description: 'Jornada integral con médicos veterinarios para valoración general, desparasitación interna y externa, corte de uñas, limpieza preventiva de oídos y entrega de suplementos vitamínicos para perros y gatos de la zona rural de Purificación.',
+    isFree: true,
+    feeDetails: '100% Gratuito para familias del sector rural y veredal de Purificación.',
+    requirements: [
+      'Mascotas sujetas con collar o traílla (gatos en guacal).',
+      'Llevar carné de vacunas previo en caso de tenerlo.',
+      'Acompañamiento obligatorio de un adulto responsable.',
+      'Asistir puntualmente en el horario asignado.'
+    ],
+    totalSpots: 25,
+    registeredCount: 7, // Cupos disponibles (18 libres)
+    contactPhone: '+57 312 890 4521',
+    contactOrganizer: 'Red de Médicos Veterinarios Rurales & Pata Amiga',
     status: 'proximo'
   }
 ];

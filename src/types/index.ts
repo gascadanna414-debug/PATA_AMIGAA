@@ -15,6 +15,7 @@ export interface User {
 export interface AppNotification {
   id: string;
   userId?: string;
+  userEmail?: string;
   title: string;
   message: string;
   type: 'evento' | 'reporte' | 'adopcion' | 'sistema';
@@ -22,6 +23,13 @@ export interface AppNotification {
   read: boolean;
   eventId?: string;
   linkTab?: string;
+  statusType?: 'aprobada' | 'rechazada' | 'pendiente' | 'info';
+  metadata?: {
+    petName?: string;
+    applicantName?: string;
+    applicantPhone?: string;
+    statusNote?: string;
+  };
 }
 
 export interface SuccessStory {
@@ -84,6 +92,9 @@ export interface AdoptionApplication {
   reasonForAdoption: string;
   status: 'pendiente' | 'aprobada' | 'rechazada';
   submittedAt: string;
+  userId?: string;
+  statusNote?: string;
+  reviewedAt?: string;
 }
 
 export interface AnimalReport {

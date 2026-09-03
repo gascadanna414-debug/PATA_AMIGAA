@@ -16,11 +16,10 @@ export interface StoredUser extends User {
 }
 
 export const AUTHORIZED_ADMIN_EMAILS = [
-  'gascadanna414@gmail.com',
-  'sofia.rescate@pataamiga.org'
+  'gascadanna414@gmail.com'
 ];
 
-// Initial default user accounts with the two authorized administrators
+// Initial default user accounts with the single authorized administrator
 const DEFAULT_USERS: StoredUser[] = [
   {
     id: 'user-admin-1',
@@ -32,13 +31,13 @@ const DEFAULT_USERS: StoredUser[] = [
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
     createdAt: '2024-01-10',
     registeredAt: '10 Ene 2024',
-    passwordHash: '123456'
+    passwordHash: 'DannaGasca180610'
   },
   {
     id: 'user-admin-2',
     name: 'Dra. Sofía Ruiz',
     email: 'sofia.rescate@pataamiga.org',
-    role: 'admin',
+    role: 'veterinario',
     phone: '+57 314 772 1093',
     location: 'Barrio El Ospina Pérez, Purificación',
     avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=200&q=80',
@@ -80,14 +79,28 @@ function getStoredUsers(): StoredUser[] {
       return DEFAULT_USERS;
     }
     const parsed: StoredUser[] = JSON.parse(raw);
-    // Ensure both authorized administrators have admin role
     let updated = false;
+
+    // Strict rule: ONLY gascadanna414@gmail.com can have the admin role, and her password must be DannaGasca180610
     parsed.forEach(u => {
-      if (AUTHORIZED_ADMIN_EMAILS.includes(u.email.toLowerCase()) && u.role !== 'admin') {
-        u.role = 'admin';
-        updated = true;
+      if (u.email.toLowerCase() === 'gascadanna414@gmail.com') {
+        if (u.role !== 'admin') {
+          u.role = 'admin';
+          updated = true;
+        }
+        if (u.passwordHash !== 'DannaGasca180610') {
+          u.passwordHash = 'DannaGasca180610';
+          updated = true;
+        }
+      } else {
+        // Demote any other user if they have the admin role
+        if (u.role === 'admin') {
+          u.role = u.email.toLowerCase() === 'sofia.rescate@pataamiga.org' ? 'veterinario' : 'voluntario';
+          updated = true;
+        }
       }
     });
+
     // Ensure Dra. Sofia exists in users list if not present
     if (!parsed.some(u => u.email.toLowerCase() === 'sofia.rescate@pataamiga.org')) {
       parsed.push(DEFAULT_USERS[1]);
@@ -117,8 +130,13 @@ export const AuthController = {
       const raw = localStorage.getItem(AUTH_USER_KEY);
       if (!raw) return null;
       const user: User = JSON.parse(raw);
-      if (AUTHORIZED_ADMIN_EMAILS.includes(user.email.toLowerCase()) && user.role !== 'admin') {
-        user.role = 'admin';
+      if (user.email.toLowerCase() === 'gascadanna414@gmail.com') {
+        if (user.role !== 'admin') {
+          user.role = 'admin';
+          this.setCurrentUser(user);
+        }
+      } else if (user.role === 'admin') {
+        user.role = 'voluntario';
         this.setCurrentUser(user);
       }
       return user;
@@ -130,13 +148,15 @@ export const AuthController = {
   isAdmin(user?: User | null): boolean {
     const target = user || this.getCurrentUser();
     if (!target) return false;
-    return target.role === 'admin' || AUTHORIZED_ADMIN_EMAILS.includes(target.email.toLowerCase());
+    return target.email.toLowerCase() === 'gascadanna414@gmail.com' && target.role === 'admin';
   },
 
   setCurrentUser(user: User | null): void {
     if (user) {
-      if (AUTHORIZED_ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+      if (user.email.toLowerCase() === 'gascadanna414@gmail.com') {
         user.role = 'admin';
+      } else if (user.role === 'admin') {
+        user.role = 'voluntario';
       }
       localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
     } else {
@@ -151,6 +171,10 @@ export const AuthController = {
 
   deleteUser(userId: string): boolean {
     const users = getStoredUsers();
+    const target = users.find(u => u.id === userId);
+    if (target && target.email.toLowerCase() === 'gascadanna414@gmail.com') {
+      return false; // Cannot delete primary administrator
+    }
     const updated = users.filter(u => u.id !== userId);
     saveUsers(updated);
     window.dispatchEvent(new Event('auth-state-change'));
@@ -162,6 +186,13 @@ export const AuthController = {
     const users = getStoredUsers();
     const idx = users.findIndex(u => u.id === userId);
     if (idx === -1) return false;
+    // Only gascadanna414@gmail.com can be admin
+    if (newRole === 'admin' && users[idx].email.toLowerCase() !== 'gascadanna414@gmail.com') {
+      return false;
+    }
+    if (users[idx].email.toLowerCase() === 'gascadanna414@gmail.com' && newRole !== 'admin') {
+      return false;
+    }
     users[idx].role = newRole;
     saveUsers(users);
 
@@ -180,18 +211,18 @@ export const AuthController = {
     let user = users.find(u => u.email.toLowerCase() === cleanEmail);
 
     // Auto-restore admin account if not found
-    if (!user && AUTHORIZED_ADMIN_EMAILS.includes(cleanEmail)) {
+    if (!user && cleanEmail === 'gascadanna414@gmail.com') {
       user = {
-        id: cleanEmail === 'gascadanna414@gmail.com' ? 'user-admin-1' : 'user-admin-2',
-        name: cleanEmail === 'gascadanna414@gmail.com' ? 'Danna Gascá' : 'Dra. Sofía Ruiz',
-        email: cleanEmail,
+        id: 'user-admin-1',
+        name: 'Danna Gascá',
+        email: 'gascadanna414@gmail.com',
         role: 'admin',
         phone: '+57 312 890 4521',
         location: 'Purificación, Tolima',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
         createdAt: '2024-01-10',
         registeredAt: '10 Ene 2024',
-        passwordHash: cleanPassword || '123456'
+        passwordHash: 'DannaGasca180610'
       };
       users.unshift(user);
       saveUsers(users);
@@ -204,12 +235,16 @@ export const AuthController = {
       };
     }
 
-    // Special guarantee for project administrator (Danna Gascá)
+    // Strict validation for sole administrator (Danna Gascá)
     if (cleanEmail === 'gascadanna414@gmail.com') {
-      // Whenever Danna logs in with her password, update her stored password to keep it synchronized
-      if (cleanPassword) {
-        user.passwordHash = cleanPassword;
+      if (cleanPassword !== 'DannaGasca180610') {
+        return {
+          success: false,
+          message: 'Contraseña de administrador incorrecta. Solo la administradora autorizada puede ingresar.'
+        };
       }
+
+      user.passwordHash = 'DannaGasca180610';
       user.role = 'admin';
       saveUsers(users);
 
@@ -223,23 +258,6 @@ export const AuthController = {
       };
     }
 
-    // Special guarantee for second authorized administrator (Sofia Ruiz)
-    if (AUTHORIZED_ADMIN_EMAILS.includes(cleanEmail)) {
-      if (user.passwordHash === password || user.passwordHash === cleanPassword || user.passwordHash === '123456') {
-        if (cleanPassword) user.passwordHash = cleanPassword;
-        user.role = 'admin';
-        saveUsers(users);
-        const { passwordHash: _, ...publicUser } = user;
-        publicUser.role = 'admin';
-        this.setCurrentUser(publicUser);
-        return {
-          success: true,
-          message: `¡Bienvenida Administradora, ${publicUser.name}! Has iniciado sesión correctamente.`,
-          user: publicUser
-        };
-      }
-    }
-
     if (user.passwordHash !== password && user.passwordHash !== cleanPassword) {
       return {
         success: false,
@@ -247,7 +265,16 @@ export const AuthController = {
       };
     }
 
+    // Normal users never receive admin role
+    if (user.role === 'admin') {
+      user.role = 'voluntario';
+      saveUsers(users);
+    }
+
     const { passwordHash: _, ...publicUser } = user;
+    if (publicUser.role === 'admin') {
+      publicUser.role = 'voluntario';
+    }
     this.setCurrentUser(publicUser);
     return {
       success: true,
@@ -260,26 +287,14 @@ export const AuthController = {
     const users = getStoredUsers();
     const cleanEmail = data.email.trim().toLowerCase();
 
+    if (cleanEmail === 'gascadanna414@gmail.com') {
+      return {
+        success: false,
+        message: 'Este correo electrónico no está disponible para registro público.'
+      };
+    }
+
     if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
-      // If Danna Gascá is registering to update her password:
-      if (cleanEmail === 'gascadanna414@gmail.com') {
-        const idx = users.findIndex(u => u.email.toLowerCase() === cleanEmail);
-        if (idx !== -1) {
-          users[idx].passwordHash = data.password.trim();
-          if (data.name && data.name.trim()) users[idx].name = data.name.trim();
-          if (data.phone && data.phone.trim()) users[idx].phone = data.phone.trim();
-          users[idx].role = 'admin';
-          saveUsers(users);
-          const { passwordHash: _, ...publicUser } = users[idx];
-          publicUser.role = 'admin';
-          this.setCurrentUser(publicUser);
-          return {
-            success: true,
-            message: '¡Contraseña y datos actualizados con éxito! Has iniciado sesión como Administradora.',
-            user: publicUser
-          };
-        }
-      }
       return {
         success: false,
         message: 'Ya existe una cuenta con este correo electrónico. Por favor inicia sesión.'
@@ -293,7 +308,7 @@ export const AuthController = {
       };
     }
 
-    const assignedRole: UserRole = cleanEmail === 'gascadanna414@gmail.com' ? 'admin' : (data.role || 'ciudadano');
+    const assignedRole: UserRole = data.role === 'admin' ? 'voluntario' : (data.role || 'ciudadano');
     const sanitizedPhone = data.phone ? data.phone.trim() : '';
 
     const newUser: StoredUser = {
@@ -348,11 +363,14 @@ export const AuthController = {
       };
     }
 
+    // Only gascadanna414@gmail.com can be admin
+    const effectiveRole: UserRole = data.role === 'admin' ? 'voluntario' : data.role;
+
     const newUser: StoredUser = {
       id: `user-${Date.now()}`,
       name: data.name.trim(),
       email: cleanEmail,
-      role: data.role,
+      role: effectiveRole,
       phone: sanitizedPhone,
       location: 'Purificación, Tolima',
       avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(data.name)}`,
@@ -398,12 +416,23 @@ export const AuthController = {
   },
 
   loginAsAdminDemo(): AuthResponse {
-    return this.login('gascadanna414@gmail.com', '123456');
+    return {
+      success: false,
+      message: 'Acceso de prueba deshabilitado.'
+    };
   },
 
   requestPasswordReset(email: string): { success: boolean; message: string; simulatedCode?: string } {
     const users = getStoredUsers();
     const cleanEmail = email.trim().toLowerCase();
+
+    if (cleanEmail === 'gascadanna414@gmail.com') {
+      return {
+        success: false,
+        message: 'Esta cuenta administrativa está protegida y no permite restablecimiento público.'
+      };
+    }
+
     const user = users.find(u => u.email.toLowerCase() === cleanEmail);
 
     if (!user) {
@@ -431,6 +460,14 @@ export const AuthController = {
 
   resetPasswordWithCode(email: string, code: string, newPassword: string): AuthResponse {
     const cleanEmail = email.trim().toLowerCase();
+
+    if (cleanEmail === 'gascadanna414@gmail.com') {
+      return {
+        success: false,
+        message: 'La cuenta de Administradora principal está protegida y no permite restablecimiento público.'
+      };
+    }
+
     let valid = false;
 
     try {
