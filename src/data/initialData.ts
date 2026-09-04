@@ -14,7 +14,7 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '12 de Junio, 2024',
     healthBefore: 'Deshidratación severa, almohadillas lastimadas por el asfalto caliente y parásitos.',
     healthAfter: '100% recuperado, peso ideal, esterilizado, vacunado y muy afectuoso.',
-    beforePhotoUrl: 'https://images.unsplash.com/photo-1534361960057-19889db98a1e?auto=format&fit=crop&w=800&q=80',
+    beforePhotoUrl: '/images/hades_before_rescue_1788524848047.jpg',
     currentPhotoUrl: '/images/hades_rescue_1788225379594.jpg',
     rescuerName: 'Equipo Voluntario Pata Amiga',
     likes: 89
@@ -32,7 +32,7 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '24 de Agosto, 2024',
     healthBefore: 'Bajo peso, anemia leve, cicatrices y pelaje maltratado.',
     healthAfter: 'Totalmente revitalizado, pelaje brillante, carné de vacunas completo y esterilizado.',
-    beforePhotoUrl: 'https://images.unsplash.com/photo-1507146426996-ef05306b995a?auto=format&fit=crop&w=800&q=80',
+    beforePhotoUrl: '/images/chopper_before_rescue_1788524869108.jpg',
     currentPhotoUrl: '/images/chopper_rescue_1788225394304.jpg',
     rescuerName: 'Dra. Sofía - Rescatista Purificación',
     likes: 94
@@ -50,7 +50,7 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '18 de Julio, 2024',
     healthBefore: 'Desnutrición moderada, cojera en miembro anterior izquierdo y pulgas.',
     healthAfter: 'Corre con total energía, pelaje dorado radiante, peso óptimo y vacunación completa.',
-    beforePhotoUrl: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=800&q=80',
+    beforePhotoUrl: '/images/mateo_before_rescue_1788524894912.jpg',
     currentPhotoUrl: '/images/mateo_rescue_story_1788226480262.jpg',
     rescuerName: 'Brigadistas Río Magdalena Purificación',
     likes: 67
@@ -68,7 +68,7 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '05 de Septiembre, 2024',
     healthBefore: 'Hipotermia leve, asustadiza, pelaje húmedo y deshidratada.',
     healthAfter: 'Esterilizada, ronroneadora experta, con peso saludable y vacunas felinas al día.',
-    beforePhotoUrl: 'https://images.unsplash.com/photo-1561948955-570b270e7c36?auto=format&fit=crop&w=800&q=80',
+    beforePhotoUrl: '/images/kiara_before_rescue_1788524914908.jpg',
     currentPhotoUrl: '/images/kiara_cat_rescue_1788226493062.jpg',
     rescuerName: 'Equipo Voluntario Purificación',
     likes: 72
@@ -86,7 +86,7 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '14 de Octubre, 2024',
     healthBefore: 'Dermatitis solar, bajo peso y marcas de rozamiento en el cuello.',
     healthAfter: 'Pelaje grueso y brillante, esterilizado, sociable con otros perros y muy protector.',
-    beforePhotoUrl: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=800&q=80',
+    beforePhotoUrl: '/images/bruno_before_rescue_1788524947597.jpg',
     currentPhotoUrl: '/images/bruno_dog_rescue_1788226506971.jpg',
     rescuerName: 'Rescate Rural Purificación',
     likes: 81
@@ -104,7 +104,7 @@ export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
     adoptedDate: '02 de Noviembre, 2024',
     healthBefore: 'Lactante huérfana, baja temperatura y parásitos intestinales.',
     healthAfter: 'Cachorra juguetona y sana, con esquema completo de vacunación y microchip.',
-    beforePhotoUrl: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=800&q=80',
+    beforePhotoUrl: '/images/nala_before_rescue_1788524970799.jpg',
     currentPhotoUrl: '/images/nala_puppy_rescue_1788226520622.jpg',
     rescuerName: 'Hogar de Paso Amigos Peludos',
     likes: 98

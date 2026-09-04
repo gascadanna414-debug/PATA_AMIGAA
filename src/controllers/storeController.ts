@@ -701,6 +701,8 @@ export const StoreController = {
     };
     list.unshift(newNotif);
     setItem(NOTIFICATIONS_KEY, list);
+    window.dispatchEvent(new Event('pata-data-change'));
+    window.dispatchEvent(new Event('pata-notifications-change'));
     return newNotif;
   },
 

@@ -40,7 +40,7 @@ import {
   AdoptionApplication,
   ContactMessage
 } from '../types';
-import { AuthController } from '../controllers/authController';
+import { AuthController, AUTHORIZED_ADMIN_EMAILS, AUTHORIZED_ADMIN_CREDENTIALS } from '../controllers/authController';
 import { StoreController } from '../controllers/storeController';
 import { PURIFICACION_NEIGHBORHOODS } from '../data/initialData';
 import { resolveImageUrl, handleImageError } from '../utils/imageUtils';
@@ -94,10 +94,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [selectedReportDetail, setSelectedReportDetail] = useState<AnimalReport | null>(null);
   const [viewingRegistrationsEventId, setViewingRegistrationsEventId] = useState<string | null>(null);
 
-  // Login State for non-admins viewing the tab (no demo hardcoding)
+  // Login State for non-admins viewing the tab (privacy masked email support)
   const [quickLoginEmail, setQuickLoginEmail] = useState('');
   const [quickLoginPass, setQuickLoginPass] = useState('');
   const [showQuickLoginPass, setShowQuickLoginPass] = useState(false);
+  const [hideAdminEmail, setHideAdminEmail] = useState(true);
   const [quickLoginError, setQuickLoginError] = useState<string | null>(null);
 
   // Success message banner
@@ -215,22 +216,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const handleToggleAdminRole = (userId: string) => {
     const targetUser = usersList.find(u => u.id === userId);
     if (!targetUser) return;
-    if (targetUser.email.toLowerCase() !== 'gascadanna414@gmail.com') {
-      showNotification('Por seguridad, solo la Administradora autorizada puede gestionar el Panel.');
+    if (!AUTHORIZED_ADMIN_EMAILS.includes(targetUser.email.toLowerCase())) {
+      showNotification('Por seguridad, solo las Administradoras autorizadas pueden gestionar el Panel.');
       return;
     }
-    showNotification('No se puede revocar el rol a la Administradora principal.');
+    showNotification('No se puede revocar el rol a una Administradora oficial del sistema.');
   };
 
   const handleChangeRole = (userId: string, newRole: UserRole) => {
     const targetUser = usersList.find(u => u.id === userId);
     if (!targetUser) return;
-    if (newRole === 'admin' && targetUser.email.toLowerCase() !== 'gascadanna414@gmail.com') {
-      showNotification('Por seguridad, solo la Administradora autorizada puede tener este rol.');
+    const targetEmail = targetUser.email.toLowerCase();
+
+    if (newRole === 'admin' && !AUTHORIZED_ADMIN_EMAILS.includes(targetEmail)) {
+      showNotification('Por seguridad, solo las Administradoras autorizadas pueden tener este rol.');
       return;
     }
-    if (targetUser.email.toLowerCase() === 'gascadanna414@gmail.com' && newRole !== 'admin') {
-      showNotification('No se puede alterar el rol de la Administradora principal.');
+    if (AUTHORIZED_ADMIN_EMAILS.includes(targetEmail) && newRole !== 'admin') {
+      showNotification('No se puede alterar el rol de una Administradora oficial del sistema.');
       return;
     }
     AuthController.updateUserRole(userId, newRole);
@@ -239,8 +242,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   const handleDeleteUser = (userId: string, userName: string, email?: string) => {
-    if (email?.toLowerCase() === 'gascadanna414@gmail.com') {
-      showNotification('No se puede eliminar a la Administradora principal del sistema.');
+    if (email && AUTHORIZED_ADMIN_EMAILS.includes(email.toLowerCase())) {
+      showNotification('No se puede eliminar a una Administradora oficial del sistema.');
       return;
     }
     setDeleteTarget({
@@ -463,12 +466,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       return;
     }
 
-    if (email !== 'gascadanna414@gmail.com') {
+    const adminCred = AUTHORIZED_ADMIN_CREDENTIALS[email];
+    if (!adminCred) {
       setQuickLoginError('Acceso denegado: El correo ingresado no cuenta con permisos de administración.');
       return;
     }
 
-    if (pass !== 'DannaGasca180610') {
+    if (pass !== adminCred.password) {
       setQuickLoginError('Contraseña de administrador incorrecta. Acceso no autorizado.');
       return;
     }
@@ -478,7 +482,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       const user = AuthController.getCurrentUser();
       if (user && AuthController.isAdmin(user)) {
         refreshAllData();
-        showNotification(`Bienvenida al Panel Administrativo, ${user.name}`);
+        showNotification(`¡Bienvenida al Panel Administrativo, ${user.name}!`);
       } else {
         setQuickLoginError('Esta cuenta no cuenta con permisos de Administrador.');
       }
@@ -514,25 +518,58 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {/* Secure Admin Login Form */}
           <form onSubmit={handleAdminLogin} className="p-5 bg-[#FAF6F0] rounded-2xl border border-[#E8DFD3] space-y-3.5 text-left">
             <div>
-              <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
-                Correo Electrónico de Administrador
-              </label>
-              <input
-                id="admin-login-email"
-                type="email"
-                required
-                value={quickLoginEmail}
-                onChange={(e) => setQuickLoginEmail(e.target.value)}
-                placeholder="correo@ejemplo.com"
-                autoComplete="email"
-                className="w-full px-3.5 py-2.5 bg-white border border-[#D5C8B8] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
-              />
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="admin-login-email" className="block text-xs font-semibold text-[#2C1E14]">
+                  Correo Electrónico de Administrador
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setHideAdminEmail(!hideAdminEmail)}
+                  className="text-[11px] font-medium text-[#8A7568] hover:text-[#9E6B38] flex items-center gap-1 cursor-pointer transition"
+                  title={hideAdminEmail ? 'Mostrar correo' : 'Ocultar correo para mayor privacidad'}
+                >
+                  {hideAdminEmail ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                  <span>{hideAdminEmail ? 'Mostrar correo' : 'Ocultar correo'}</span>
+                </button>
+              </div>
+              <div className="relative">
+                <input
+                  id="admin-login-email"
+                  type={hideAdminEmail ? 'password' : 'email'}
+                  required
+                  value={quickLoginEmail}
+                  onChange={(e) => setQuickLoginEmail(e.target.value)}
+                  placeholder={hideAdminEmail ? '••••••••••••••••••••' : 'correo@ejemplo.com'}
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="w-full pl-3.5 pr-10 py-2.5 bg-white border border-[#D5C8B8] rounded-xl text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setHideAdminEmail(!hideAdminEmail)}
+                  className="absolute right-3 top-2.5 p-0.5 text-[#8A7568] hover:text-[#9E6B38] focus:outline-none cursor-pointer"
+                  title={hideAdminEmail ? 'Mostrar correo' : 'Ocultar correo'}
+                >
+                  {hideAdminEmail ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#2C1E14] mb-1">
-                Contraseña
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="admin-login-password" className="block text-xs font-semibold text-[#2C1E14]">
+                  Contraseña
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowQuickLoginPass(!showQuickLoginPass)}
+                  className="text-[11px] font-medium text-[#8A7568] hover:text-[#9E6B38] flex items-center gap-1 cursor-pointer transition"
+                  title={showQuickLoginPass ? 'Ocultar contraseña' : 'Ver contraseña'}
+                >
+                  {showQuickLoginPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  <span>{showQuickLoginPass ? 'Ocultar' : 'Mostrar'}</span>
+                </button>
+              </div>
               <div className="relative">
                 <input
                   id="admin-login-password"
@@ -641,7 +678,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       )}
 
       {/* Admin Tabs Navigation */}
-      <div className="flex flex-wrap items-center gap-2 bg-[#FAF6F0] p-1.5 rounded-2xl sm:rounded-full border border-[#E8DFD3]">
+      <div className="flex items-center gap-1.5 sm:gap-2 bg-[#FAF6F0] p-1.5 rounded-2xl sm:rounded-full border border-[#E8DFD3] overflow-x-auto no-scrollbar sm:flex-wrap">
         {[
           { id: 'reportes', label: `Reportes Ciudadanos (${reportsList.length})`, icon: AlertCircle, count: 0 },
           { id: 'usuarios', label: `Personas Registradas (${usersList.length})`, icon: Users, count: 0 },
@@ -661,7 +698,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 setActiveAdminTab(tab.id as any);
                 setSearchQuery('');
               }}
-              className={`px-3.5 py-2 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-2 ${
+              className={`px-3.5 py-2 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
                 isActive
                   ? 'bg-[#9E6B38] text-white shadow-xs'
                   : 'text-[#6E574B] hover:text-[#2C1E14] hover:bg-white/60'
@@ -898,7 +935,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
           <div className="bg-white rounded-2xl border border-[#EAE2D5] overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-left text-xs min-w-[700px]">
                 <thead className="bg-[#FAF6F0] text-[#6E574B] uppercase tracking-wider font-bold border-b border-[#E8DFD3]">
                   <tr>
                     <th className="px-4 py-3">Nombre Completo</th>

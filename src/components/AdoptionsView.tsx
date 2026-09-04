@@ -200,82 +200,84 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
       {/* Main Grid with Left Sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Sidebar Navigation */}
-        <aside className="lg:col-span-3 bg-white p-4 sm:p-5 rounded-3xl border border-[#EAE2D5] shadow-xs space-y-5 lg:sticky lg:top-24">
-          <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#8A7568] px-3 block">
-            Navegación
-          </span>
-          <nav className="flex flex-row lg:flex-col gap-1.5 overflow-x-auto pb-1 lg:pb-0">
-            <button
-              onClick={() => onNavigateToTab ? onNavigateToTab('inicio') : null}
-              className="px-4 py-2.5 rounded-full text-xs font-semibold text-[#5C4538] hover:bg-[#FAF6F0] hover:text-[#2C1E14] flex items-center gap-2.5 transition text-left cursor-pointer whitespace-nowrap"
-            >
-              <span>Inicio</span>
-            </button>
-            <button
-              onClick={() => onNavigateToTab ? onNavigateToTab('reportar') : null}
-              className="px-4 py-2.5 rounded-full text-xs font-semibold text-[#5C4538] hover:bg-[#FAF6F0] hover:text-[#2C1E14] flex items-center gap-2.5 transition text-left cursor-pointer whitespace-nowrap"
-            >
-              <span>Reporte de Animales</span>
-            </button>
-            <button
-              className="px-4 py-2.5 rounded-full text-xs font-bold bg-[#9E6B38] text-white flex items-center gap-2.5 shadow-xs text-left cursor-default whitespace-nowrap"
-            >
-              <span>Catálogo Adopción</span>
-            </button>
-            <button
-              onClick={() => onNavigateToTab ? onNavigateToTab('blog') : null}
-              className="px-4 py-2.5 rounded-full text-xs font-semibold text-[#5C4538] hover:bg-[#FAF6F0] hover:text-[#2C1E14] flex items-center gap-2.5 transition text-left cursor-pointer whitespace-nowrap"
-            >
-              <span>Historias de Rescate</span>
-            </button>
-            <button
-              onClick={() => onNavigateToTab ? onNavigateToTab('jornadas') : null}
-              className="px-4 py-2.5 rounded-full text-xs font-semibold text-[#5C4538] hover:bg-[#FAF6F0] hover:text-[#2C1E14] flex items-center gap-2.5 transition text-left cursor-pointer whitespace-nowrap"
-            >
-              <span>Jornadas de Salud</span>
-            </button>
-          </nav>
+        <aside className="lg:col-span-3 bg-white p-4 sm:p-5 rounded-3xl border border-[#EAE2D5] shadow-xs space-y-4 lg:space-y-5 lg:sticky lg:top-24">
+          <div>
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#8A7568] px-1 sm:px-3 block mb-2">
+              Navegación
+            </span>
+            <nav className="flex flex-row lg:flex-col gap-1.5 overflow-x-auto pb-1.5 lg:pb-0 no-scrollbar">
+              <button
+                onClick={() => onNavigateToTab ? onNavigateToTab('inicio') : null}
+                className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full text-xs font-semibold text-[#5C4538] hover:bg-[#FAF6F0] hover:text-[#2C1E14] flex items-center gap-2 transition text-left cursor-pointer whitespace-nowrap"
+              >
+                <span>Inicio</span>
+              </button>
+              <button
+                onClick={() => onNavigateToTab ? onNavigateToTab('reportar') : null}
+                className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full text-xs font-semibold text-[#5C4538] hover:bg-[#FAF6F0] hover:text-[#2C1E14] flex items-center gap-2 transition text-left cursor-pointer whitespace-nowrap"
+              >
+                <span>Reporte de Animales</span>
+              </button>
+              <button
+                className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full text-xs font-bold bg-[#9E6B38] text-white flex items-center gap-2 shadow-xs text-left cursor-default whitespace-nowrap"
+              >
+                <span>Catálogo Adopción</span>
+              </button>
+              <button
+                onClick={() => onNavigateToTab ? onNavigateToTab('blog') : null}
+                className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full text-xs font-semibold text-[#5C4538] hover:bg-[#FAF6F0] hover:text-[#2C1E14] flex items-center gap-2 transition text-left cursor-pointer whitespace-nowrap"
+              >
+                <span>Historias de Rescate</span>
+              </button>
+              <button
+                onClick={() => onNavigateToTab ? onNavigateToTab('jornadas') : null}
+                className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full text-xs font-semibold text-[#5C4538] hover:bg-[#FAF6F0] hover:text-[#2C1E14] flex items-center gap-2 transition text-left cursor-pointer whitespace-nowrap"
+              >
+                <span>Jornadas de Salud</span>
+              </button>
+            </nav>
+          </div>
 
           {/* Quick Species Filter in Sidebar */}
-          <div className="pt-4 border-t border-[#EAE2D5] space-y-2">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#8A7568] px-3 block">
+          <div className="pt-3.5 border-t border-[#EAE2D5] space-y-2">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#8A7568] px-1 sm:px-3 block">
               Filtrar por especie
             </span>
-            <div className="space-y-1">
+            <div className="grid grid-cols-3 lg:grid-cols-1 gap-1.5">
               <button
                 onClick={() => setSelectedSpecies('Todos')}
-                className={`w-full px-3.5 py-2 rounded-xl text-xs font-medium text-left transition cursor-pointer flex items-center justify-between ${
+                className={`px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-medium text-left transition cursor-pointer flex items-center justify-between gap-1 ${
                   selectedSpecies === 'Todos'
                     ? 'bg-[#FAF6F0] text-[#9E6B38] font-bold border border-[#EAE2D5]'
                     : 'text-[#6E574B] hover:bg-[#FAF6F0]'
                 }`}
               >
-                <span>🐾 Todos los animales</span>
-                <span className="text-[10px] bg-black/5 px-2 py-0.5 rounded-full font-bold">{pets.length}</span>
+                <span className="truncate">🐾 Todos</span>
+                <span className="text-[10px] bg-black/5 px-1.5 py-0.5 rounded-full font-bold">{pets.length}</span>
               </button>
               <button
                 onClick={() => setSelectedSpecies('Perro')}
-                className={`w-full px-3.5 py-2 rounded-xl text-xs font-medium text-left transition cursor-pointer flex items-center justify-between ${
+                className={`px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-medium text-left transition cursor-pointer flex items-center justify-between gap-1 ${
                   selectedSpecies === 'Perro'
                     ? 'bg-[#FAF6F0] text-[#9E6B38] font-bold border border-[#EAE2D5]'
                     : 'text-[#6E574B] hover:bg-[#FAF6F0]'
                 }`}
               >
-                <span>🐶 Perros</span>
-                <span className="text-[10px] bg-black/5 px-2 py-0.5 rounded-full font-bold">
+                <span className="truncate">🐶 Perros</span>
+                <span className="text-[10px] bg-black/5 px-1.5 py-0.5 rounded-full font-bold">
                   {pets.filter(p => p.species === 'Perro').length}
                 </span>
               </button>
               <button
                 onClick={() => setSelectedSpecies('Gato')}
-                className={`w-full px-3.5 py-2 rounded-xl text-xs font-medium text-left transition cursor-pointer flex items-center justify-between ${
+                className={`px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-medium text-left transition cursor-pointer flex items-center justify-between gap-1 ${
                   selectedSpecies === 'Gato'
                     ? 'bg-[#FAF6F0] text-[#9E6B38] font-bold border border-[#EAE2D5]'
                     : 'text-[#6E574B] hover:bg-[#FAF6F0]'
                 }`}
               >
-                <span>🐱 Gatos</span>
-                <span className="text-[10px] bg-black/5 px-2 py-0.5 rounded-full font-bold">
+                <span className="truncate">🐱 Gatos</span>
+                <span className="text-[10px] bg-black/5 px-1.5 py-0.5 rounded-full font-bold">
                   {pets.filter(p => p.species === 'Gato').length}
                 </span>
               </button>
