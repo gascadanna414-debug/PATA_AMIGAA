@@ -409,9 +409,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     >
                       <option value="Perro">🐶 Perro / Canino</option>
                       <option value="Gato">🐱 Gato / Felino</option>
-                      <option value="Equino">🐴 Caballo / Mula</option>
-                      <option value="Fauna Silvestre">🦜 Fauna Silvestre</option>
-                      <option value="Otro">🐾 Otro animal</option>
                     </select>
                   </div>
 

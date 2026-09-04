@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { AuthModal } from './components/AuthModal';
 import { NotificationModal } from './components/NotificationModal';
+import { UserProfileModal } from './components/UserProfileModal';
 import { HomeView } from './components/HomeView';
 import { AdoptionsView } from './components/AdoptionsView';
 import { ReportView } from './components/ReportView';
@@ -20,6 +21,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(() => AuthController.getCurrentUser());
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [targetChatRescuer, setTargetChatRescuer] = useState<string | undefined>(undefined);
   const [selectedStoryId, setSelectedStoryId] = useState<string>('story-chopper');
@@ -79,6 +81,7 @@ export default function App() {
         currentUser={currentUser}
         onOpenAuth={handleOpenAuth}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
+        onOpenProfile={() => setIsProfileModalOpen(true)}
       />
 
       {/* Main Content View Switcher */}
@@ -180,6 +183,16 @@ export default function App() {
         onClose={() => setIsNotificationsOpen(false)}
         currentUser={currentUser}
         onNavigateToTab={handleNavigateToTab}
+      />
+
+      {/* User Profile Edit Modal */}
+      <UserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        currentUser={currentUser}
+        onProfileUpdated={(updatedUser) => {
+          setCurrentUser(updatedUser);
+        }}
       />
 
       {/* Auth Modal (Login / Register / Recover Password) */}

@@ -18,6 +18,7 @@ import {
   INITIAL_CHAT_CHANNELS, 
   INITIAL_CHAT_MESSAGES 
 } from '../data/initialData';
+import { AUTHORIZED_ADMIN_EMAILS } from './authController';
 
 const STORIES_KEY = 'pata_amiga_stories';
 const PETS_KEY = 'pata_amiga_pets';
@@ -278,15 +279,13 @@ export const StoreController = {
       `🐾 ¡Nueva solicitud de adopción! ${appData.applicantName} ha postulado para adoptar a ${appData.petName}. Ciudad: ${appData.applicantCity}, Teléfono: ${appData.applicantPhone}. Estado actualizado a 'En proceso de adopción'.`
     );
 
-    // Add in-app notification for the applicant
+    // In-app notification for administrators
     this.addNotification({
-      userId: appData.userId,
-      userEmail: appData.applicantEmail.trim().toLowerCase(),
-      statusType: 'pendiente',
-      title: `Solicitud de Adopción Recibida (${appData.petName})`,
-      message: `¡Hola ${appData.applicantName}! Tu postulación para adoptar a ${appData.petName} fue radicada con éxito. La mascota pasa a 'En proceso de adopción'. Nuestro equipo en Purificación evaluará tu información.`,
+      title: `🐾 Nueva Postulación de Adopción: ${appData.petName}`,
+      message: `${appData.applicantName} (${appData.applicantPhone}) se ha postulado para adoptar a ${appData.petName}. Ubicación: ${appData.applicantCity}.`,
       type: 'adopcion',
-      linkTab: 'adopciones',
+      targetRole: 'admin',
+      linkTab: 'admin',
       metadata: {
         petName: appData.petName,
         applicantName: appData.applicantName,
@@ -329,6 +328,7 @@ export const StoreController = {
         userId: targetApp.userId,
         userEmail: targetApp.applicantEmail.trim().toLowerCase(),
         statusType: 'aprobada',
+        targetRole: 'user',
         title: `🎉 ¡Postulación Aprobada para ${targetApp.petName}!`,
         message: adminNote
           ? `¡Felicidades, ${targetApp.applicantName}! Tu solicitud para adoptar a ${targetApp.petName} ha sido APROBADA. Mensaje de la administración: "${adminNote}". Nos comunicaremos contigo al ${targetApp.applicantPhone} para coordinar la entrega.`
@@ -364,6 +364,7 @@ export const StoreController = {
         userId: targetApp.userId,
         userEmail: targetApp.applicantEmail.trim().toLowerCase(),
         statusType: 'rechazada',
+        targetRole: 'user',
         title: `Aviso sobre tu postulación de adopción (${targetApp.petName})`,
         message: adminNote
           ? `Hola ${targetApp.applicantName}, tu solicitud para adoptar a ${targetApp.petName} no ha podido ser aprobada. Observación de la administración: "${adminNote}". Te invitamos a conocer otros peluditos en adopción.`
@@ -449,10 +450,16 @@ export const StoreController = {
 
     // Send admin notification
     this.addNotification({
-      title: `Nuevo Reporte Animal: ${newReport.animalType} (${newReport.urgency.toUpperCase()})`,
-      message: `Ubicación: ${newReport.neighborhood} - ${newReport.addressDetails}. Reportado por ${newReport.reporterName}.`,
+      title: `🚨 Nuevo Reporte Animal: ${newReport.animalType} (${newReport.urgency.toUpperCase()})`,
+      message: `Ubicación: ${newReport.neighborhood} - ${newReport.addressDetails}. Reportado por ${newReport.reporterName} (Tel: ${newReport.reporterPhone}).`,
       type: 'reporte',
-      linkTab: 'admin'
+      targetRole: 'admin',
+      linkTab: 'admin',
+      metadata: {
+        reportId: newReport.id,
+        animalType: newReport.animalType,
+        neighborhood: newReport.neighborhood
+      }
     });
 
     return newReport;
@@ -626,20 +633,25 @@ export const StoreController = {
     registrations.unshift(newReg);
     setItem(REGISTRATIONS_KEY, registrations);
 
-    // Create automated event notification for user
+    // 1. In-app notification strictly for administrators: "las personas que se inscribieron a brigadas"
     this.addNotification({
-      title: `🔔 Inscripción Confirmada: ${event.title}`,
-      message: `¡Hola ${regData.ownerName}! Tu mascota ${regData.petName} quedó inscrita con éxito para el ${event.date} (${event.time}) en ${event.locationName}. Código: ${confirmationCode}. Te enviaremos recordatorio cuando se acerque la fecha.`,
+      title: `📋 Nueva Inscripción en Brigada: ${event.title}`,
+      message: `${regData.ownerName} ha inscrito a ${regData.petName} (${regData.petSpecies}) para "${event.title}" en ${event.locationName} (${event.date} - ${event.time}). Teléfono: ${regData.ownerPhone}. Código: ${confirmationCode}.`,
       type: 'evento',
+      targetRole: 'admin',
       eventId: event.id,
-      linkTab: 'eventos'
+      linkTab: 'admin'
     });
 
-    // Create upcoming event reminder alert in advance
+    // 2. In-app notification for the user: strictly "recordatorio para brigadas"
     this.addNotification({
-      title: `🗓️ Recordatorio Próximo Evento: ${event.title}`,
-      message: `Recuerda que tienes cita programada con ${regData.petName} en ${event.locationName} (${event.address}). Por favor cumplir con los requisitos previos (ayuno, bozal/guacal). Cupo ${event.registeredCount}/${MAX_EVENT_CAPACITY}.`,
+      userId: regData.userId,
+      userEmail: regData.ownerEmail.trim().toLowerCase(),
+      title: `🗓️ Recordatorio de Cita para Brigada: ${event.title}`,
+      message: `¡Hola ${regData.ownerName}! Recuerda tu cita para ${regData.petName} en la brigada de salud el ${event.date} a las ${event.time} en ${event.locationName} (${event.address}). Código de reserva: ${confirmationCode}. Recuerda llevar carné de vacunación y cumplir con ayuno si aplica procedimiento quirúrgico.`,
       type: 'evento',
+      targetRole: 'user',
+      isReminder: true,
       eventId: event.id,
       linkTab: 'eventos'
     });
@@ -670,22 +682,65 @@ export const StoreController = {
   getNotifications(): AppNotification[] {
     const initialNotifs: AppNotification[] = [
       {
-        id: 'notif-1',
+        id: 'notif-admin-rep1',
+        title: '🚨 Nuevo Reporte Animal: Perro (URGENTE)',
+        message: 'Ubicación: Barrio Camilo Torres - Carrera 5 con Calle 4. Reportado por Carlos Mendoza (Tel: 3105558899). Animal con herida en pata delantera.',
+        type: 'reporte',
+        timestamp: 'Hoy, 09:15 AM',
+        read: false,
+        linkTab: 'admin',
+        targetRole: 'admin',
+        metadata: {
+          reportId: 'rep-1',
+          animalType: 'Perro',
+          neighborhood: 'Barrio Camilo Torres'
+        }
+      },
+      {
+        id: 'notif-admin-app1',
+        title: '🐾 Nueva Postulación de Adopción: Mateo',
+        message: 'Laura Camila Rodríguez (Tel: 3154442211) se ha postulado para adoptar a Mateo. Ubicación: Barrio Ospina Pérez. Requiere evaluación.',
+        type: 'adopcion',
+        timestamp: 'Ayer, 03:40 PM',
+        read: false,
+        linkTab: 'admin',
+        targetRole: 'admin',
+        metadata: {
+          petName: 'Mateo',
+          applicantName: 'Laura Camila Rodríguez',
+          applicationId: 'app-sample-1'
+        }
+      },
+      {
+        id: 'notif-admin-msg1',
+        title: '📩 Nuevo Mensaje de Contacto',
+        message: 'Andrés Morales (Tel: 3182223344) ha enviado un mensaje: "Donación de medicamentos e insumos para la próxima brigada".',
+        type: 'sistema',
+        timestamp: 'Ayer, 11:20 AM',
+        read: false,
+        linkTab: 'admin',
+        targetRole: 'admin'
+      },
+      {
+        id: 'notif-admin-reg1',
+        title: '📋 Nueva Inscripción en Brigada: Gran Jornada de Esterilización',
+        message: 'Gloria Patricia Silva ha inscrito a "Kira" (Perro) para la jornada en el Polideportivo Municipal. Tel: 3209876543.',
+        type: 'evento',
+        timestamp: 'Hace 2 días',
+        read: true,
+        linkTab: 'admin',
+        targetRole: 'admin'
+      },
+      {
+        id: 'notif-user-rem1',
         title: '🗓️ Recordatorio de Brigada Próxima',
         message: 'La Gran Jornada de Esterilización en el Polideportivo Municipal se aproxima. Recuerda llevar a tu mascota en ayuno de 8 horas.',
         type: 'evento',
         timestamp: 'Hoy, 08:00 AM',
         read: false,
-        linkTab: 'eventos'
-      },
-      {
-        id: 'notif-2',
-        title: '📢 Nuevo Reporte en Purificación',
-        message: 'Se ha registrado un reporte de rescate en el Barrio Camilo Torres. El móvil de apoyo ya fue asignado.',
-        type: 'reporte',
-        timestamp: 'Ayer, 04:30 PM',
-        read: true,
-        linkTab: 'reportar'
+        linkTab: 'eventos',
+        isReminder: true,
+        targetRole: 'user'
       }
     ];
     return getItem<AppNotification[]>(NOTIFICATIONS_KEY, initialNotifs);
@@ -710,31 +765,103 @@ export const StoreController = {
     const list = this.getNotifications();
     const updated = list.map(n => n.id === notifId ? { ...n, read: true } : n);
     setItem(NOTIFICATIONS_KEY, updated);
+    window.dispatchEvent(new Event('pata-data-change'));
+    window.dispatchEvent(new Event('pata-notifications-change'));
     return updated;
+  },
+
+  markNotificationUnread(notifId: string): AppNotification[] {
+    const list = this.getNotifications();
+    const updated = list.map(n => n.id === notifId ? { ...n, read: false } : n);
+    setItem(NOTIFICATIONS_KEY, updated);
+    window.dispatchEvent(new Event('pata-data-change'));
+    window.dispatchEvent(new Event('pata-notifications-change'));
+    return updated;
+  },
+
+  deleteNotification(notifId: string): boolean {
+    const list = this.getNotifications();
+    const updated = list.filter(n => n.id !== notifId);
+    setItem(NOTIFICATIONS_KEY, updated);
+    window.dispatchEvent(new Event('pata-data-change'));
+    window.dispatchEvent(new Event('pata-notifications-change'));
+    return true;
   },
 
   markAllNotificationsRead(): AppNotification[] {
     const list = this.getNotifications();
     const updated = list.map(n => ({ ...n, read: true }));
     setItem(NOTIFICATIONS_KEY, updated);
+    window.dispatchEvent(new Event('pata-data-change'));
+    window.dispatchEvent(new Event('pata-notifications-change'));
     return updated;
   },
 
   getUserNotifications(user?: { id?: string; email?: string; role?: string } | null): AppNotification[] {
     const list = this.getNotifications();
-    if (!user) {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('pata_last_applicant_email')?.toLowerCase().trim() : null;
-      return list.filter(n => (!n.userEmail && !n.userId) || (savedEmail && n.userEmail?.toLowerCase().trim() === savedEmail));
+    const cleanEmail = user?.email?.toLowerCase().trim() || 
+      (typeof window !== 'undefined' ? localStorage.getItem('pata_last_applicant_email')?.toLowerCase().trim() : null);
+    const userId = user?.id;
+    const isAdmin = (user?.role === 'admin') || (cleanEmail ? AUTHORIZED_ADMIN_EMAILS.includes(cleanEmail) : false);
+
+    if (isAdmin) {
+      // En el panel de control / administradores:
+      // "que en el panel de control nos lleguen notificaciones de los reportes que an realizado los usuarios, laas postulaciones de adopcion , no lo mismo que a los usuarios"
+      // Notificaciones exclusivas de gestión:
+      // - Reportes realizados por los usuarios
+      // - Postulaciones de adopción
+      // - Mensajes de contacto de los usuarios
+      // - Personas inscritas a brigadas
+      // Se excluyen totalmente los recordatorios dirigidos a los usuarios o estados de aprobación de usuario.
+      return list.filter(n => {
+        // Excluir notificaciones dirigidas al usuario común
+        if (n.targetRole === 'user') return false;
+        if (n.isReminder === true) return false;
+        if (n.statusType === 'aprobada' || n.statusType === 'rechazada') return false;
+
+        // Válidas para administración:
+        return n.targetRole === 'admin' || n.type === 'reporte' || (n.type === 'adopcion' && !n.statusType);
+      });
     }
-    if (user.role === 'admin') {
-      return list;
-    }
-    const cleanEmail = user.email?.toLowerCase().trim();
-    return list.filter(n => 
-      (!n.userEmail && !n.userId) ||
-      (user.id && n.userId === user.id) ||
-      (cleanEmail && n.userEmail?.toLowerCase().trim() === cleanEmail)
-    );
+
+    // Usuarios comunes (ciudadano, voluntario o visitante):
+    // "a los usuarios solo les debe llegar notificaciones de recordatorio para brigadas y si fue aceptada o rechazada su solicitud de adopcion"
+    // "que solo a los administradores le llegue las notificaciones de mensajes de los usuarios y de las personas que se inscrbieron a brigadas, no a los usuarios"
+    return list.filter(n => {
+      // Descartar notificaciones exclusivas de administradores
+      if (n.targetRole === 'admin') return false;
+
+      // 1. Notificaciones de recordatorio para brigadas
+      const isBrigadeReminder = n.type === 'evento' && (
+        n.isReminder === true || 
+        n.title.toLowerCase().includes('recordatorio')
+      );
+      if (isBrigadeReminder) {
+        if (n.userId || n.userEmail) {
+          return Boolean((userId && n.userId === userId) || (cleanEmail && n.userEmail?.toLowerCase().trim() === cleanEmail));
+        }
+        return true;
+      }
+
+      // 2. Notificaciones de adopción ACEPTADA o RECHAZADA
+      const isAdoptionDecision = n.type === 'adopcion' && (
+        n.statusType === 'aprobada' || n.statusType === 'rechazada'
+      );
+      if (isAdoptionDecision) {
+        return Boolean((userId && n.userId === userId) || (cleanEmail && n.userEmail?.toLowerCase().trim() === cleanEmail));
+      }
+
+      // Cualquier otra notificación queda restringida
+      return false;
+    });
+  },
+
+  getAdminNotifications(): AppNotification[] {
+    return this.getUserNotifications({ role: 'admin' });
+  },
+
+  getAdminUnreadCount(): number {
+    return this.getAdminNotifications().filter(n => !n.read).length;
   },
 
   getUnreadCount(user?: { id?: string; email?: string; role?: string } | null): number {
@@ -885,11 +1012,12 @@ export const StoreController = {
     contacts.unshift(newContact);
     setItem(CONTACTS_KEY, contacts);
 
-    // Add in-app notification for administrators
+    // In-app notification strictly for administrators: "mensajes de los usuarios"
     this.addNotification({
-      title: 'Nuevo Mensaje de Contacto',
+      title: '📩 Nuevo Mensaje de Contacto',
       message: `${data.name} (${data.phone}) ha enviado un mensaje: "${data.subject}"`,
       type: 'sistema',
+      targetRole: 'admin',
       linkTab: 'admin'
     });
 

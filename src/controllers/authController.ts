@@ -466,29 +466,67 @@ export const AuthController = {
     };
   },
 
-  updateUserProfile(userId: string, updates: Partial<User>): boolean {
+  updateUserProfile(userId: string, updates: Partial<User> & { password?: string }): { success: boolean; message: string; user?: User } {
     const users = getStoredUsers();
     const userIndex = users.findIndex(u => u.id === userId);
-    if (userIndex === -1) return false;
-
-    if (updates.phone) {
-      updates.phone = sanitizePhone10(updates.phone);
+    if (userIndex === -1) {
+      return { success: false, message: 'Usuario no encontrado en el sistema.' };
     }
 
-    users[userIndex] = {
-      ...users[userIndex],
-      ...updates
-    };
+    if (updates.name !== undefined) {
+      const cleanName = updates.name.trim();
+      if (cleanName.length < 3) {
+        return { success: false, message: 'El nombre completo debe tener al menos 3 caracteres.' };
+      }
+      users[userIndex].name = cleanName;
+    }
+
+    if (updates.phone !== undefined) {
+      const cleanPhone = sanitizePhone10(updates.phone);
+      users[userIndex].phone = cleanPhone;
+    }
+
+    if (updates.location !== undefined) {
+      users[userIndex].location = updates.location.trim();
+    }
+
+    if (updates.avatar !== undefined) {
+      users[userIndex].avatar = updates.avatar.trim();
+    }
+
+    if (updates.password && updates.password.trim()) {
+      if (updates.password.trim().length < 6) {
+        return { success: false, message: 'La nueva contraseña debe tener al menos 6 caracteres.' };
+      }
+      users[userIndex].passwordHash = updates.password.trim();
+    }
+
+    // Role safety: role cannot be escalated to admin
+    if (updates.role && updates.role !== users[userIndex].role) {
+      const userEmail = users[userIndex].email.toLowerCase();
+      if (updates.role === 'admin' && !AUTHORIZED_ADMIN_EMAILS.includes(userEmail)) {
+        // preserve existing role
+      } else {
+        users[userIndex].role = updates.role;
+      }
+    }
 
     saveUsers(users);
 
+    const { passwordHash: _, ...publicUser } = users[userIndex];
     const current = this.getCurrentUser();
     if (current && current.id === userId) {
-      const { passwordHash: _, ...publicUser } = users[userIndex];
       this.setCurrentUser(publicUser);
     }
 
-    return true;
+    window.dispatchEvent(new Event('auth-state-change'));
+    window.dispatchEvent(new Event('pata-data-change'));
+
+    return {
+      success: true,
+      message: '¡Perfil actualizado con éxito!',
+      user: publicUser
+    };
   },
 
   loginAsAdminDemo(): AuthResponse {

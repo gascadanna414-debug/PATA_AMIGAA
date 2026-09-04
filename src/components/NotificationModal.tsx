@@ -37,7 +37,11 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
       setNotifications(StoreController.getUserNotifications(currentUser));
     };
     window.addEventListener('pata-data-change', handleUpdate);
-    return () => window.removeEventListener('pata-data-change', handleUpdate);
+    window.addEventListener('pata-notifications-change', handleUpdate);
+    return () => {
+      window.removeEventListener('pata-data-change', handleUpdate);
+      window.removeEventListener('pata-notifications-change', handleUpdate);
+    };
   }, [currentUser]);
 
   if (!isOpen) return null;

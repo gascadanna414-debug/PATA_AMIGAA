@@ -11,7 +11,8 @@ import {
   BookOpen, 
   Heart,
   Bell,
-  ShieldCheck
+  ShieldCheck,
+  UserCog
 } from 'lucide-react';
 import { User } from '../types';
 import { AuthController } from '../controllers/authController';
@@ -25,6 +26,7 @@ interface NavbarProps {
   currentUser: User | null;
   onOpenAuth: (mode?: 'login' | 'register' | 'forgot') => void;
   onOpenNotifications?: () => void;
+  onOpenProfile?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -32,7 +34,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveTab,
   currentUser,
   onOpenAuth,
-  onOpenNotifications
+  onOpenNotifications,
+  onOpenProfile
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState<number>(() => StoreController.getUnreadCount(currentUser));
@@ -46,7 +49,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       setUnreadCount(StoreController.getUnreadCount(currentUser));
     };
     window.addEventListener('pata-data-change', handleDataChange);
-    return () => window.removeEventListener('pata-data-change', handleDataChange);
+    window.addEventListener('pata-notifications-change', handleDataChange);
+    return () => {
+      window.removeEventListener('pata-data-change', handleDataChange);
+      window.removeEventListener('pata-notifications-change', handleDataChange);
+    };
   }, [currentUser]);
 
   const handleRequestLogout = () => {
@@ -142,33 +149,49 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             {currentUser ? (
-              <div className="flex items-center gap-2.5 bg-[#FAF6F0] pl-3 pr-2 py-1 rounded-full border border-[#E8DFD3]">
-                <div className="w-7 h-7 rounded-full bg-[#9E6B38] text-white flex items-center justify-center font-bold text-xs shadow-inner">
-                  {currentUser.avatar ? (
-                    <img 
-                      src={resolveImageUrl(currentUser.avatar, 'avatar')} 
-                      alt={currentUser.name} 
-                      className="w-full h-full rounded-full object-cover"
-                      onError={(e) => handleImageError(e, 'avatar')}
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    currentUser.name.charAt(0).toUpperCase()
-                  )}
-                </div>
-                <div className="text-left leading-tight pr-1">
-                  <span className="text-xs font-bold text-[#2C1E14] block max-w-[120px] truncate">
-                    {currentUser.name}
-                  </span>
-                  <span className="text-[10px] text-[#8A7568] capitalize font-medium">
-                    {currentUser.role}
-                  </span>
-                </div>
+              <div className="flex items-center gap-2 bg-[#FAF6F0] pl-2.5 pr-2 py-1 rounded-full border border-[#E8DFD3]">
+                <button
+                  id="open-profile-summary-btn"
+                  onClick={() => onOpenProfile && onOpenProfile()}
+                  title="Ver y editar mi perfil"
+                  className="flex items-center gap-2 text-left cursor-pointer hover:opacity-90 transition group"
+                >
+                  <div className="w-7 h-7 rounded-full bg-[#9E6B38] text-white flex items-center justify-center font-bold text-xs shadow-inner shrink-0 overflow-hidden ring-1 ring-white">
+                    {currentUser.avatar ? (
+                      <img 
+                        src={resolveImageUrl(currentUser.avatar, 'avatar')} 
+                        alt={currentUser.name} 
+                        className="w-full h-full rounded-full object-cover"
+                        onError={(e) => handleImageError(e, 'avatar')}
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      currentUser.name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="text-left leading-tight pr-1">
+                    <span className="text-xs font-bold text-[#2C1E14] block max-w-[120px] truncate group-hover:text-[#9E6B38] transition">
+                      {currentUser.name}
+                    </span>
+                    <span className="text-[10px] text-[#8A7568] capitalize font-medium flex items-center gap-1">
+                      <span>{currentUser.role}</span>
+                      <span className="text-[#9E6B38] font-bold">• Editar</span>
+                    </span>
+                  </div>
+                </button>
+                <button
+                  id="open-profile-btn"
+                  onClick={() => onOpenProfile && onOpenProfile()}
+                  title="Editar perfil"
+                  className="p-1.5 text-[#8A7568] hover:text-[#9E6B38] rounded-full hover:bg-[#EFE6DA] transition cursor-pointer"
+                >
+                  <UserCog className="w-3.5 h-3.5" />
+                </button>
                 <button
                   id="logout-btn"
                   onClick={handleRequestLogout}
                   title="Cerrar sesión"
-                  className="p-1 text-[#8A7568] hover:text-rose-600 rounded-full hover:bg-[#EFE6DA] transition cursor-pointer"
+                  className="p-1.5 text-[#8A7568] hover:text-rose-600 rounded-full hover:bg-[#EFE6DA] transition cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                 </button>
@@ -268,22 +291,54 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="lg:hidden bg-[#FAF6F0] border-b border-[#EAE2D5] px-4 pt-3 pb-6 space-y-2 animate-in slide-in-from-top-2 duration-200">
           {currentUser && (
             <div className="flex items-center justify-between p-3 bg-white rounded-2xl mb-3 border border-[#E8DFD3]">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#9E6B38] text-white flex items-center justify-center font-bold text-sm">
-                  {currentUser.name.charAt(0).toUpperCase()}
+              <div 
+                className="flex items-center gap-3 cursor-pointer"
+                onClick={() => {
+                  if (onOpenProfile) onOpenProfile();
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                <div className="w-9 h-9 rounded-full bg-[#9E6B38] text-white flex items-center justify-center font-bold text-sm overflow-hidden ring-1 ring-white shrink-0">
+                  {currentUser.avatar ? (
+                    <img
+                      src={resolveImageUrl(currentUser.avatar, 'avatar')}
+                      alt={currentUser.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => handleImageError(e, 'avatar')}
+                    />
+                  ) : (
+                    currentUser.name.charAt(0).toUpperCase()
+                  )}
                 </div>
                 <div>
                   <div className="text-sm font-bold text-[#2C1E14]">{currentUser.name}</div>
-                  <div className="text-xs text-[#8A7568] capitalize">{currentUser.role}</div>
+                  <div className="text-xs text-[#9E6B38] font-medium flex items-center gap-1">
+                    <span className="capitalize text-[#8A7568]">{currentUser.role}</span>
+                    <span>• Editar perfil</span>
+                  </div>
                 </div>
               </div>
-              <button
-                onClick={handleRequestLogout}
-                className="text-xs text-rose-700 hover:text-rose-800 font-semibold px-2.5 py-1 bg-rose-50 rounded-lg cursor-pointer flex items-center gap-1 border border-rose-200"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Cerrar sesión</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  id="mobile-drawer-edit-profile-btn"
+                  onClick={() => {
+                    if (onOpenProfile) onOpenProfile();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="text-xs text-[#9E6B38] hover:text-[#86582A] font-semibold px-2.5 py-1.5 bg-[#FAF6F0] rounded-xl cursor-pointer flex items-center gap-1 border border-[#E8DFD3]"
+                  title="Editar perfil"
+                >
+                  <UserCog className="w-3.5 h-3.5" />
+                  <span>Editar</span>
+                </button>
+                <button
+                  onClick={handleRequestLogout}
+                  className="text-xs text-rose-700 hover:text-rose-800 font-semibold p-1.5 bg-rose-50 rounded-xl cursor-pointer flex items-center justify-center border border-rose-200"
+                  title="Cerrar sesión"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           )}
 

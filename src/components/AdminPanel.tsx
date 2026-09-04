@@ -27,7 +27,12 @@ import {
   Sparkles,
   Filter,
   Check,
-  EyeOff
+  EyeOff,
+  Bell,
+  CheckCheck,
+  Inbox,
+  CheckCircle,
+  BellOff
 } from 'lucide-react';
 import { 
   User, 
@@ -38,7 +43,8 @@ import {
   AnimalReport, 
   EventRegistration,
   AdoptionApplication,
-  ContactMessage
+  ContactMessage,
+  AppNotification
 } from '../types';
 import { AuthController, AUTHORIZED_ADMIN_EMAILS, AUTHORIZED_ADMIN_CREDENTIALS } from '../controllers/authController';
 import { StoreController } from '../controllers/storeController';
@@ -60,7 +66,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 }) => {
   const isAdmin = AuthController.isAdmin(currentUser);
 
-  const [activeAdminTab, setActiveAdminTab] = useState<'reportes' | 'usuarios' | 'brigadas' | 'adopciones' | 'historias' | 'solicitudes' | 'mensajes'>('reportes');
+  const [activeAdminTab, setActiveAdminTab] = useState<'notificaciones' | 'reportes' | 'solicitudes' | 'mensajes' | 'brigadas' | 'adopciones' | 'usuarios' | 'historias'>('notificaciones');
   
   // Data states
   const [usersList, setUsersList] = useState<User[]>(() => AuthController.getAllUsers());
@@ -71,6 +77,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [appsList, setAppsList] = useState<AdoptionApplication[]>(() => StoreController.getAdoptionApplications());
   const [registrationsList, setRegistrationsList] = useState<EventRegistration[]>(() => StoreController.getEventRegistrations());
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>(() => StoreController.getContactMessages());
+  const [adminNotifications, setAdminNotifications] = useState<AppNotification[]>(() => StoreController.getAdminNotifications());
 
   // Search & filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -78,6 +85,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [speciesFilter, setSpeciesFilter] = useState<string>('todos');
   const [reportStatusFilter, setReportStatusFilter] = useState<string>('todos');
   const [messageFilter, setMessageFilter] = useState<'todos' | 'no_leidos' | 'leidos'>('todos');
+  const [adminNotifFilter, setAdminNotifFilter] = useState<'todos' | 'reportes' | 'adopciones' | 'mensajes' | 'brigadas'>('todos');
+  const [adminNotifOnlyUnread, setAdminNotifOnlyUnread] = useState<boolean>(false);
 
   // Modals & Form States
   const [isAddingUser, setIsAddingUser] = useState(false);
@@ -133,6 +142,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setAppsList(StoreController.getAdoptionApplications());
     setRegistrationsList(StoreController.getEventRegistrations());
     setContactMessages(StoreController.getContactMessages());
+    setAdminNotifications(StoreController.getAdminNotifications());
   };
 
   useEffect(() => {
@@ -140,12 +150,65 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       refreshAllData();
     };
     window.addEventListener('pata-data-change', handleDataChange);
+    window.addEventListener('pata-notifications-change', handleDataChange);
     window.addEventListener('auth-state-change', handleDataChange);
     return () => {
       window.removeEventListener('pata-data-change', handleDataChange);
+      window.removeEventListener('pata-notifications-change', handleDataChange);
       window.removeEventListener('auth-state-change', handleDataChange);
     };
   }, []);
+
+  const handleMarkAllAdminNotifsRead = () => {
+    StoreController.markAllNotificationsRead();
+    setAdminNotifications(StoreController.getAdminNotifications());
+    showNotification('Todas las notificaciones administrativas han sido marcadas como leídas.');
+  };
+
+  const handleToggleAdminNotifRead = (notifId: string, currentRead: boolean) => {
+    if (currentRead) {
+      StoreController.markNotificationUnread(notifId);
+    } else {
+      StoreController.markNotificationRead(notifId);
+    }
+    setAdminNotifications(StoreController.getAdminNotifications());
+  };
+
+  const handleDeleteAdminNotif = (notifId: string) => {
+    StoreController.deleteNotification(notifId);
+    setAdminNotifications(StoreController.getAdminNotifications());
+    showNotification('Notificación eliminada de la bandeja.');
+  };
+
+  const handleNavigateFromNotif = (notif: AppNotification) => {
+    // Marcar como leída
+    StoreController.markNotificationRead(notif.id);
+    setAdminNotifications(StoreController.getAdminNotifications());
+
+    if (notif.type === 'reporte') {
+      setActiveAdminTab('reportes');
+      setReportStatusFilter('todos');
+      setSearchQuery('');
+      if (notif.metadata?.reportId) {
+        const found = reportsList.find(r => r.id === notif.metadata?.reportId);
+        if (found) {
+          setSelectedReportDetail(found);
+        }
+      }
+    } else if (notif.type === 'adopcion') {
+      setActiveAdminTab('solicitudes');
+      setSearchQuery('');
+    } else if (notif.type === 'sistema') {
+      setActiveAdminTab('mensajes');
+      setMessageFilter('todos');
+      setSearchQuery('');
+    } else if (notif.type === 'evento') {
+      setActiveAdminTab('brigadas');
+      if (notif.eventId) {
+        setViewingRegistrationsEventId(notif.eventId);
+      }
+    }
+  };
 
   // Preset photo galleries for easy animal registration
   const PRESET_PET_PHOTOS = [
@@ -649,23 +712,144 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="bg-white/10 px-3 py-2 rounded-2xl text-xs border border-white/10 text-center">
-            <span className="block font-bold text-[#FAF6F0]">{usersList.length}</span>
-            <span className="text-[10px] text-[#D8C7BA]">Usuarios</span>
-          </div>
-          <div className="bg-white/10 px-3 py-2 rounded-2xl text-xs border border-white/10 text-center">
-            <span className="block font-bold text-[#FAF6F0]">{petsList.length}</span>
-            <span className="text-[10px] text-[#D8C7BA]">Adopciones</span>
-          </div>
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          <button
+            id="admin-notif-center-btn"
+            onClick={() => setActiveAdminTab('notificaciones')}
+            className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl border text-xs font-bold transition cursor-pointer ${
+              activeAdminTab === 'notificaciones'
+                ? 'bg-[#9E6B38] text-white border-[#B8824C] shadow-sm'
+                : 'bg-white/10 hover:bg-white/20 text-white border-white/15'
+            }`}
+            title="Buzón exclusivo de notificaciones de usuarios"
+          >
+            <Bell className="w-4 h-4 text-[#E8A868]" />
+            <span>Notificaciones</span>
+            {adminNotifications.filter(n => !n.read).length > 0 ? (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-white animate-pulse">
+                {adminNotifications.filter(n => !n.read).length} nuevas
+              </span>
+            ) : (
+              <span className="text-[10px] text-[#D8C7BA]">
+                ({adminNotifications.length})
+              </span>
+            )}
+          </button>
+
           <div className="bg-white/10 px-3 py-2 rounded-2xl text-xs border border-white/10 text-center">
             <span className="block font-bold text-[#FAF6F0]">{reportsList.length}</span>
             <span className="text-[10px] text-[#D8C7BA]">Reportes</span>
           </div>
           <div className="bg-white/10 px-3 py-2 rounded-2xl text-xs border border-white/10 text-center">
+            <span className="block font-bold text-[#FAF6F0]">{appsList.length}</span>
+            <span className="text-[10px] text-[#D8C7BA]">Postulaciones</span>
+          </div>
+          <div className="bg-white/10 px-3 py-2 rounded-2xl text-xs border border-white/10 text-center">
+            <span className="block font-bold text-[#FAF6F0]">{contactMessages.length}</span>
+            <span className="text-[10px] text-[#D8C7BA]">Mensajes</span>
+          </div>
+          <div className="bg-white/10 px-3 py-2 rounded-2xl text-xs border border-white/10 text-center">
             <span className="block font-bold text-[#FAF6F0]">{eventsList.length}</span>
             <span className="text-[10px] text-[#D8C7BA]">Brigadas</span>
           </div>
+        </div>
+      </div>
+
+      {/* Live Admin Incoming Alerts Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Reportes Alert Card */}
+        <div 
+          onClick={() => {
+            setActiveAdminTab('reportes');
+            setReportStatusFilter('recibido');
+          }}
+          className="bg-white p-3.5 rounded-2xl border border-[#EAE2D5] hover:border-red-300 hover:shadow-xs transition cursor-pointer flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-red-100 text-red-700 flex items-center justify-center shrink-0">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-[#6E574B] uppercase block">
+                Reportes Ciudadanos
+              </span>
+              <span className="text-sm font-bold text-[#2C1E14]">
+                {reportsList.filter(r => r.status === 'recibido' || r.status === 'en_camino').length} por atender
+              </span>
+            </div>
+          </div>
+          <span className="text-[11px] font-semibold text-[#9E6B38] hover:underline flex items-center gap-0.5">
+            Ver <ArrowRight className="w-3 h-3" />
+          </span>
+        </div>
+
+        {/* Postulaciones Alert Card */}
+        <div 
+          onClick={() => setActiveAdminTab('solicitudes')}
+          className="bg-white p-3.5 rounded-2xl border border-[#EAE2D5] hover:border-amber-300 hover:shadow-xs transition cursor-pointer flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+              <UserCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-[#6E574B] uppercase block">
+                Postulaciones Adopción
+              </span>
+              <span className="text-sm font-bold text-[#2C1E14]">
+                {appsList.filter(a => a.status === 'pendiente').length} por evaluar
+              </span>
+            </div>
+          </div>
+          <span className="text-[11px] font-semibold text-[#9E6B38] hover:underline flex items-center gap-0.5">
+            Revisar <ArrowRight className="w-3 h-3" />
+          </span>
+        </div>
+
+        {/* Mensajes Alert Card */}
+        <div 
+          onClick={() => setActiveAdminTab('mensajes')}
+          className="bg-white p-3.5 rounded-2xl border border-[#EAE2D5] hover:border-[#9E6B38] hover:shadow-xs transition cursor-pointer flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#FAF0E6] text-[#9E6B38] flex items-center justify-center shrink-0">
+              <Mail className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-[#6E574B] uppercase block">
+                Mensajes de Usuarios
+              </span>
+              <span className="text-sm font-bold text-[#2C1E14]">
+                {contactMessages.filter(m => !m.read).length} sin leer
+              </span>
+            </div>
+          </div>
+          <span className="text-[11px] font-semibold text-[#9E6B38] hover:underline flex items-center gap-0.5">
+            Leer <ArrowRight className="w-3 h-3" />
+          </span>
+        </div>
+
+        {/* Buzón Alert Card */}
+        <div 
+          onClick={() => setActiveAdminTab('notificaciones')}
+          className="bg-white p-3.5 rounded-2xl border border-[#EAE2D5] hover:border-[#B8824C] hover:shadow-xs transition cursor-pointer flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-orange-100 text-[#9E6B38] flex items-center justify-center shrink-0">
+              <Bell className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-[#6E574B] uppercase block">
+                Buzón Administrativo
+              </span>
+              <span className="text-sm font-bold text-[#2C1E14]">
+                {adminNotifications.filter(n => !n.read).length} avisos nuevos
+              </span>
+            </div>
+          </div>
+          <span className="text-[11px] font-semibold text-[#9E6B38] hover:underline flex items-center gap-0.5">
+            Buzón <ArrowRight className="w-3 h-3" />
+          </span>
         </div>
       </div>
 
@@ -680,13 +864,54 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       {/* Admin Tabs Navigation */}
       <div className="flex items-center gap-1.5 sm:gap-2 bg-[#FAF6F0] p-1.5 rounded-2xl sm:rounded-full border border-[#E8DFD3] overflow-x-auto no-scrollbar sm:flex-wrap">
         {[
-          { id: 'reportes', label: `Reportes Ciudadanos (${reportsList.length})`, icon: AlertCircle, count: 0 },
-          { id: 'usuarios', label: `Personas Registradas (${usersList.length})`, icon: Users, count: 0 },
-          { id: 'adopciones', label: `Animales en Adopción (${petsList.length})`, icon: Heart, count: 0 },
-          { id: 'brigadas', label: `Modificar Brigadas (${eventsList.length})`, icon: Calendar, count: 0 },
-          { id: 'solicitudes', label: `Solicitudes Adopción (${appsList.length})`, icon: UserCheck, count: 0 },
-          { id: 'mensajes', label: `Mensajes de Contacto (${contactMessages.length})`, icon: Mail, count: contactMessages.filter(m => !m.read).length },
-          { id: 'historias', label: `Historias Rescate (${storiesList.length})`, icon: BookOpen, count: 0 }
+          { 
+            id: 'notificaciones', 
+            label: `Buzón Notificaciones (${adminNotifications.length})`, 
+            icon: Bell, 
+            count: adminNotifications.filter(n => !n.read).length 
+          },
+          { 
+            id: 'reportes', 
+            label: `Reportes Ciudadanos (${reportsList.length})`, 
+            icon: AlertCircle, 
+            count: reportsList.filter(r => r.status === 'recibido' || r.status === 'en_camino').length 
+          },
+          { 
+            id: 'solicitudes', 
+            label: `Solicitudes Adopción (${appsList.length})`, 
+            icon: UserCheck, 
+            count: appsList.filter(a => a.status === 'pendiente').length 
+          },
+          { 
+            id: 'mensajes', 
+            label: `Mensajes de Contacto (${contactMessages.length})`, 
+            icon: Mail, 
+            count: contactMessages.filter(m => !m.read).length 
+          },
+          { 
+            id: 'brigadas', 
+            label: `Modificar Brigadas (${eventsList.length})`, 
+            icon: Calendar, 
+            count: 0 
+          },
+          { 
+            id: 'adopciones', 
+            label: `Animales en Adopción (${petsList.length})`, 
+            icon: Heart, 
+            count: 0 
+          },
+          { 
+            id: 'usuarios', 
+            label: `Personas Registradas (${usersList.length})`, 
+            icon: Users, 
+            count: 0 
+          },
+          { 
+            id: 'historias', 
+            label: `Historias Rescate (${storiesList.length})`, 
+            icon: BookOpen, 
+            count: 0 
+          }
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeAdminTab === tab.id;
@@ -715,6 +940,209 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           );
         })}
       </div>
+
+      {/* ========================================================================= */}
+      {/* TAB 0: BUZÓN DE NOTIFICACIONES DE USUARIOS (Reportes, Adopciones, Mensajes) */}
+      {/* ========================================================================= */}
+      {activeAdminTab === 'notificaciones' && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-[#EAE2D5] shadow-xs">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-[#FAF0E6] text-[#9E6B38] rounded-xl">
+                  <Bell className="w-5 h-5" />
+                </div>
+                <h2 className="text-lg font-bold font-['Fraunces',serif] text-[#2C1E14]">
+                  Buzón Exclusivo de Notificaciones ({adminNotifications.length})
+                </h2>
+              </div>
+              <p className="text-xs text-[#6E574B] max-w-2xl">
+                Recibe en tiempo real las alertas generadas por los usuarios en Purificación: 
+                <strong> nuevos reportes de rescate animal</strong>, 
+                <strong> postulaciones para adopción</strong>, 
+                <strong> mensajes de contacto</strong> e 
+                <strong> inscripciones a brigadas</strong>.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+              {adminNotifications.filter(n => !n.read).length > 0 && (
+                <button
+                  onClick={handleMarkAllAdminNotifsRead}
+                  className="px-3.5 py-2 bg-[#FAF6F0] hover:bg-[#F3ECE0] border border-[#E8DFD3] text-[#2C1E14] text-xs font-semibold rounded-full cursor-pointer transition flex items-center gap-1.5 shadow-xs"
+                  title="Marcar todas las alertas como leídas"
+                >
+                  <CheckCheck className="w-4 h-4 text-emerald-600" />
+                  <span>Marcar todo leído ({adminNotifications.filter(n => !n.read).length})</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Filters Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#FAF6F0] p-3 rounded-2xl border border-[#E8DFD3]">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {[
+                { id: 'todos', label: 'Todas las Alertas', count: adminNotifications.length },
+                { id: 'reportes', label: '🚨 Reportes Ciudadanos', count: adminNotifications.filter(n => n.type === 'reporte').length },
+                { id: 'adopciones', label: '🐾 Postulaciones Adopción', count: adminNotifications.filter(n => n.type === 'adopcion').length },
+                { id: 'mensajes', label: '📩 Mensajes de Contacto', count: adminNotifications.filter(n => n.type === 'sistema').length },
+                { id: 'brigadas', label: '📋 Inscritos en Brigadas', count: adminNotifications.filter(n => n.type === 'evento').length }
+              ].map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setAdminNotifFilter(f.id as any)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                    adminNotifFilter === f.id
+                      ? 'bg-[#9E6B38] text-white shadow-xs'
+                      : 'bg-white text-[#6E574B] hover:bg-white/80 border border-[#E8DFD3]'
+                  }`}
+                >
+                  <span>{f.label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                    adminNotifFilter === f.id ? 'bg-white/20 text-white' : 'bg-[#FAF6F0] text-[#8A7568]'
+                  }`}>
+                    {f.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <label className="flex items-center gap-2 text-xs font-medium text-[#2C1E14] cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={adminNotifOnlyUnread}
+                onChange={e => setAdminNotifOnlyUnread(e.target.checked)}
+                className="w-4 h-4 rounded text-[#9E6B38] focus:ring-[#9E6B38]"
+              />
+              <span>Solo no leídas ({adminNotifications.filter(n => !n.read).length})</span>
+            </label>
+          </div>
+
+          {/* Notifications List */}
+          <div className="space-y-3">
+            {(() => {
+              const filteredNotifs = adminNotifications.filter(notif => {
+                if (adminNotifOnlyUnread && notif.read) return false;
+                if (adminNotifFilter === 'reportes' && notif.type !== 'reporte') return false;
+                if (adminNotifFilter === 'adopciones' && notif.type !== 'adopcion') return false;
+                if (adminNotifFilter === 'mensajes' && notif.type !== 'sistema') return false;
+                if (adminNotifFilter === 'brigadas' && notif.type !== 'evento') return false;
+                return true;
+              });
+
+              if (filteredNotifs.length === 0) {
+                return (
+                  <div className="bg-white p-12 rounded-2xl border border-[#EAE2D5] text-center space-y-2">
+                    <Inbox className="w-10 h-10 text-[#D8C7BA] mx-auto opacity-60" />
+                    <h3 className="text-sm font-bold text-[#2C1E14]">
+                      No hay notificaciones en este filtro
+                    </h3>
+                    <p className="text-xs text-[#8A7568] max-w-sm mx-auto">
+                      Cuando los usuarios envíen reportes de rescate, solicitudes de adopción o mensajes, aparecerán organizadas aquí.
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {filteredNotifs.map(notif => {
+                    const isReport = notif.type === 'reporte';
+                    const isAdoption = notif.type === 'adopcion';
+                    const isSystem = notif.type === 'sistema';
+                    const isEvent = notif.type === 'evento';
+
+                    return (
+                      <div
+                        key={notif.id}
+                        className={`p-4 rounded-2xl border transition flex flex-col justify-between gap-3 shadow-xs ${
+                          notif.read
+                            ? 'bg-white border-[#EAE2D5]'
+                            : 'bg-[#FFFDF9] border-[#9E6B38]/40 ring-1 ring-[#9E6B38]/20'
+                        }`}
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
+                              isReport ? 'bg-red-100 text-red-800' :
+                              isAdoption ? 'bg-amber-100 text-amber-900' :
+                              isEvent ? 'bg-blue-100 text-blue-800' :
+                              'bg-[#FAF0E6] text-[#86582A]'
+                            }`}>
+                              {isReport && <AlertCircle className="w-3 h-3" />}
+                              {isAdoption && <Heart className="w-3 h-3" />}
+                              {isEvent && <Calendar className="w-3 h-3" />}
+                              {isSystem && <Mail className="w-3 h-3" />}
+                              <span>
+                                {isReport ? 'Reporte Ciudadano' :
+                                 isAdoption ? 'Postulación de Adopción' :
+                                 isEvent ? 'Inscripción en Brigada' :
+                                 'Mensaje de Contacto'}
+                              </span>
+                            </span>
+
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] text-[#8A7568] flex items-center gap-1">
+                                <Clock className="w-3 h-3 text-[#9E6B38]" />
+                                {notif.timestamp}
+                              </span>
+                              {!notif.read && (
+                                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-red-600 text-white animate-pulse">
+                                  NUEVA
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="text-sm font-bold text-[#2C1E14]">
+                              {notif.title}
+                            </h4>
+                            <p className="text-xs text-[#5C4538] mt-1 leading-relaxed">
+                              {notif.message}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-[#F5EDE2] flex items-center justify-between gap-2">
+                          <button
+                            onClick={() => handleNavigateFromNotif(notif)}
+                            className="px-3 py-1.5 bg-[#2C1E14] hover:bg-[#3D2C1F] text-white text-xs font-semibold rounded-full cursor-pointer transition flex items-center gap-1.5 shadow-xs"
+                          >
+                            {isReport && <span>🚨 Atender Reporte</span>}
+                            {isAdoption && <span>🐾 Evaluar Postulación</span>}
+                            {isSystem && <span>📩 Ver Mensaje</span>}
+                            {isEvent && <span>📋 Ver Inscritos</span>}
+                            <ArrowRight className="w-3 h-3 text-[#9E6B38]" />
+                          </button>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleToggleAdminNotifRead(notif.id, notif.read)}
+                              className="p-1.5 text-[#6E574B] hover:text-[#2C1E14] hover:bg-[#FAF6F0] rounded-lg transition cursor-pointer"
+                              title={notif.read ? 'Marcar como no leído' : 'Marcar como leído'}
+                            >
+                              {notif.read ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteAdminNotif(notif.id)}
+                              className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                              title="Eliminar notificación"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* TAB 1: REPORTES CIUDADANOS (Ver y modificar estados de atención) */}
@@ -1990,7 +2418,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   >
                     <option value="Perro">🐶 Perro / Canino</option>
                     <option value="Gato">🐱 Gato / Felino</option>
-                    <option value="Otro">🐾 Otro</option>
                   </select>
                 </div>
               </div>

@@ -24,11 +24,18 @@ export interface AppNotification {
   eventId?: string;
   linkTab?: string;
   statusType?: 'aprobada' | 'rechazada' | 'pendiente' | 'info';
+  targetRole?: 'admin' | 'user' | 'all';
+  isReminder?: boolean;
   metadata?: {
     petName?: string;
     applicantName?: string;
     applicantPhone?: string;
     statusNote?: string;
+    reportId?: string;
+    applicationId?: string;
+    neighborhood?: string;
+    animalType?: string;
+    [key: string]: any;
   };
 }
 
@@ -140,6 +147,7 @@ export interface EventRegistration {
   id: string;
   eventId: string;
   eventTitle: string;
+  userId?: string;
   ownerName: string;
   ownerEmail: string;
   ownerPhone: string;
