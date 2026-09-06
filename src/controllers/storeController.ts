@@ -13,6 +13,7 @@ import {
 import { 
   INITIAL_SUCCESS_STORIES, 
   INITIAL_ADOPTION_PETS, 
+  INITIAL_ADOPTION_APPLICATIONS,
   INITIAL_HEALTH_EVENTS, 
   INITIAL_ANIMAL_REPORTS, 
   INITIAL_CHAT_CHANNELS, 
@@ -133,7 +134,7 @@ const INITIAL_USER_NOTIFICATIONS: AppNotification[] = [
   {
     id: 'user-notif-app-accepted-1',
     title: '🎉 ¡Postulación Aprobada para Adopción: Mateo!',
-    message: '¡Felicidades! Tu postulación para adoptar a Mateo ha sido APROBADA con éxito por el equipo de Pata Amiga Purificación. Nos comunicaremos contigo para coordinar la firma del acta y entrega responsable.',
+    message: '¡Felicidades! Tu postulación para adoptar a Mateo ha sido APROBADA con éxito por el equipo de Pata Amiga Purificación. Nos comunicaremos contigo al 315 444 2211 para coordinar más datos necesarios y ultimar detalles de la adopción responsable.',
     type: 'adopcion',
     statusType: 'aprobada',
     timestamp: 'Ayer, 04:30 PM',
@@ -246,6 +247,23 @@ export const StoreController = {
       }
     }
 
+    // CRITICAL: Synchronize pet status with adoption applications in real-time
+    // Any pet with an approved adoption application is guaranteed to be 'adoptado' across all profiles!
+    const apps = getItem<AdoptionApplication[]>(ADOPTION_APPS_KEY, INITIAL_ADOPTION_APPLICATIONS);
+    const approvedPetIds = new Set(apps.filter(a => a.status === 'aprobada').map(a => a.petId));
+    const inProcessPetIds = new Set(apps.filter(a => a.status === 'pendiente').map(a => a.petId));
+    for (const p of finalPets) {
+      if (approvedPetIds.has(p.id)) {
+        if (p.status !== 'adoptado') {
+          p.status = 'adoptado';
+          needsSave = true;
+        }
+      } else if (inProcessPetIds.has(p.id) && p.status === 'disponible') {
+        p.status = 'en_proceso';
+        needsSave = true;
+      }
+    }
+
     if (needsSave || finalPets.length !== cached.length) {
       setItem(PETS_KEY, finalPets);
     }
@@ -297,6 +315,10 @@ export const StoreController = {
       setItem(PETS_KEY, pets);
     }
 
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('pata-data-change'));
+      window.dispatchEvent(new Event('pata-pets-change'));
+    }
     return savedPet;
   },
 
@@ -309,6 +331,10 @@ export const StoreController = {
     const pets = getItem<AdoptionPet[]>(PETS_KEY, INITIAL_ADOPTION_PETS);
     const filtered = pets.filter(p => p.id !== petId);
     setItem(PETS_KEY, filtered);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('pata-data-change'));
+      window.dispatchEvent(new Event('pata-pets-change'));
+    }
     return true;
   },
 
@@ -316,6 +342,10 @@ export const StoreController = {
     const pets = this.getAdoptionPets();
     const updated = pets.map(p => p.id === petId ? { ...p, status } : p);
     setItem(PETS_KEY, updated);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('pata-data-change'));
+      window.dispatchEvent(new Event('pata-pets-change'));
+    }
     return updated;
   },
 
@@ -336,11 +366,11 @@ export const StoreController = {
   },
 
   getAdoptionApplications(): AdoptionApplication[] {
-    return getItem<AdoptionApplication[]>(ADOPTION_APPS_KEY, []);
+    return getItem<AdoptionApplication[]>(ADOPTION_APPS_KEY, INITIAL_ADOPTION_APPLICATIONS);
   },
 
   submitAdoptionApplication(appData: Omit<AdoptionApplication, 'id' | 'status' | 'submittedAt'>): AdoptionApplication {
-    const apps = getItem<AdoptionApplication[]>(ADOPTION_APPS_KEY, []);
+    const apps = this.getAdoptionApplications();
     const newApp: AdoptionApplication = {
       ...appData,
       id: `app-${Date.now()}`,
@@ -383,6 +413,12 @@ export const StoreController = {
       }
     });
 
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('pata-data-change'));
+      window.dispatchEvent(new Event('pata-pets-change'));
+      window.dispatchEvent(new Event('pata-notifications-change'));
+    }
+
     return newApp;
   },
 
@@ -394,7 +430,7 @@ export const StoreController = {
     const targetApp = { ...apps[idx] };
     targetApp.status = status;
     targetApp.statusNote = adminNote || (status === 'aprobada'
-      ? '¡Felicitaciones! Tu postulación ha sido aprobada por la administración de Pata Amiga Purificación.'
+      ? '¡Felicitaciones! Tu postulación ha sido aprobada por la administración de Pata Amiga Purificación. Nos comunicaremos contigo para coordinar más datos necesarios y ultimar detalles.'
       : status === 'rechazada'
         ? 'Tu postulación no ha podido ser aprobada en esta oportunidad. Te invitamos a conocer otros peluditos en adopción.'
         : 'Tu solicitud está en revisión.');
@@ -420,8 +456,8 @@ export const StoreController = {
         statusType: 'aprobada',
         title: `🎉 ¡Postulación Aprobada para ${targetApp.petName}!`,
         message: adminNote
-          ? `¡Felicidades, ${targetApp.applicantName}! Tu solicitud para adoptar a ${targetApp.petName} ha sido APROBADA. Mensaje de la administración: "${adminNote}". Nos comunicaremos contigo al ${targetApp.applicantPhone} para coordinar la entrega y firma del acta.`
-          : `¡Felicidades, ${targetApp.applicantName}! Tu solicitud para adoptar a ${targetApp.petName} ha sido APROBADA con éxito por la administración de Pata Amiga Purificación. Nos comunicaremos contigo al ${targetApp.applicantPhone} para coordinar la entrega y firma del acta de adopción responsable.`,
+          ? `¡Felicidades, ${targetApp.applicantName}! Tu solicitud para adoptar a ${targetApp.petName} ha sido APROBADA. Mensaje de la administración: "${adminNote}". Nos comunicaremos contigo al ${targetApp.applicantPhone} para coordinar más datos necesarios y ultimar detalles.`
+          : `¡Felicidades, ${targetApp.applicantName}! Tu solicitud para adoptar a ${targetApp.petName} ha sido APROBADA con éxito por la administración de Pata Amiga Purificación. Nos comunicaremos contigo al ${targetApp.applicantPhone} para coordinar más datos necesarios y ultimar detalles de la adopción responsable.`,
         type: 'adopcion',
         linkTab: 'adopciones',
         metadata: {
@@ -474,6 +510,12 @@ export const StoreController = {
       );
     }
 
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('pata-data-change'));
+      window.dispatchEvent(new Event('pata-pets-change'));
+      window.dispatchEvent(new Event('pata-notifications-change'));
+    }
+
     return true;
   },
 
@@ -503,6 +545,11 @@ export const StoreController = {
           this.updatePetStatus(appToDelete.petId, 'disponible');
         }
       }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('pata-data-change'));
+      window.dispatchEvent(new Event('pata-pets-change'));
     }
 
     return true;

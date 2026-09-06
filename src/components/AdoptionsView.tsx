@@ -15,7 +15,7 @@ import {
 import { AdoptionPet, AdoptionApplication, User } from '../types';
 import { StoreController } from '../controllers/storeController';
 import { resolveImageUrl, handleImageError } from '../utils/imageUtils';
-import { parsePhoneWithCountry } from '../utils/phoneUtils';
+import { parsePhoneWithCountry, formatPhone10 } from '../utils/phoneUtils';
 import { PhoneInput } from './PhoneInput';
 import confetti from 'canvas-confetti';
 
@@ -46,14 +46,26 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
     StoreController.getUserAdoptionApplications(currentUser)
   );
 
-  // Real-time synchronization when pets or applications change status
+  // Real-time synchronization when pets or applications change status, or when profile switches
   useEffect(() => {
+    // Immediately refresh state whenever currentUser prop changes
+    setPets(StoreController.getAdoptionPets());
+    setUserApplications(StoreController.getUserAdoptionApplications(currentUser));
+
     const handleDataChange = () => {
       setPets(StoreController.getAdoptionPets());
       setUserApplications(StoreController.getUserAdoptionApplications(currentUser));
     };
+
     window.addEventListener('pata-data-change', handleDataChange);
-    return () => window.removeEventListener('pata-data-change', handleDataChange);
+    window.addEventListener('pata-pets-change', handleDataChange);
+    window.addEventListener('storage', handleDataChange);
+
+    return () => {
+      window.removeEventListener('pata-data-change', handleDataChange);
+      window.removeEventListener('pata-pets-change', handleDataChange);
+      window.removeEventListener('storage', handleDataChange);
+    };
   }, [currentUser]);
 
   // Update species filter if prop changes
@@ -109,7 +121,8 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
   }, [pets, searchQuery, selectedSpecies, selectedSize, selectedGender, selectedTrait]);
 
   const handleOpenAdoption = (pet: AdoptionPet) => {
-    setActivePet(pet);
+    const freshPet = StoreController.getPetById(pet.id) || pet;
+    setActivePet(freshPet);
     setShowApplicationModal(true);
     setAppSubmitted(false);
     setAppError(null);
@@ -164,6 +177,10 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
         otherPetsDetails,
         reasonForAdoption: reasonForAdoption.trim()
       });
+
+      setPets(StoreController.getAdoptionPets());
+      setUserApplications(StoreController.getUserAdoptionApplications(currentUser));
+      setActivePet(prev => prev ? { ...prev, status: 'en_proceso' } : null);
 
       setIsSubmitting(false);
       setAppSubmitted(true);
@@ -566,8 +583,9 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
                           <span>En proceso de adopción</span>
                         </div>
                       ) : pet.status === 'adoptado' ? (
-                        <div className="absolute top-3 right-3 bg-emerald-700 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-xs">
-                          ¡Adoptado!
+                        <div className="absolute top-3 right-3 bg-emerald-700 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>{pet.gender === 'Hembra' ? '¡Adoptada!' : '¡Adoptado!'}</span>
                         </div>
                       ) : (
                         <div className="absolute top-3 right-3 bg-[#9E6B38] text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-full shadow-xs">
@@ -640,14 +658,34 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
 
                   {/* Card Footer Button */}
                   <div className="p-5 pt-0">
-                    <button
-                      id={`adopt-pet-btn-${pet.id}`}
-                      onClick={() => handleOpenAdoption(pet)}
-                      className="w-full py-2.5 px-4 bg-[#9E6B38] hover:bg-[#86582A] text-white text-xs font-semibold rounded-full shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <Heart className="w-3.5 h-3.5 fill-white text-white" />
-                      <span>Ver ficha & postularme</span>
-                    </button>
+                    {pet.status === 'adoptado' ? (
+                      <button
+                        id={`adopt-pet-btn-${pet.id}`}
+                        onClick={() => handleOpenAdoption(pet)}
+                        className="w-full py-2.5 px-4 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-full shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Ver ficha • {pet.gender === 'Hembra' ? 'Adoptada' : 'Adoptado'}</span>
+                      </button>
+                    ) : pet.status === 'en_proceso' ? (
+                      <button
+                        id={`adopt-pet-btn-${pet.id}`}
+                        onClick={() => handleOpenAdoption(pet)}
+                        className="w-full py-2.5 px-4 bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold rounded-full shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Heart className="w-3.5 h-3.5 fill-white text-white" />
+                        <span>Ver ficha (En proceso)</span>
+                      </button>
+                    ) : (
+                      <button
+                        id={`adopt-pet-btn-${pet.id}`}
+                        onClick={() => handleOpenAdoption(pet)}
+                        className="w-full py-2.5 px-4 bg-[#9E6B38] hover:bg-[#86582A] text-white text-xs font-semibold rounded-full shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Heart className="w-3.5 h-3.5 fill-white text-white" />
+                        <span>Ver ficha & postularme</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -821,14 +859,17 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
                 <div className="lg:col-span-6 bg-[#FAF6F0] p-5 sm:p-6 rounded-3xl border border-[#E8DFD3] space-y-5">
                   {appSubmitted ? (
                     <div className="bg-white border border-[#E8DFD3] rounded-2xl p-6 sm:p-8 text-center space-y-4 animate-in fade-in">
-                      <div className="w-14 h-14 bg-[#9E6B38] text-white rounded-full flex items-center justify-center mx-auto shadow-md">
+                      <div className="w-14 h-14 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
                         <CheckCircle2 className="w-8 h-8" />
                       </div>
                       <h4 className="text-xl font-bold text-[#2C1E14] font-['Fraunces',serif]">
                         ¡Solicitud de Adopción Enviada!
                       </h4>
-                      <p className="text-xs sm:text-sm text-[#5C4538] max-w-md mx-auto leading-relaxed">
-                        Hemos registrado con éxito tu postulación para <strong>{activePet.name}</strong>. El rescatista <strong>{activePet.rescuerName}</strong> se pondrá en contacto contigo al número <strong>{applicantPhone}</strong> para continuar el proceso y coordinar el encuentro en Purificación, Tolima.
+                      <div className="bg-emerald-50/90 border border-emerald-200 rounded-xl p-4 text-emerald-900 text-xs sm:text-sm font-medium leading-relaxed max-w-md mx-auto">
+                        Hemos recibido tu solicitud de adopción para <strong>{activePet.name}</strong>. Nos comunicaremos contigo al <strong>{formatPhone10(applicantPhone)}</strong> para coordinar más datos necesarios o ultimar detalles.
+                      </div>
+                      <p className="text-xs text-[#6E574B] max-w-md mx-auto">
+                        Puedes seguir el estado de tu postulación desde la sección <strong>"Mis Postulaciones"</strong> en la parte superior de este catálogo.
                       </p>
                       <button
                         onClick={() => setShowApplicationModal(false)}
@@ -836,6 +877,26 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
                       >
                         Cerrar y volver al catálogo
                       </button>
+                    </div>
+                  ) : activePet.status === 'adoptado' ? (
+                    <div className="bg-white border border-emerald-200 rounded-2xl p-6 sm:p-8 text-center space-y-4 animate-in fade-in">
+                      <div className="w-14 h-14 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
+                        <CheckCircle2 className="w-8 h-8" />
+                      </div>
+                      <h4 className="text-xl font-bold text-[#2C1E14] font-['Fraunces',serif]">
+                        ¡{activePet.name} ya fue {activePet.gender === 'Hembra' ? 'adoptada' : 'adoptado'}!
+                      </h4>
+                      <p className="text-xs sm:text-sm text-[#5C4538] max-w-md mx-auto leading-relaxed">
+                        Esta hermosa mascota ya encontró un hogar amoroso y responsable en Purificación, Tolima. Te invitamos a conocer a los demás peluditos disponibles en nuestro catálogo que aún esperan una oportunidad.
+                      </p>
+                      <div className="pt-2">
+                        <button
+                          onClick={() => setShowApplicationModal(false)}
+                          className="px-6 py-2.5 bg-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-full shadow-xs hover:bg-emerald-800 cursor-pointer transition"
+                        >
+                          Explorar otros peluditos disponibles
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <form onSubmit={handleSubmitApplication} className="space-y-4">

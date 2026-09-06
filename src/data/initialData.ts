@@ -1,4 +1,4 @@
-import { SuccessStory, AdoptionPet, HealthEvent, AnimalReport, ChatChannel, ChatMessage } from '../types';
+import { SuccessStory, AdoptionPet, AdoptionApplication, HealthEvent, AnimalReport, ChatChannel, ChatMessage } from '../types';
 
 export const INITIAL_SUCCESS_STORIES: SuccessStory[] = [
   {
@@ -208,7 +208,7 @@ export const INITIAL_ADOPTION_PETS: AdoptionPet[] = [
     },
     personality: ['Sociable', 'Juguetón', 'Noble', 'Activo'],
     photos: ['/images/mateo_rescue_story_1788226480262.jpg'],
-    status: 'disponible',
+    status: 'adoptado',
     rescuerName: 'Brigadistas Río Magdalena',
     rescuerContact: '+57 312 890 4521',
     rescuerLocation: 'Sector Malecón, Purificación Tolima',
@@ -1031,4 +1031,24 @@ export const PURIFICACION_NEIGHBORHOODS = [
   'Vereda Santa Lucía (Rural)',
   'Vereda Villa Esperanza (Rural)',
   'Otro Sector en Purificación Tolima'
+];
+
+export const INITIAL_ADOPTION_APPLICATIONS: AdoptionApplication[] = [
+  {
+    id: 'app-sample-1',
+    petId: 'pet-mateo',
+    petName: 'Mateo',
+    applicantName: 'Laura Camila Rodríguez',
+    applicantEmail: 'gascadanna414@gmail.com',
+    applicantPhone: '3154442211',
+    applicantCity: 'Purificación, Tolima',
+    housingType: 'Casa con patio',
+    hasOtherPets: true,
+    otherPetsDetails: 'Un perrito criollo sociable',
+    reasonForAdoption: 'Deseo brindarle un hogar amoroso y seguro en Purificación con espacio para correr.',
+    status: 'aprobada',
+    statusNote: 'Postulación aprobada con éxito. Nos comunicaremos contigo al 315 444 2211 para coordinar más datos necesarios y ultimar detalles de la adopción responsable.',
+    submittedAt: 'Ayer, 03:40 PM',
+    reviewedAt: 'Ayer, 04:30 PM'
+  }
 ];
