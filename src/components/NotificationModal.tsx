@@ -10,7 +10,9 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  Sparkles
+  Sparkles,
+  LogIn,
+  UserPlus
 } from 'lucide-react';
 import { AppNotification, User } from '../types';
 import { StoreController } from '../controllers/storeController';
@@ -20,21 +22,23 @@ interface NotificationModalProps {
   onClose: () => void;
   currentUser: User | null;
   onNavigateToTab?: (tab: string) => void;
+  onOpenAuth?: (mode?: 'login' | 'register') => void;
 }
 
 export const NotificationModal: React.FC<NotificationModalProps> = ({
   isOpen,
   onClose,
   currentUser,
-  onNavigateToTab
+  onNavigateToTab,
+  onOpenAuth
 }) => {
   const [notifications, setNotifications] = useState<AppNotification[]>(() => 
-    StoreController.getUserNotifications(currentUser)
+    currentUser ? StoreController.getUserNotifications(currentUser) : []
   );
 
   useEffect(() => {
     const handleUpdate = () => {
-      setNotifications(StoreController.getUserNotifications(currentUser));
+      setNotifications(currentUser ? StoreController.getUserNotifications(currentUser) : []);
     };
     window.addEventListener('pata-data-change', handleUpdate);
     window.addEventListener('pata-notifications-change', handleUpdate);
@@ -92,43 +96,89 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
           </button>
         </div>
 
-        {/* Admin Quick Switch Notice if user is Admin */}
-        {isAdmin && (
-          <div className="bg-amber-50/90 px-4 py-2.5 border-b border-amber-200 flex items-center justify-between gap-2 text-xs text-amber-950">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-600 shrink-0"></span>
-              <span>¿Buscas los <strong>reportes</strong> y <strong>postulaciones</strong> de usuarios?</span>
+        {/* Mode A: User NOT logged in - Do NOT show any notifications, prompt login/register */}
+        {!currentUser ? (
+          <div className="p-6 text-center space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#FAF6F0] border border-[#E8DFD3] text-[#9E6B38] mx-auto flex items-center justify-center">
+              <Bell className="w-7 h-7 text-[#9E6B38]" />
             </div>
-            <button
-              onClick={() => {
-                if (onNavigateToTab) onNavigateToTab('admin');
-                onClose();
-              }}
-              className="text-xs font-bold text-[#9E6B38] hover:underline shrink-0 cursor-pointer"
-            >
-              Ir al Buzón Admin →
-            </button>
+
+            <div className="space-y-1.5">
+              <h4 className="text-base font-bold text-[#2C1E14] font-['Fraunces',serif]">
+                Inicia sesión para ver tus notificaciones
+              </h4>
+              <p className="text-xs text-[#6E574B] leading-relaxed max-w-xs mx-auto">
+                Para consultar las actualizaciones de tus postulaciones de adopción y recordatorios de brigadas veterinarias en Purificación, ingresa con tu cuenta.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  onClose();
+                  if (onOpenAuth) onOpenAuth('login');
+                }}
+                className="w-full py-2.5 px-4 bg-[#2C1E14] hover:bg-[#3D2C1F] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <LogIn className="w-4 h-4 text-[#9E6B38]" />
+                <span>Iniciar Sesión</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  onClose();
+                  if (onOpenAuth) onOpenAuth('register');
+                }}
+                className="w-full py-2.5 px-4 bg-[#FAF6F0] hover:bg-[#F3ECE0] text-[#2C1E14] border border-[#E8DFD3] text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <UserPlus className="w-4 h-4 text-[#9E6B38]" />
+                <span>Registrarme Gratis</span>
+              </button>
+            </div>
+
+            <div className="pt-3 border-t border-[#F5EDE2] text-[11px] text-[#8A7568]">
+              Pata Amiga Purificación • Resguardo y Bienestar Animal
+            </div>
           </div>
-        )}
+        ) : (
+          <>
+            {/* Admin Quick Switch Notice if user is Admin */}
+            {isAdmin && (
+              <div className="bg-amber-50/90 px-4 py-2.5 border-b border-amber-200 flex items-center justify-between gap-2 text-xs text-amber-950">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-600 shrink-0"></span>
+                  <span>¿Buscas las alertas del panel? Están en tu <strong>Buzón Interno</strong></span>
+                </div>
+                <button
+                  onClick={() => {
+                    if (onNavigateToTab) onNavigateToTab('admin');
+                    onClose();
+                  }}
+                  className="text-xs font-bold text-[#9E6B38] hover:underline shrink-0 cursor-pointer"
+                >
+                  Ir al Buzón →
+                </button>
+              </div>
+            )}
 
-        {/* Toolbar */}
-        <div className="px-5 py-2.5 bg-[#FAF6F0] border-b border-[#E8DFD3] flex items-center justify-between text-xs">
-          <span className="text-[#6E574B] font-semibold">
-            {unreadCount} {unreadCount === 1 ? 'aviso sin leer' : 'avisos sin leer'}
-          </span>
-          {unreadCount > 0 && (
-            <button
-              onClick={handleMarkAllAsRead}
-              className="text-[#9E6B38] hover:text-[#86582A] font-semibold flex items-center gap-1 cursor-pointer"
-            >
-              <CheckCheck className="w-3.5 h-3.5" />
-              <span>Marcar todo como leído</span>
-            </button>
-          )}
-        </div>
+            {/* Toolbar */}
+            <div className="px-5 py-2.5 bg-[#FAF6F0] border-b border-[#E8DFD3] flex items-center justify-between text-xs">
+              <span className="text-[#6E574B] font-semibold">
+                {unreadCount} {unreadCount === 1 ? 'aviso sin leer' : 'avisos sin leer'}
+              </span>
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-[#9E6B38] hover:text-[#86582A] font-semibold flex items-center gap-1 cursor-pointer"
+                >
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  <span>Marcar todo como leído</span>
+                </button>
+              )}
+            </div>
 
-        {/* Notification List */}
-        <div className="max-h-[440px] overflow-y-auto divide-y divide-[#F5EDE2] p-2 space-y-1">
+            {/* Notification List */}
+            <div className="max-h-[440px] overflow-y-auto divide-y divide-[#F5EDE2] p-2 space-y-1">
           {notifications.length === 0 ? (
             <div className="text-center py-10 px-4 space-y-2">
               <Bell className="w-8 h-8 text-[#D8C7BA] mx-auto opacity-50" />
@@ -244,6 +294,8 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
             })
           )}
         </div>
+          </>
+        )}
 
         {/* Modal Footer */}
         <div className="p-3 bg-[#FAF6F0] border-t border-[#E8DFD3] text-center">

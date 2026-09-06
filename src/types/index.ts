@@ -27,6 +27,13 @@ export interface AppNotification {
   targetRole?: 'admin' | 'user' | 'all';
   isReminder?: boolean;
   isNewBrigade?: boolean;
+  emailDispatch?: {
+    sentAt: string;
+    recipients: string[];
+    status: 'enviado' | 'simulado' | 'fallido';
+    subject: string;
+    preview: string;
+  };
   metadata?: {
     petName?: string;
     applicantName?: string;

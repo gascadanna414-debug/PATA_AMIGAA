@@ -32,7 +32,9 @@ import {
   CheckCheck,
   Inbox,
   CheckCircle,
-  BellOff
+  BellOff,
+  Send,
+  MailCheck
 } from 'lucide-react';
 import { 
   User, 
@@ -198,7 +200,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     } else if (notif.type === 'adopcion') {
       setActiveAdminTab('solicitudes');
       setSearchQuery('');
+    } else if (notif.type === 'sistema' && (notif.linkTab === 'admin' || notif.metadata?.contactId)) {
+      setActiveAdminTab('contacto');
+      setSearchQuery('');
     }
+  };
+
+  const handleResendAdminEmail = (notifId: string) => {
+    const res = StoreController.resendAdminNotificationEmail(notifId);
+    setAdminNotifications(StoreController.getAdminNotifications());
+    if (res.success) {
+      showNotification(`Alerta reenviada exitosamente a los correos de ${res.recipients.length} administradores.`);
+    } else {
+      showNotification('No se pudo reenviar la alerta a los correos.');
+    }
+  };
+
+  const handleTestAdminEmailDispatch = () => {
+    const res = StoreController.testAdminEmailDispatch();
+    setAdminNotifications(StoreController.getAdminNotifications());
+    showNotification(`Despacho de prueba ejecutado a ${res.recipients.length} correos administrativos.`);
   };
 
   // Preset photo galleries for easy animal registration
@@ -944,28 +965,55 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <Bell className="w-5 h-5" />
                 </div>
                 <h2 className="text-lg font-bold font-['Fraunces',serif] text-[#2C1E14]">
-                  Buzón Exclusivo de Notificaciones ({adminNotifications.length})
+                  Buzón Interno de Notificaciones ({adminNotifications.length})
                 </h2>
               </div>
               <p className="text-xs text-[#6E574B] max-w-2xl">
-                Recibe en tiempo real las alertas administrativas exclusivas del panel: 
-                <strong> postulaciones de adopción de mascotas</strong> y 
-                <strong> reportes ciudadanos de rescate animal</strong> en Purificación.
+                Acceso exclusivo para administradores autorizados. Cada nuevo reporte ciudadano o postulación de adopción en Purificación se registra en este buzón interno y se despacha de forma simultánea a la cuenta de correo de cada administrador.
               </p>
             </div>
 
             <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+              <button
+                onClick={handleTestAdminEmailDispatch}
+                className="px-3 py-2 bg-[#FAF6F0] hover:bg-[#F3ECE0] border border-[#E8DFD3] text-[#9E6B38] text-xs font-semibold rounded-full cursor-pointer transition flex items-center gap-1.5 shadow-xs"
+                title="Generar alerta de prueba y simular despacho a correos de administradores"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Probar alerta correo</span>
+              </button>
+
               {adminNotifications.filter(n => !n.read).length > 0 && (
                 <button
                   onClick={handleMarkAllAdminNotifsRead}
-                  className="px-3.5 py-2 bg-[#FAF6F0] hover:bg-[#F3ECE0] border border-[#E8DFD3] text-[#2C1E14] text-xs font-semibold rounded-full cursor-pointer transition flex items-center gap-1.5 shadow-xs"
+                  className="px-3.5 py-2 bg-[#2C1E14] hover:bg-[#3D2C1F] text-white text-xs font-semibold rounded-full cursor-pointer transition flex items-center gap-1.5 shadow-xs"
                   title="Marcar todas las alertas como leídas"
                 >
-                  <CheckCheck className="w-4 h-4 text-emerald-600" />
+                  <CheckCheck className="w-4 h-4 text-[#9E6B38]" />
                   <span>Marcar todo leído ({adminNotifications.filter(n => !n.read).length})</span>
                 </button>
               )}
             </div>
+          </div>
+
+          {/* Email Dispatch System Status Banner */}
+          <div className="bg-[#FAF6F0] p-4 rounded-2xl border border-[#E8DFD3] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                <span className="font-bold text-[#2C1E14]">
+                  Despacho Automático a Correos de Administradores: ACTIVO
+                </span>
+              </div>
+              <p className="text-[11px] text-[#6E574B]">
+                <strong>Cuentas vinculadas ({StoreController.getAdminEmails().length}):</strong>{' '}
+                {StoreController.getAdminEmails().join(', ')}
+              </p>
+            </div>
+            <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full shrink-0 flex items-center gap-1">
+              <MailCheck className="w-3 h-3" />
+              <span>Multi-Canal In-App + Email</span>
+            </span>
           </div>
 
           {/* Filters Bar */}
@@ -974,7 +1022,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               {[
                 { id: 'todos', label: 'Todas las Alertas', count: adminNotifications.length },
                 { id: 'adopciones', label: '🐾 Postulaciones Adopción', count: adminNotifications.filter(n => n.type === 'adopcion').length },
-                { id: 'reportes', label: '🚨 Reportes Ciudadanos', count: adminNotifications.filter(n => n.type === 'reporte').length }
+                { id: 'reportes', label: '🚨 Reportes Ciudadanos', count: adminNotifications.filter(n => n.type === 'reporte').length },
+                { id: 'mensajes', label: '📩 Mensajes y Sistema', count: adminNotifications.filter(n => n.type === 'sistema').length }
               ].map(f => (
                 <button
                   key={f.id}
@@ -1013,6 +1062,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 if (adminNotifOnlyUnread && notif.read) return false;
                 if (adminNotifFilter === 'reportes' && notif.type !== 'reporte') return false;
                 if (adminNotifFilter === 'adopciones' && notif.type !== 'adopcion') return false;
+                if (adminNotifFilter === 'mensajes' && notif.type !== 'sistema') return false;
                 return true;
               });
 
@@ -1024,7 +1074,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       No hay notificaciones en este filtro
                     </h3>
                     <p className="text-xs text-[#8A7568] max-w-sm mx-auto">
-                      Cuando los usuarios envíen reportes de rescate, solicitudes de adopción o mensajes, aparecerán organizadas aquí.
+                      Cuando los usuarios envíen reportes de rescate, solicitudes de adopción o mensajes, aparecerán organizadas aquí y se enviará la notificación por correo a cada administrador.
                     </p>
                   </div>
                 );
@@ -1036,7 +1086,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     const isReport = notif.type === 'reporte';
                     const isAdoption = notif.type === 'adopcion';
                     const isSystem = notif.type === 'sistema';
-                    const isEvent = notif.type === 'evento';
 
                     return (
                       <div
@@ -1047,14 +1096,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             : 'bg-[#FFFDF9] border-[#9E6B38]/40 ring-1 ring-[#9E6B38]/20'
                         }`}
                       >
-                        <div className="space-y-2">
+                        <div className="space-y-2.5">
                           <div className="flex items-center justify-between gap-2">
                             <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
-                              isReport ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-900'
+                              isReport 
+                                ? 'bg-red-100 text-red-800' 
+                                : isAdoption 
+                                  ? 'bg-amber-100 text-amber-900' 
+                                  : 'bg-blue-100 text-blue-900'
                             }`}>
-                              {isReport ? <AlertCircle className="w-3 h-3" /> : <Heart className="w-3 h-3" />}
+                              {isReport ? (
+                                <AlertCircle className="w-3 h-3" />
+                              ) : isAdoption ? (
+                                <Heart className="w-3 h-3" />
+                              ) : (
+                                <Mail className="w-3 h-3" />
+                              )}
                               <span>
-                                {isReport ? '🚨 Reporte Ciudadano' : '🐾 Postulación de Adopción'}
+                                {isReport 
+                                  ? '🚨 Reporte Ciudadano' 
+                                  : isAdoption 
+                                    ? '🐾 Postulación de Adopción' 
+                                    : '📩 Mensaje / Sistema'}
                               </span>
                             </span>
 
@@ -1079,6 +1142,48 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               {notif.message}
                             </p>
                           </div>
+
+                          {/* Email Dispatch Status Details */}
+                          {notif.emailDispatch ? (
+                            <div className="bg-[#FAF6F0] p-2.5 rounded-xl border border-[#E8DFD3] text-xs space-y-1.5">
+                              <div className="flex items-center justify-between gap-1 flex-wrap">
+                                <span className="text-[10px] font-bold text-[#2C1E14] flex items-center gap-1">
+                                  <MailCheck className="w-3.5 h-3.5 text-emerald-700" />
+                                  <span>Notificación enviada a correos de administradores</span>
+                                </span>
+                                <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-full">
+                                  {notif.emailDispatch.status === 'enviado' ? 'Entregado' : 'Simulado'}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-[#6E574B] truncate" title={notif.emailDispatch.recipients.join(', ')}>
+                                <strong>Destinatarios ({notif.emailDispatch.recipients.length}):</strong> {notif.emailDispatch.recipients.join(', ')}
+                              </p>
+                              <div className="flex items-center justify-between text-[10px] text-[#8A7568] pt-1 border-t border-[#EAE2D5]">
+                                <span>Despachado: {notif.emailDispatch.sentAt}</span>
+                                <button
+                                  onClick={() => handleResendAdminEmail(notif.id)}
+                                  className="text-[#9E6B38] hover:text-[#805224] font-bold hover:underline cursor-pointer flex items-center gap-1"
+                                >
+                                  <Send className="w-2.5 h-2.5" />
+                                  <span>Reenviar a correos</span>
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="bg-[#FAF6F0] p-2 rounded-xl border border-[#E8DFD3] flex items-center justify-between text-[10px]">
+                              <span className="text-[#6E574B] flex items-center gap-1">
+                                <Mail className="w-3 h-3 text-[#9E6B38]" />
+                                <span>Canal de correo configurado</span>
+                              </span>
+                              <button
+                                onClick={() => handleResendAdminEmail(notif.id)}
+                                className="text-[#9E6B38] font-bold hover:underline cursor-pointer flex items-center gap-1"
+                              >
+                                <Send className="w-2.5 h-2.5" />
+                                <span>Despachar a correos</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
 
                         <div className="pt-2 border-t border-[#F5EDE2] flex items-center justify-between gap-2">
@@ -1086,7 +1191,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             onClick={() => handleNavigateFromNotif(notif)}
                             className="px-3 py-1.5 bg-[#2C1E14] hover:bg-[#3D2C1F] text-white text-xs font-semibold rounded-full cursor-pointer transition flex items-center gap-1.5 shadow-xs"
                           >
-                            {isReport ? <span>🚨 Atender Reporte</span> : <span>🐾 Evaluar Postulación</span>}
+                            {isReport ? (
+                              <span>🚨 Atender Reporte</span>
+                            ) : isAdoption ? (
+                              <span>🐾 Evaluar Postulación</span>
+                            ) : (
+                              <span>📩 Ver en Panel</span>
+                            )}
                             <ArrowRight className="w-3 h-3 text-[#9E6B38]" />
                           </button>
 

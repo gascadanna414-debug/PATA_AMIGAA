@@ -38,18 +38,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenProfile
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState<number>(() => StoreController.getUserUnreadCount(currentUser));
-  const [adminUnreadCount, setAdminUnreadCount] = useState<number>(() => StoreController.getAdminUnreadCount());
+  const [unreadCount, setUnreadCount] = useState<number>(() => {
+    return currentUser ? StoreController.getUserUnreadCount(currentUser) : 0;
+  });
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const isAdmin = AuthController.isAdmin(currentUser);
 
   useEffect(() => {
-    setUnreadCount(StoreController.getUserUnreadCount(currentUser));
-    setAdminUnreadCount(StoreController.getAdminUnreadCount());
+    setUnreadCount(currentUser ? StoreController.getUserUnreadCount(currentUser) : 0);
     const handleDataChange = () => {
-      setUnreadCount(StoreController.getUserUnreadCount(currentUser));
-      setAdminUnreadCount(StoreController.getAdminUnreadCount());
+      setUnreadCount(currentUser ? StoreController.getUserUnreadCount(currentUser) : 0);
     };
     window.addEventListener('pata-data-change', handleDataChange);
     window.addEventListener('pata-notifications-change', handleDataChange);
@@ -130,11 +129,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Panel Admin</span>
               {isAdmin && (
                 <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-              )}
-              {adminUnreadCount > 0 && (
-                <span className="px-1.5 py-0.2 bg-red-600 text-white text-[10px] font-bold rounded-full animate-pulse shadow-xs">
-                  {adminUnreadCount}
-                </span>
               )}
             </button>
           </nav>
@@ -393,11 +387,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>Panel Administrador</span>
               </div>
               <div className="flex items-center gap-1.5">
-                {adminUnreadCount > 0 && (
-                  <span className="text-[10px] bg-red-600 text-white font-bold px-2 py-0.5 rounded-full animate-pulse">
-                    {adminUnreadCount} {adminUnreadCount === 1 ? 'nueva' : 'nuevas'}
-                  </span>
-                )}
                 {isAdmin && (
                   <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Activo</span>
                 )}

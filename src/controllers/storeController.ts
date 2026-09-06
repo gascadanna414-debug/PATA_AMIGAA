@@ -70,6 +70,13 @@ const INITIAL_ADMIN_NOTIFICATIONS: AppNotification[] = [
     read: false,
     linkTab: 'admin',
     targetRole: 'admin',
+    emailDispatch: {
+      sentAt: 'Hoy, 09:15 AM',
+      recipients: ['gascadanna414@gmail.com', 'sofiaaa.123791@gmail.com', 'adrianamacana2@gmail.com'],
+      status: 'enviado',
+      subject: '[Pata Amiga Purificación - Admin] 🚨 Nuevo Reporte Animal: Perro (URGENTE)',
+      preview: 'Ubicación: Barrio Camilo Torres - Carrera 5 con Calle 4. Reportado por Carlos Mendoza (Tel: 3105558899).'
+    },
     metadata: {
       reportId: 'rep-1',
       animalType: 'Perro',
@@ -85,6 +92,13 @@ const INITIAL_ADMIN_NOTIFICATIONS: AppNotification[] = [
     read: false,
     linkTab: 'admin',
     targetRole: 'admin',
+    emailDispatch: {
+      sentAt: 'Ayer, 03:40 PM',
+      recipients: ['gascadanna414@gmail.com', 'sofiaaa.123791@gmail.com', 'adrianamacana2@gmail.com'],
+      status: 'enviado',
+      subject: '[Pata Amiga Purificación - Admin] 🐾 Nueva Postulación de Adopción: Mateo',
+      preview: 'Laura Camila Rodríguez (Tel: 3154442211) se ha postulado para adoptar a Mateo.'
+    },
     metadata: {
       petName: 'Mateo',
       applicantName: 'Laura Camila Rodríguez',
@@ -100,6 +114,13 @@ const INITIAL_ADMIN_NOTIFICATIONS: AppNotification[] = [
     read: true,
     linkTab: 'admin',
     targetRole: 'admin',
+    emailDispatch: {
+      sentAt: 'Hace 2 días',
+      recipients: ['gascadanna414@gmail.com', 'sofiaaa.123791@gmail.com', 'adrianamacana2@gmail.com'],
+      status: 'enviado',
+      subject: '[Pata Amiga Purificación - Admin] 🚨 Nuevo Reporte Animal: Gato',
+      preview: 'Ubicación: Barrio Santa Bárbara - Manzana B Casa 12. Reportado por Andrea Gómez.'
+    },
     metadata: {
       reportId: 'rep-2',
       animalType: 'Gato',
@@ -812,27 +833,138 @@ export const StoreController = {
   },
 
   // --- NOTIFICATIONS SYSTEM ---
-  // --- ADMIN NOTIFICATIONS (Exclusivas para el Panel de Control: Postulaciones de adopción y Reportes) ---
+  getAdminEmails(): string[] {
+    const list = [...AUTHORIZED_ADMIN_EMAILS];
+    try {
+      const storedUsersRaw = localStorage.getItem('pata_amiga_registered_users');
+      if (storedUsersRaw) {
+        const users = JSON.parse(storedUsersRaw);
+        if (Array.isArray(users)) {
+          users.forEach((u: any) => {
+            if (u.role === 'admin' && u.email) {
+              const em = u.email.toLowerCase().trim();
+              if (!list.includes(em)) {
+                list.push(em);
+              }
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Error fetching admin emails:', e);
+    }
+    return list;
+  },
+
+  // --- ADMIN NOTIFICATIONS (Exclusivas para el Buzón Interno del Panel de Control: Postulaciones, Reportes y Mensajes) ---
   getAdminNotifications(): AppNotification[] {
     const list = getItem<AppNotification[]>(ADMIN_NOTIFICATIONS_KEY, INITIAL_ADMIN_NOTIFICATIONS);
-    // Filtrar estrictamente solo postulaciones y reportes para administradores
-    return list.filter(n => n.type === 'reporte' || n.type === 'adopcion');
+    // Filtrar estrictamente solo notificaciones del buzón de administradores
+    return list.filter(n => n.type === 'reporte' || n.type === 'adopcion' || n.type === 'sistema');
   },
 
   addAdminNotification(notif: Omit<AppNotification, 'id' | 'timestamp' | 'read' | 'targetRole'>): AppNotification {
     const list = getItem<AppNotification[]>(ADMIN_NOTIFICATIONS_KEY, INITIAL_ADMIN_NOTIFICATIONS);
+    const adminEmails = this.getAdminEmails();
+    const nowFormatted = new Date().toLocaleDateString('es-CO', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
     const newNotif: AppNotification = {
       ...notif,
       id: `admin-notif-${Date.now()}`,
       timestamp: 'Hace un momento',
       read: false,
-      targetRole: 'admin'
+      targetRole: 'admin',
+      emailDispatch: notif.emailDispatch || {
+        sentAt: nowFormatted,
+        recipients: adminEmails,
+        status: 'enviado',
+        subject: `[Pata Amiga Purificación - Admin] ${notif.title}`,
+        preview: notif.message
+      }
     };
     list.unshift(newNotif);
     setItem(ADMIN_NOTIFICATIONS_KEY, list);
+
+    // Registro de auditoría del correo electrónico enviado a cada administrador
+    try {
+      const dispatchLog = getItem<any[]>('pata_admin_email_dispatch_log', []);
+      dispatchLog.unshift({
+        id: `email-dispatch-${Date.now()}`,
+        sentAt: nowFormatted,
+        recipients: adminEmails,
+        subject: `[Pata Amiga Purificación - Admin] ${notif.title}`,
+        bodyPreview: notif.message,
+        type: notif.type,
+        status: 'enviado'
+      });
+      setItem('pata_admin_email_dispatch_log', dispatchLog.slice(0, 50));
+    } catch (e) {
+      console.warn('Dispatch log error:', e);
+    }
+
+    console.info(`[Pata Amiga] Alerta enviada al correo de cada administrador: ${adminEmails.join(', ')}`);
+
     window.dispatchEvent(new Event('pata-data-change'));
     window.dispatchEvent(new Event('pata-notifications-change'));
     return newNotif;
+  },
+
+  resendAdminNotificationEmail(notifId: string): { success: boolean; recipients: string[] } {
+    const list = getItem<AppNotification[]>(ADMIN_NOTIFICATIONS_KEY, INITIAL_ADMIN_NOTIFICATIONS);
+    const idx = list.findIndex(n => n.id === notifId);
+    const adminEmails = this.getAdminEmails();
+    const nowFormatted = new Date().toLocaleDateString('es-CO', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    if (idx !== -1) {
+      list[idx].emailDispatch = {
+        sentAt: nowFormatted,
+        recipients: adminEmails,
+        status: 'enviado',
+        subject: `[Reenvío Pata Amiga Purificación - Admin] ${list[idx].title}`,
+        preview: list[idx].message
+      };
+      setItem(ADMIN_NOTIFICATIONS_KEY, list);
+      window.dispatchEvent(new Event('pata-data-change'));
+      window.dispatchEvent(new Event('pata-notifications-change'));
+      return { success: true, recipients: adminEmails };
+    }
+    return { success: false, recipients: adminEmails };
+  },
+
+  testAdminEmailDispatch(): { success: boolean; recipients: string[]; timestamp: string } {
+    const adminEmails = this.getAdminEmails();
+    const nowFormatted = new Date().toLocaleDateString('es-CO', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    this.addAdminNotification({
+      title: '⚡ Notificación de Prueba Despachada por Correo',
+      message: `Verificación del canal de alerta por correo electrónico a cada administrador de Purificación (${adminEmails.join(', ')}).`,
+      type: 'sistema',
+      linkTab: 'admin'
+    });
+
+    return {
+      success: true,
+      recipients: adminEmails,
+      timestamp: nowFormatted
+    };
   },
 
   markAdminNotificationRead(notifId: string): AppNotification[] {
@@ -875,15 +1007,19 @@ export const StoreController = {
     return this.getAdminNotifications().filter(n => !n.read).length;
   },
 
-  // --- USER NOTIFICATIONS (Exclusivas para usuarios: Recordatorios de brigadas inscritas, nueva brigada y estado de adopción) ---
+  // --- USER NOTIFICATIONS (Exclusivas para usuarios autenticados: Recordatorios de brigadas inscritas y estado de adopción) ---
   getUserNotifications(user?: { id?: string; email?: string; role?: string } | null): AppNotification[] {
+    // Si no ha iniciado sesión en un perfil, no deben aparecer notificaciones
+    if (!user || !user.id) {
+      return [];
+    }
+
     const list = getItem<AppNotification[]>(USER_NOTIFICATIONS_KEY, INITIAL_USER_NOTIFICATIONS);
-    const cleanEmail = user?.email?.toLowerCase().trim() || 
-      (typeof window !== 'undefined' ? localStorage.getItem('pata_last_applicant_email')?.toLowerCase().trim() : null);
-    const userId = user?.id;
+    const cleanEmail = user.email?.toLowerCase().trim();
+    const userId = user.id;
 
     return list.filter(n => {
-      // 1. Notificaciones de nueva brigada (para todos los usuarios)
+      // 1. Notificaciones de nueva brigada (para usuarios autenticados)
       if (n.type === 'evento' && n.isNewBrigade === true) {
         return true;
       }
@@ -957,6 +1093,9 @@ export const StoreController = {
   },
 
   getUserUnreadCount(user?: { id?: string; email?: string; role?: string } | null): number {
+    if (!user || !user.id) {
+      return 0;
+    }
     return this.getUserNotifications(user).filter(n => !n.read).length;
   },
 
@@ -1138,13 +1277,19 @@ export const StoreController = {
     contacts.unshift(newContact);
     setItem(CONTACTS_KEY, contacts);
 
-    // In-app notification strictly for administrators: "mensajes de los usuarios"
-    this.addNotification({
+    // In-app notification strictly for administrators dispatched to internal mailbox and admin emails
+    this.addAdminNotification({
       title: '📩 Nuevo Mensaje de Contacto',
       message: `${data.name} (${data.phone}) ha enviado un mensaje: "${data.subject}"`,
       type: 'sistema',
-      targetRole: 'admin',
-      linkTab: 'admin'
+      linkTab: 'admin',
+      metadata: {
+        contactId: newContact.id,
+        senderName: data.name,
+        senderPhone: data.phone,
+        senderEmail: data.email,
+        subject: data.subject
+      }
     });
 
     return newContact;

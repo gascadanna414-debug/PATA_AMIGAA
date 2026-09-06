@@ -183,6 +183,7 @@ export default function App() {
         onClose={() => setIsNotificationsOpen(false)}
         currentUser={currentUser}
         onNavigateToTab={handleNavigateToTab}
+        onOpenAuth={handleOpenAuth}
       />
 
       {/* User Profile Edit Modal */}
