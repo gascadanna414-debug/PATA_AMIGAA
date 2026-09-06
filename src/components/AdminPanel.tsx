@@ -34,7 +34,11 @@ import {
   CheckCircle,
   BellOff,
   Send,
-  MailCheck
+  MailCheck,
+  RefreshCw,
+  AlertTriangle,
+  Key,
+  HelpCircle
 } from 'lucide-react';
 import { 
   User, 
@@ -130,6 +134,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   } | null>(null);
   const [reviewCustomNote, setReviewCustomNote] = useState<string>('');
 
+  // Email Server Diagnostics & Status
+  const [emailServerStatus, setEmailServerStatus] = useState<{
+    configured: boolean;
+    provider: string;
+    account: string | null;
+    recipients: string[];
+    instructions: string;
+  } | null>(null);
+  const [showEmailConfigModal, setShowEmailConfigModal] = useState(false);
+  const [isTestingEmail, setIsTestingEmail] = useState(false);
+
+  const fetchEmailStatus = () => {
+    StoreController.checkEmailServerStatus().then(status => {
+      setEmailServerStatus(status);
+    });
+  };
+
   const showNotification = (msg: string) => {
     setActionSuccess(msg);
     setTimeout(() => setActionSuccess(null), 3500);
@@ -154,12 +175,45 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     window.addEventListener('pata-data-change', handleDataChange);
     window.addEventListener('pata-notifications-change', handleDataChange);
     window.addEventListener('auth-state-change', handleDataChange);
+    fetchEmailStatus();
     return () => {
       window.removeEventListener('pata-data-change', handleDataChange);
       window.removeEventListener('pata-notifications-change', handleDataChange);
       window.removeEventListener('auth-state-change', handleDataChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (activeAdminTab === 'notificaciones') {
+      fetchEmailStatus();
+    }
+  }, [activeAdminTab]);
+
+  const handleTestRealEmailDispatch = async () => {
+    setIsTestingEmail(true);
+    try {
+      const res = await StoreController.sendServerTestEmail();
+      fetchEmailStatus();
+      setAdminNotifications(StoreController.getAdminNotifications());
+      if (res.delivered) {
+        showNotification('✅ ¡Correo de prueba enviado con éxito a las 4 administradoras! Revisa tu bandeja de Gmail.');
+      } else if (res.configured === false) {
+        setShowEmailConfigModal(true);
+        showNotification('⚠️ El servidor de correo requiere credenciales (GMAIL_USER / GMAIL_APP_PASSWORD) para despachar a tu bandeja de Gmail.');
+      } else {
+        showNotification(`Aviso: ${res.error || res.message || 'No se pudo completar el despacho'}`);
+      }
+    } catch (e: any) {
+      showNotification('Error contactando con el servicio de correo.');
+    } finally {
+      setIsTestingEmail(false);
+    }
+  };
+
+  const handleOpenGmailWeb = (notif: AppNotification) => {
+    const url = StoreController.getGmailComposeUrl(notif);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
   const handleMarkAllAdminNotifsRead = () => {
     StoreController.markAllAdminNotificationsRead();
@@ -973,14 +1027,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </p>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 flex-wrap">
               <button
-                onClick={handleTestAdminEmailDispatch}
-                className="px-3 py-2 bg-[#FAF6F0] hover:bg-[#F3ECE0] border border-[#E8DFD3] text-[#9E6B38] text-xs font-semibold rounded-full cursor-pointer transition flex items-center gap-1.5 shadow-xs"
-                title="Generar alerta de prueba y simular despacho a correos de administradores"
+                onClick={handleTestRealEmailDispatch}
+                disabled={isTestingEmail}
+                className="px-3.5 py-2 bg-[#9E6B38] hover:bg-[#855728] text-white text-xs font-semibold rounded-full cursor-pointer transition flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+                title="Probar despacho real a las bandejas de correo de las administradoras"
               >
-                <Send className="w-3.5 h-3.5" />
-                <span>Probar alerta correo</span>
+                {isTestingEmail ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Send className="w-3.5 h-3.5" />
+                )}
+                <span>{isTestingEmail ? 'Verificando...' : 'Probar Envío al Correo'}</span>
+              </button>
+
+              <button
+                onClick={() => setShowEmailConfigModal(true)}
+                className="px-3.5 py-2 bg-[#FAF6F0] hover:bg-[#F3ECE0] border border-[#E8DFD3] text-[#5C4538] text-xs font-semibold rounded-full cursor-pointer transition flex items-center gap-1.5 shadow-xs"
+                title="Ver estado de conexión y configuración para recibir correos reales"
+              >
+                <Key className="w-3.5 h-3.5 text-[#9E6B38]" />
+                <span>Configuración de Correo</span>
               </button>
 
               {adminNotifications.filter(n => !n.read).length > 0 && (
@@ -996,24 +1064,64 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           </div>
 
-          {/* Email Dispatch System Status Banner */}
-          <div className="bg-[#FAF6F0] p-4 rounded-2xl border border-[#E8DFD3] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-            <div className="space-y-1">
+          {/* Email Dispatch System Gateway Banner */}
+          <div className={`p-4 rounded-2xl border text-xs space-y-2.5 transition ${
+            emailServerStatus?.configured
+              ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+              : 'bg-amber-50/80 border-amber-200 text-amber-950'
+          }`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                <span className="font-bold text-[#2C1E14]">
-                  Despacho Automático a Correos de Administradores: ACTIVO
+                <span className={`w-2.5 h-2.5 rounded-full inline-block ${
+                  emailServerStatus?.configured ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500 animate-ping'
+                }`}></span>
+                <span className="font-bold text-sm">
+                  {emailServerStatus?.configured
+                    ? `🟢 Despacho Real a Gmail ACTIVO (${emailServerStatus.provider.toUpperCase()})`
+                    : '🟡 Servidor Listo • Pendiente Credencial de Gmail para Salida Externa'}
                 </span>
               </div>
-              <p className="text-[11px] text-[#6E574B]">
-                <strong>Cuentas vinculadas ({StoreController.getAdminEmails().length}):</strong>{' '}
-                {StoreController.getAdminEmails().join(', ')}
-              </p>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={fetchEmailStatus}
+                  className="px-2.5 py-1 bg-white/80 hover:bg-white border border-black/10 rounded-full text-[11px] font-semibold text-[#5C4538] transition cursor-pointer flex items-center gap-1"
+                  title="Comprobar estado del servidor de correos"
+                >
+                  <RefreshCw className="w-3 h-3 text-[#9E6B38]" />
+                  <span>Revisar Estado</span>
+                </button>
+                <button
+                  onClick={() => setShowEmailConfigModal(true)}
+                  className="px-2.5 py-1 bg-[#9E6B38] hover:bg-[#855728] text-white rounded-full text-[11px] font-bold transition cursor-pointer flex items-center gap-1"
+                >
+                  <Key className="w-3 h-3" />
+                  <span>{emailServerStatus?.configured ? 'Ver Detalles' : 'Cómo Activar Gmail'}</span>
+                </button>
+              </div>
             </div>
-            <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full shrink-0 flex items-center gap-1">
-              <MailCheck className="w-3 h-3" />
-              <span>Multi-Canal In-App + Email</span>
-            </span>
+
+            <p className="text-[11px] leading-relaxed text-[#5C4538]">
+              {emailServerStatus?.configured ? (
+                <>
+                  Los reportes de rescate y solicitudes de adopción se despachan automáticamente a las bandejas de entrada de las administradoras desde la cuenta <strong>{emailServerStatus.account}</strong>.
+                </>
+              ) : (
+                <>
+                  Todas las alertas se registran de inmediato en este <strong>buzón administrativo</strong>. Para que además lleguen a tu bandeja personal de Gmail (como <code>gascadanna414@gmail.com</code> o <code>marimasmela15@gmail.com</code>), solo debes añadir la contraseña de aplicación de Gmail en las variables de entorno, o utilizar el botón <strong>«Abrir en Gmail (1 Clic)»</strong> incluido en cada tarjeta.
+                </>
+              )}
+            </p>
+
+            <div className="pt-2 border-t border-black/5 flex flex-wrap items-center justify-between gap-2 text-[10px] text-[#6E574B]">
+              <div>
+                <strong>Bandejas autorizadas ({StoreController.getAdminEmails().length}):</strong>{' '}
+                {StoreController.getAdminEmails().join(', ')}
+              </div>
+              <span className="font-semibold text-[#9E6B38]">
+                Purificación, Tolima
+              </span>
+            </div>
           </div>
 
           {/* Filters Bar */}
@@ -1145,43 +1253,82 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                           {/* Email Dispatch Status Details */}
                           {notif.emailDispatch ? (
-                            <div className="bg-[#FAF6F0] p-2.5 rounded-xl border border-[#E8DFD3] text-xs space-y-1.5">
-                              <div className="flex items-center justify-between gap-1 flex-wrap">
-                                <span className="text-[10px] font-bold text-[#2C1E14] flex items-center gap-1">
-                                  <MailCheck className="w-3.5 h-3.5 text-emerald-700" />
-                                  <span>Notificación enviada a correos de administradores</span>
+                            <div className="bg-[#FAF6F0] p-3 rounded-xl border border-[#E8DFD3] text-xs space-y-2">
+                              <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                                <span className="text-[11px] font-bold text-[#2C1E14] flex items-center gap-1.5">
+                                  <MailCheck className={`w-3.5 h-3.5 ${
+                                    notif.emailDispatch.status === 'entregado' ? 'text-emerald-600' : 'text-[#9E6B38]'
+                                  }`} />
+                                  <span>Despacho a Correos de Administradores</span>
                                 </span>
-                                <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-full">
-                                  {notif.emailDispatch.status === 'enviado' ? 'Entregado' : 'Simulado'}
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  notif.emailDispatch.status === 'entregado'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : notif.emailDispatch.status === 'pendiente_configuracion'
+                                      ? 'bg-amber-100 text-amber-900'
+                                      : notif.emailDispatch.status === 'fallido'
+                                        ? 'bg-rose-100 text-rose-800'
+                                        : 'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {notif.emailDispatch.status === 'entregado'
+                                    ? `Entregado (${notif.emailDispatch.provider?.toUpperCase() || 'Gmail'})`
+                                    : notif.emailDispatch.status === 'pendiente_configuracion'
+                                      ? 'Buzón Interno • Falta activar Gmail SMTP'
+                                      : notif.emailDispatch.status === 'fallido'
+                                        ? 'Error de Despacho'
+                                        : 'Despachado'}
                                 </span>
                               </div>
+
                               <p className="text-[10px] text-[#6E574B] truncate" title={notif.emailDispatch.recipients.join(', ')}>
                                 <strong>Destinatarios ({notif.emailDispatch.recipients.length}):</strong> {notif.emailDispatch.recipients.join(', ')}
                               </p>
-                              <div className="flex items-center justify-between text-[10px] text-[#8A7568] pt-1 border-t border-[#EAE2D5]">
-                                <span>Despachado: {notif.emailDispatch.sentAt}</span>
-                                <button
-                                  onClick={() => handleResendAdminEmail(notif.id)}
-                                  className="text-[#9E6B38] hover:text-[#805224] font-bold hover:underline cursor-pointer flex items-center gap-1"
-                                >
-                                  <Send className="w-2.5 h-2.5" />
-                                  <span>Reenviar a correos</span>
-                                </button>
+
+                              <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-[#8A7568] pt-1.5 border-t border-[#EAE2D5]">
+                                <span>Fecha: {notif.emailDispatch.sentAt}</span>
+                                
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => handleOpenGmailWeb(notif)}
+                                    className="px-2.5 py-1 bg-white hover:bg-[#F5EDE2] text-[#9E6B38] border border-[#D8C7B5] rounded-md font-bold flex items-center gap-1 transition cursor-pointer shadow-2xs hover:shadow-xs"
+                                    title="Abrir Gmail Web con mensaje y los 4 correos listos para enviar"
+                                  >
+                                    <ExternalLink className="w-2.5 h-2.5" />
+                                    <span>Abrir en Gmail (1 Clic)</span>
+                                  </button>
+
+                                  <button
+                                    onClick={() => handleResendAdminEmail(notif.id)}
+                                    className="text-[#6E574B] hover:text-[#2C1E14] font-medium hover:underline cursor-pointer flex items-center gap-1"
+                                  >
+                                    <Send className="w-2.5 h-2.5" />
+                                    <span>Reenviar</span>
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           ) : (
-                            <div className="bg-[#FAF6F0] p-2 rounded-xl border border-[#E8DFD3] flex items-center justify-between text-[10px]">
+                            <div className="bg-[#FAF6F0] p-2.5 rounded-xl border border-[#E8DFD3] flex items-center justify-between text-[10px]">
                               <span className="text-[#6E574B] flex items-center gap-1">
                                 <Mail className="w-3 h-3 text-[#9E6B38]" />
-                                <span>Canal de correo configurado</span>
+                                <span>Canal de alerta multi-administrador</span>
                               </span>
-                              <button
-                                onClick={() => handleResendAdminEmail(notif.id)}
-                                className="text-[#9E6B38] font-bold hover:underline cursor-pointer flex items-center gap-1"
-                              >
-                                <Send className="w-2.5 h-2.5" />
-                                <span>Despachar a correos</span>
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleOpenGmailWeb(notif)}
+                                  className="text-[#9E6B38] font-bold hover:underline cursor-pointer flex items-center gap-1"
+                                >
+                                  <ExternalLink className="w-2.5 h-2.5" />
+                                  <span>Abrir en Gmail</span>
+                                </button>
+                                <button
+                                  onClick={() => handleResendAdminEmail(notif.id)}
+                                  className="text-[#6E574B] font-bold hover:underline cursor-pointer flex items-center gap-1"
+                                >
+                                  <Send className="w-2.5 h-2.5" />
+                                  <span>Despachar</span>
+                                </button>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -2957,6 +3104,164 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 }`}
               >
                 <span>{reviewAppModal.action === 'aprobada' ? 'Confirmar Aprobación y Notificar' : 'Confirmar Rechazo y Notificar'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: CONFIGURACIÓN Y DIAGNÓSTICO DE CORREO ELECTRÓNICO (GMAIL / SMTP) */}
+      {/* ========================================================================= */}
+      {showEmailConfigModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-5 border border-[#EAE2D5] shadow-2xl">
+            <div className="flex items-start justify-between gap-3 border-b border-[#F5EDE2] pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#9E6B38] flex items-center justify-center text-white shrink-0 shadow-xs">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold font-['Fraunces',serif] text-[#2C1E14]">
+                    Configuración de Notificaciones por Correo Electrónico
+                  </h3>
+                  <p className="text-xs text-[#8A7568]">
+                    Entrega de alertas para las 4 administradoras de Purificación, Tolima
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEmailConfigModal(false)}
+                className="text-[#8A7568] hover:text-[#2C1E14] p-1 rounded-full hover:bg-[#FAF6F0] transition cursor-pointer"
+                title="Cerrar"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Current Gateway State Card */}
+            <div className={`p-4 rounded-2xl border text-xs space-y-2 ${
+              emailServerStatus?.configured
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                : 'bg-amber-50 border-amber-200 text-amber-950'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full inline-block ${
+                    emailServerStatus?.configured ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                  }`}></span>
+                  <span className="font-bold text-sm">
+                    {emailServerStatus?.configured
+                      ? `Despacho Conectado: ${emailServerStatus.provider.toUpperCase()}`
+                      : 'Servidor Listo • Requiere Contraseña de Aplicación Gmail'}
+                  </span>
+                </div>
+                <button
+                  onClick={fetchEmailStatus}
+                  className="px-2.5 py-1 bg-white border border-black/10 rounded-full text-[11px] font-semibold text-[#5C4538] hover:bg-white/80 transition flex items-center gap-1 cursor-pointer"
+                >
+                  <RefreshCw className="w-3 h-3 text-[#9E6B38]" />
+                  <span>Revisar</span>
+                </button>
+              </div>
+
+              <p className="text-[11px] leading-relaxed text-[#5C4538]">
+                {emailServerStatus?.configured
+                  ? `El servidor enviará los correos automáticamente a las 4 administradoras desde ${emailServerStatus.account}.`
+                  : 'El servidor backend Express está activo y procesa cada postulación/reporte. Para que los correos salgan de la plataforma y lleguen a tu bandeja de entrada de Gmail sin intervención manual, añade la contraseña de aplicación de Gmail a las variables de entorno.'}
+              </p>
+            </div>
+
+            {/* Admin Recipients List */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-[#2C1E14] flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-[#9E6B38]" />
+                <span>Bandejas de Administradoras Registradas ({StoreController.getAdminEmails().length}):</span>
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                {[
+                  { name: 'Danna Gasca', email: 'gascadanna414@gmail.com' },
+                  { name: 'Sofia Lozano', email: 'sofiaaa.123791@gmail.com' },
+                  { name: 'Adriana Macana', email: 'adrianamacana2@gmail.com' },
+                  { name: 'Mari Masmela', email: 'marimasmela15@gmail.com' }
+                ].map((adm, i) => (
+                  <div key={i} className="p-2.5 bg-[#FAF6F0] rounded-xl border border-[#E8DFD3] flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-[#2C1E14] text-[11px]">{adm.name}</p>
+                      <p className="text-[10px] text-[#6E574B]">{adm.email}</p>
+                    </div>
+                    <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded-full">
+                      Receptor
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Step-by-Step Instructions */}
+            <div className="space-y-2.5">
+              <h4 className="text-xs font-bold text-[#2C1E14] flex items-center gap-1.5">
+                <Key className="w-3.5 h-3.5 text-[#9E6B38]" />
+                <span>Cómo activar el envío automático a Gmail en 2 minutos:</span>
+              </h4>
+              <div className="bg-[#FAF6F0] p-4 rounded-2xl border border-[#E8DFD3] text-xs space-y-2 text-[#5C4538] leading-relaxed">
+                <ol className="list-decimal list-inside space-y-1.5">
+                  <li>
+                    Ingresa a tu cuenta de Google en <a href="https://myaccount.google.com/security" target="_blank" rel="noopener noreferrer" className="text-[#9E6B38] font-bold underline">myaccount.google.com/security</a>.
+                  </li>
+                  <li>
+                    Asegúrate de que la <strong>«Verificación en dos pasos»</strong> esté activada.
+                  </li>
+                  <li>
+                    En la barra de búsqueda superior, escribe <strong>«Contraseñas de aplicaciones»</strong> (o App Passwords).
+                  </li>
+                  <li>
+                    Crea una con el nombre <strong>«Pata Amiga»</strong>. Google te dará una clave de 16 caracteres (por ejemplo: <code>abcd efgh ijkl mnop</code>).
+                  </li>
+                  <li>
+                    Agrega estas dos variables de entorno en el panel de configuración de la app:
+                    <div className="mt-1.5 p-2 bg-[#2C1E14] text-[#FAF6F0] font-mono text-[11px] rounded-lg space-y-0.5">
+                      <p>GMAIL_USER=gascadanna414@gmail.com</p>
+                      <p>GMAIL_APP_PASSWORD=tu_clave_de_16_caracteres</p>
+                    </div>
+                  </li>
+                </ol>
+              </div>
+            </div>
+
+            {/* Fallback Option */}
+            <div className="bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200 text-xs text-emerald-950 space-y-1">
+              <p className="font-bold flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Opción Inmediata Disponible Ahora:</span>
+              </p>
+              <p className="text-[11px] text-emerald-900 leading-relaxed">
+                Cada tarjeta del buzón cuenta con el botón <strong>«Abrir en Gmail (1 Clic)»</strong>. Al pulsarlo, se abre automáticamente la ventana de redacción de Gmail con el reporte o postulación dirigido a las 4 administradoras para que lo envíes de inmediato desde tu cuenta personal sin configuraciones previas.
+              </p>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-[#EAE2D5]">
+              <button
+                type="button"
+                onClick={handleTestRealEmailDispatch}
+                disabled={isTestingEmail}
+                className="px-4 py-2 bg-[#9E6B38] hover:bg-[#855728] text-white rounded-full text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {isTestingEmail ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Send className="w-3.5 h-3.5" />
+                )}
+                <span>{isTestingEmail ? 'Probando...' : 'Enviar Prueba al Correo Ahora'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowEmailConfigModal(false)}
+                className="px-5 py-2 bg-[#FAF6F0] hover:bg-[#F3ECE0] border border-[#E8DFD3] rounded-full text-xs font-semibold text-[#5C4538] transition cursor-pointer"
+              >
+                Cerrar
               </button>
             </div>
           </div>

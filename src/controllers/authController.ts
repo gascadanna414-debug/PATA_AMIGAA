@@ -44,6 +44,13 @@ export const AUTHORIZED_ADMIN_CREDENTIALS: Record<string, AdminCredential> = {
     phone: '+57 310 556 7812',
     location: 'Purificación, Tolima',
     avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80'
+  },
+  'marimasmela15@gmail.com': {
+    password: '22022025onyx',
+    name: 'Mari Masmela',
+    phone: '+57 311 884 9201',
+    location: 'Purificación, Tolima',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80'
   }
 };
 
@@ -86,6 +93,18 @@ const DEFAULT_USERS: StoredUser[] = [
     createdAt: '2024-01-15',
     registeredAt: '15 Ene 2024',
     passwordHash: 'perezadriana'
+  },
+  {
+    id: 'user-admin-4',
+    name: 'Mari Masmela',
+    email: 'marimasmela15@gmail.com',
+    role: 'admin',
+    phone: '+57 311 884 9201',
+    location: 'Purificación, Tolima',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
+    createdAt: '2024-02-22',
+    registeredAt: '22 Feb 2024',
+    passwordHash: '22022025onyx'
   },
   {
     id: 'user-vet-4',
@@ -157,7 +176,7 @@ function getStoredUsers(): StoredUser[] {
       }
     });
 
-    // Ensure all 3 authorized administrators exist in users list
+    // Ensure all 4 authorized administrators exist in users list
     Object.entries(AUTHORIZED_ADMIN_CREDENTIALS).forEach(([email, cred], idx) => {
       if (!parsed.some(u => u.email.toLowerCase() === email)) {
         parsed.unshift({

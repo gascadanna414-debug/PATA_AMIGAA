@@ -30,9 +30,12 @@ export interface AppNotification {
   emailDispatch?: {
     sentAt: string;
     recipients: string[];
-    status: 'enviado' | 'simulado' | 'fallido';
+    status: 'enviado' | 'simulado' | 'fallido' | 'pendiente_configuracion' | 'entregado';
     subject: string;
     preview: string;
+    provider?: string;
+    delivered?: boolean;
+    error?: string;
   };
   metadata?: {
     petName?: string;

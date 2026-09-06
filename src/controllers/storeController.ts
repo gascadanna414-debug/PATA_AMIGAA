@@ -72,7 +72,7 @@ const INITIAL_ADMIN_NOTIFICATIONS: AppNotification[] = [
     targetRole: 'admin',
     emailDispatch: {
       sentAt: 'Hoy, 09:15 AM',
-      recipients: ['gascadanna414@gmail.com', 'sofiaaa.123791@gmail.com', 'adrianamacana2@gmail.com'],
+      recipients: ['gascadanna414@gmail.com', 'sofiaaa.123791@gmail.com', 'adrianamacana2@gmail.com', 'marimasmela15@gmail.com'],
       status: 'enviado',
       subject: '[Pata Amiga Purificación - Admin] 🚨 Nuevo Reporte Animal: Perro (URGENTE)',
       preview: 'Ubicación: Barrio Camilo Torres - Carrera 5 con Calle 4. Reportado por Carlos Mendoza (Tel: 3105558899).'
@@ -94,7 +94,7 @@ const INITIAL_ADMIN_NOTIFICATIONS: AppNotification[] = [
     targetRole: 'admin',
     emailDispatch: {
       sentAt: 'Ayer, 03:40 PM',
-      recipients: ['gascadanna414@gmail.com', 'sofiaaa.123791@gmail.com', 'adrianamacana2@gmail.com'],
+      recipients: ['gascadanna414@gmail.com', 'sofiaaa.123791@gmail.com', 'adrianamacana2@gmail.com', 'marimasmela15@gmail.com'],
       status: 'enviado',
       subject: '[Pata Amiga Purificación - Admin] 🐾 Nueva Postulación de Adopción: Mateo',
       preview: 'Laura Camila Rodríguez (Tel: 3154442211) se ha postulado para adoptar a Mateo.'
@@ -116,7 +116,7 @@ const INITIAL_ADMIN_NOTIFICATIONS: AppNotification[] = [
     targetRole: 'admin',
     emailDispatch: {
       sentAt: 'Hace 2 días',
-      recipients: ['gascadanna414@gmail.com', 'sofiaaa.123791@gmail.com', 'adrianamacana2@gmail.com'],
+      recipients: ['gascadanna414@gmail.com', 'sofiaaa.123791@gmail.com', 'adrianamacana2@gmail.com', 'marimasmela15@gmail.com'],
       status: 'enviado',
       subject: '[Pata Amiga Purificación - Admin] 🚨 Nuevo Reporte Animal: Gato',
       preview: 'Ubicación: Barrio Santa Bárbara - Manzana B Casa 12. Reportado por Andrea Gómez.'
@@ -908,7 +908,50 @@ export const StoreController = {
       console.warn('Dispatch log error:', e);
     }
 
-    console.info(`[Pata Amiga] Alerta enviada al correo de cada administrador: ${adminEmails.join(', ')}`);
+    // Despacho REAL a través del servidor Express hacia las bandejas de correo de las administradoras
+    if (typeof fetch !== 'undefined') {
+      fetch('/api/email/send-admin-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: notif.title,
+          message: notif.message,
+          type: notif.type,
+          metadata: notif.metadata,
+          recipients: adminEmails
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const currentList = getItem<AppNotification[]>(ADMIN_NOTIFICATIONS_KEY, []);
+        const idx = currentList.findIndex(n => n.id === newNotif.id);
+        if (idx !== -1 && currentList[idx].emailDispatch) {
+          if (data.delivered) {
+            currentList[idx].emailDispatch = {
+              ...currentList[idx].emailDispatch!,
+              status: 'entregado',
+              delivered: true,
+              provider: data.provider
+            };
+          } else if (data.configured === false) {
+            currentList[idx].emailDispatch = {
+              ...currentList[idx].emailDispatch!,
+              status: 'pendiente_configuracion',
+              delivered: false,
+              error: data.message
+            };
+          }
+          setItem(ADMIN_NOTIFICATIONS_KEY, currentList);
+          window.dispatchEvent(new Event('pata-data-change'));
+          window.dispatchEvent(new Event('pata-notifications-change'));
+        }
+      })
+      .catch(err => {
+        console.warn('Aviso: Servidor de correo respondió:', err);
+      });
+    }
+
+    console.info(`[Pata Amiga] Alerta procesada para despacho a los correos de: ${adminEmails.join(', ')}`);
 
     window.dispatchEvent(new Event('pata-data-change'));
     window.dispatchEvent(new Event('pata-notifications-change'));
@@ -928,6 +971,7 @@ export const StoreController = {
     });
 
     if (idx !== -1) {
+      const targetNotif = list[idx];
       list[idx].emailDispatch = {
         sentAt: nowFormatted,
         recipients: adminEmails,
@@ -938,6 +982,41 @@ export const StoreController = {
       setItem(ADMIN_NOTIFICATIONS_KEY, list);
       window.dispatchEvent(new Event('pata-data-change'));
       window.dispatchEvent(new Event('pata-notifications-change'));
+
+      if (typeof fetch !== 'undefined') {
+        fetch('/api/email/send-admin-alert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: targetNotif.title,
+            message: targetNotif.message,
+            type: targetNotif.type,
+            metadata: targetNotif.metadata,
+            recipients: adminEmails
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          const updated = getItem<AppNotification[]>(ADMIN_NOTIFICATIONS_KEY, []);
+          const curIdx = updated.findIndex(n => n.id === notifId);
+          if (curIdx !== -1 && updated[curIdx].emailDispatch) {
+            if (data.delivered) {
+              updated[curIdx].emailDispatch!.status = 'entregado';
+              updated[curIdx].emailDispatch!.delivered = true;
+              updated[curIdx].emailDispatch!.provider = data.provider;
+            } else if (data.configured === false) {
+              updated[curIdx].emailDispatch!.status = 'pendiente_configuracion';
+              updated[curIdx].emailDispatch!.delivered = false;
+              updated[curIdx].emailDispatch!.error = data.message;
+            }
+            setItem(ADMIN_NOTIFICATIONS_KEY, updated);
+            window.dispatchEvent(new Event('pata-data-change'));
+            window.dispatchEvent(new Event('pata-notifications-change'));
+          }
+        })
+        .catch(e => console.warn('Error reenviando correo:', e));
+      }
+
       return { success: true, recipients: adminEmails };
     }
     return { success: false, recipients: adminEmails };
@@ -955,7 +1034,7 @@ export const StoreController = {
 
     this.addAdminNotification({
       title: '⚡ Notificación de Prueba Despachada por Correo',
-      message: `Verificación del canal de alerta por correo electrónico a cada administrador de Purificación (${adminEmails.join(', ')}).`,
+      message: `Verificación del canal de alerta por correo electrónico a cada administradora de Purificación (${adminEmails.join(', ')}).`,
       type: 'sistema',
       linkTab: 'admin'
     });
@@ -965,6 +1044,51 @@ export const StoreController = {
       recipients: adminEmails,
       timestamp: nowFormatted
     };
+  },
+
+  getGmailComposeUrl(notif: AppNotification): string {
+    const adminEmails = this.getAdminEmails().join(',');
+    const subject = encodeURIComponent(`[Pata Amiga Purificación - Admin] ${notif.title}`);
+    const bodyText = encodeURIComponent(
+      `ALERTA ADMINISTRATIVA - PATA AMIGA PURIFICACIÓN\n\n` +
+      `Título: ${notif.title}\n\n` +
+      `Mensaje:\n${notif.message}\n\n` +
+      (notif.metadata ? `Detalles:\n${JSON.stringify(notif.metadata, null, 2)}\n\n` : '') +
+      `Fecha: ${notif.emailDispatch?.sentAt || notif.timestamp}\n` +
+      `Destinatarios administrativos: ${this.getAdminEmails().join(', ')}\n\n` +
+      `Atentamente,\nEquipo Pata Amiga Purificación, Tolima`
+    );
+    return `https://mail.google.com/mail/?view=cm&fs=1&to=${adminEmails}&su=${subject}&body=${bodyText}`;
+  },
+
+  async checkEmailServerStatus(): Promise<{ configured: boolean; provider: string; account: string | null; recipients: string[]; instructions: string }> {
+    try {
+      const res = await fetch('/api/email/status');
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.warn('Cannot connect to email status API:', e);
+    }
+    return {
+      configured: false,
+      provider: 'none',
+      account: null,
+      recipients: this.getAdminEmails(),
+      instructions: 'No se pudo conectar al endpoint de estado del servidor.'
+    };
+  },
+
+  async sendServerTestEmail(): Promise<{ success: boolean; delivered?: boolean; configured?: boolean; message?: string; error?: string }> {
+    try {
+      const res = await fetch('/api/email/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      return await res.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Error de conexión' };
+    }
   },
 
   markAdminNotificationRead(notifId: string): AppNotification[] {
