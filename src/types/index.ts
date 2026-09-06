@@ -26,6 +26,7 @@ export interface AppNotification {
   statusType?: 'aprobada' | 'rechazada' | 'pendiente' | 'info';
   targetRole?: 'admin' | 'user' | 'all';
   isReminder?: boolean;
+  isNewBrigade?: boolean;
   metadata?: {
     petName?: string;
     applicantName?: string;

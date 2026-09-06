@@ -27,6 +27,8 @@ const EVENTS_KEY = 'pata_amiga_events';
 const REGISTRATIONS_KEY = 'pata_amiga_event_registrations';
 const REPORTS_KEY = 'pata_amiga_reports';
 const NOTIFICATIONS_KEY = 'pata_amiga_notifications';
+const ADMIN_NOTIFICATIONS_KEY = 'pata_amiga_admin_notifications_v2';
+const USER_NOTIFICATIONS_KEY = 'pata_amiga_user_notifications_v2';
 const CHAT_CHANNELS_KEY = 'pata_amiga_chat_channels';
 const CHAT_MESSAGES_KEY = 'pata_amiga_chat_messages';
 const CONTACTS_KEY = 'pata_amiga_contacts';
@@ -56,6 +58,94 @@ function setItem<T>(key: string, value: T): void {
     console.error('Error saving to localStorage:', e);
   }
 }
+
+const INITIAL_ADMIN_NOTIFICATIONS: AppNotification[] = [
+  {
+    id: 'admin-notif-rep-1',
+    title: '🚨 Nuevo Reporte Animal: Perro (URGENTE)',
+    message: 'Ubicación: Barrio Camilo Torres - Carrera 5 con Calle 4. Reportado por Carlos Mendoza (Tel: 3105558899). Animal con herida en pata delantera.',
+    type: 'reporte',
+    timestamp: 'Hoy, 09:15 AM',
+    read: false,
+    linkTab: 'admin',
+    targetRole: 'admin',
+    metadata: {
+      reportId: 'rep-1',
+      animalType: 'Perro',
+      neighborhood: 'Barrio Camilo Torres'
+    }
+  },
+  {
+    id: 'admin-notif-app-1',
+    title: '🐾 Nueva Postulación de Adopción: Mateo',
+    message: 'Laura Camila Rodríguez (Tel: 3154442211) se ha postulado para adoptar a Mateo. Ubicación: Barrio Ospina Pérez. Requiere evaluación en el panel.',
+    type: 'adopcion',
+    timestamp: 'Ayer, 03:40 PM',
+    read: false,
+    linkTab: 'admin',
+    targetRole: 'admin',
+    metadata: {
+      petName: 'Mateo',
+      applicantName: 'Laura Camila Rodríguez',
+      applicationId: 'app-sample-1'
+    }
+  },
+  {
+    id: 'admin-notif-rep-2',
+    title: '🚨 Nuevo Reporte Animal: Gato',
+    message: 'Ubicación: Barrio Santa Bárbara - Manzana B Casa 12. Reportado por Andrea Gómez (Tel: 3147771234). Gatito abandonado dentro de caja.',
+    type: 'reporte',
+    timestamp: 'Hace 2 días',
+    read: true,
+    linkTab: 'admin',
+    targetRole: 'admin',
+    metadata: {
+      reportId: 'rep-2',
+      animalType: 'Gato',
+      neighborhood: 'Barrio Santa Bárbara'
+    }
+  }
+];
+
+const INITIAL_USER_NOTIFICATIONS: AppNotification[] = [
+  {
+    id: 'user-notif-new-brigade-1',
+    title: '📢 ¡Nueva Brigada Programada en Purificación!',
+    message: 'Se ha abierto la inscripción para la "Gran Jornada de Esterilización Gratuita" en el Polideportivo Municipal. ¡Separa tu cupo con anticipación, cupo limitado a 25 mascotas!',
+    type: 'evento',
+    isNewBrigade: true,
+    timestamp: 'Hoy, 10:00 AM',
+    read: false,
+    linkTab: 'eventos',
+    targetRole: 'user'
+  },
+  {
+    id: 'user-notif-rem-1',
+    title: '🗓️ Recordatorio de Brigada Próxima',
+    message: 'Recuerda que la jornada veterinaria en el Polideportivo Municipal se aproxima. Para cirugías o esterilizaciones, tu mascota debe estar en ayuno estricto de 8 horas y llevar carné de vacunación.',
+    type: 'evento',
+    isReminder: true,
+    timestamp: 'Hoy, 08:00 AM',
+    read: false,
+    linkTab: 'eventos',
+    targetRole: 'user'
+  },
+  {
+    id: 'user-notif-app-accepted-1',
+    title: '🎉 ¡Postulación Aprobada para Adopción: Mateo!',
+    message: '¡Felicidades! Tu postulación para adoptar a Mateo ha sido APROBADA con éxito por el equipo de Pata Amiga Purificación. Nos comunicaremos contigo para coordinar la firma del acta y entrega responsable.',
+    type: 'adopcion',
+    statusType: 'aprobada',
+    timestamp: 'Ayer, 04:30 PM',
+    read: true,
+    linkTab: 'adopciones',
+    targetRole: 'user',
+    metadata: {
+      petName: 'Mateo',
+      applicantName: 'Tutor Solicitante'
+    }
+  }
+];
 
 export const StoreController = {
   // --- SUCCESS STORIES ---
@@ -279,17 +369,17 @@ export const StoreController = {
       `🐾 ¡Nueva solicitud de adopción! ${appData.applicantName} ha postulado para adoptar a ${appData.petName}. Ciudad: ${appData.applicantCity}, Teléfono: ${appData.applicantPhone}. Estado actualizado a 'En proceso de adopción'.`
     );
 
-    // In-app notification for administrators
-    this.addNotification({
+    // In-app notification exclusively for administrators in Admin Panel
+    this.addAdminNotification({
       title: `🐾 Nueva Postulación de Adopción: ${appData.petName}`,
       message: `${appData.applicantName} (${appData.applicantPhone}) se ha postulado para adoptar a ${appData.petName}. Ubicación: ${appData.applicantCity}.`,
       type: 'adopcion',
-      targetRole: 'admin',
       linkTab: 'admin',
       metadata: {
         petName: appData.petName,
         applicantName: appData.applicantName,
-        applicantPhone: appData.applicantPhone
+        applicantPhone: appData.applicantPhone,
+        applicationId: newApp.id
       }
     });
 
@@ -323,15 +413,14 @@ export const StoreController = {
     if (status === 'aprobada') {
       this.updatePetStatus(targetPetId, 'adoptado');
 
-      // 1. Send direct in-app notification to the applicant
-      this.addNotification({
+      // 1. Send direct in-app notification exclusively to the user (applicant)
+      this.addUserNotification({
         userId: targetApp.userId,
         userEmail: targetApp.applicantEmail.trim().toLowerCase(),
         statusType: 'aprobada',
-        targetRole: 'user',
         title: `🎉 ¡Postulación Aprobada para ${targetApp.petName}!`,
         message: adminNote
-          ? `¡Felicidades, ${targetApp.applicantName}! Tu solicitud para adoptar a ${targetApp.petName} ha sido APROBADA. Mensaje de la administración: "${adminNote}". Nos comunicaremos contigo al ${targetApp.applicantPhone} para coordinar la entrega.`
+          ? `¡Felicidades, ${targetApp.applicantName}! Tu solicitud para adoptar a ${targetApp.petName} ha sido APROBADA. Mensaje de la administración: "${adminNote}". Nos comunicaremos contigo al ${targetApp.applicantPhone} para coordinar la entrega y firma del acta.`
           : `¡Felicidades, ${targetApp.applicantName}! Tu solicitud para adoptar a ${targetApp.petName} ha sido APROBADA con éxito por la administración de Pata Amiga Purificación. Nos comunicaremos contigo al ${targetApp.applicantPhone} para coordinar la entrega y firma del acta de adopción responsable.`,
         type: 'adopcion',
         linkTab: 'adopciones',
@@ -359,12 +448,11 @@ export const StoreController = {
         this.updatePetStatus(targetPetId, 'disponible');
       }
 
-      // 1. Send direct in-app notification to the applicant
-      this.addNotification({
+      // 1. Send direct in-app notification exclusively to the user (applicant)
+      this.addUserNotification({
         userId: targetApp.userId,
         userEmail: targetApp.applicantEmail.trim().toLowerCase(),
         statusType: 'rechazada',
-        targetRole: 'user',
         title: `Aviso sobre tu postulación de adopción (${targetApp.petName})`,
         message: adminNote
           ? `Hola ${targetApp.applicantName}, tu solicitud para adoptar a ${targetApp.petName} no ha podido ser aprobada. Observación de la administración: "${adminNote}". Te invitamos a conocer otros peluditos en adopción.`
@@ -448,12 +536,11 @@ export const StoreController = {
       `🚨 ALERTA DE RESCATE: ${newReport.animalType} en estado ${newReport.urgency.toUpperCase()} en ${newReport.neighborhood} (${newReport.addressDetails}). ${newReport.photos?.length || 1} fotos de evidencia adjuntadas. Reportado por: ${newReport.reporterName} (${newReport.reporterPhone}).`
     );
 
-    // Send admin notification
-    this.addNotification({
+    // Send admin notification exclusively to Admin Panel
+    this.addAdminNotification({
       title: `🚨 Nuevo Reporte Animal: ${newReport.animalType} (${newReport.urgency.toUpperCase()})`,
       message: `Ubicación: ${newReport.neighborhood} - ${newReport.addressDetails}. Reportado por ${newReport.reporterName} (Tel: ${newReport.reporterPhone}).`,
       type: 'reporte',
-      targetRole: 'admin',
       linkTab: 'admin',
       metadata: {
         reportId: newReport.id,
@@ -581,6 +668,16 @@ export const StoreController = {
       };
       events.unshift(savedEvent);
       setItem(EVENTS_KEY, events);
+
+      // Notify community users about the new health brigade
+      this.addUserNotification({
+        title: `📢 ¡Nueva Brigada Programada en Purificación!`,
+        message: `Se ha abierto la inscripción para: "${savedEvent.title}" el ${savedEvent.date} a las ${savedEvent.time} en ${savedEvent.locationName}. ¡Separa tu cupo con anticipación (máximo 25 mascotas)!`,
+        type: 'evento',
+        isNewBrigade: true,
+        eventId: savedEvent.id,
+        linkTab: 'eventos'
+      });
     }
 
     return savedEvent;
@@ -633,24 +730,13 @@ export const StoreController = {
     registrations.unshift(newReg);
     setItem(REGISTRATIONS_KEY, registrations);
 
-    // 1. In-app notification strictly for administrators: "las personas que se inscribieron a brigadas"
-    this.addNotification({
-      title: `📋 Nueva Inscripción en Brigada: ${event.title}`,
-      message: `${regData.ownerName} ha inscrito a ${regData.petName} (${regData.petSpecies}) para "${event.title}" en ${event.locationName} (${event.date} - ${event.time}). Teléfono: ${regData.ownerPhone}. Código: ${confirmationCode}.`,
-      type: 'evento',
-      targetRole: 'admin',
-      eventId: event.id,
-      linkTab: 'admin'
-    });
-
-    // 2. In-app notification for the user: strictly "recordatorio para brigadas"
-    this.addNotification({
+    // In-app notification strictly for the registered user: recordatorio de brigada
+    this.addUserNotification({
       userId: regData.userId,
       userEmail: regData.ownerEmail.trim().toLowerCase(),
       title: `🗓️ Recordatorio de Cita para Brigada: ${event.title}`,
-      message: `¡Hola ${regData.ownerName}! Recuerda tu cita para ${regData.petName} en la brigada de salud el ${event.date} a las ${event.time} en ${event.locationName} (${event.address}). Código de reserva: ${confirmationCode}. Recuerda llevar carné de vacunación y cumplir con ayuno si aplica procedimiento quirúrgico.`,
+      message: `¡Hola ${regData.ownerName}! Recuerda tu cita para ${regData.petName} en la jornada del ${event.date} a las ${event.time} en ${event.locationName} (${event.address}). Código de reserva: ${confirmationCode}. Recuerda llevar carné de vacunación y cumplir con ayuno si aplica procedimiento quirúrgico.`,
       type: 'evento',
-      targetRole: 'user',
       isReminder: true,
       eventId: event.id,
       linkTab: 'eventos'
@@ -679,194 +765,187 @@ export const StoreController = {
   },
 
   // --- NOTIFICATIONS SYSTEM ---
-  getNotifications(): AppNotification[] {
-    const initialNotifs: AppNotification[] = [
-      {
-        id: 'notif-admin-rep1',
-        title: '🚨 Nuevo Reporte Animal: Perro (URGENTE)',
-        message: 'Ubicación: Barrio Camilo Torres - Carrera 5 con Calle 4. Reportado por Carlos Mendoza (Tel: 3105558899). Animal con herida en pata delantera.',
-        type: 'reporte',
-        timestamp: 'Hoy, 09:15 AM',
-        read: false,
-        linkTab: 'admin',
-        targetRole: 'admin',
-        metadata: {
-          reportId: 'rep-1',
-          animalType: 'Perro',
-          neighborhood: 'Barrio Camilo Torres'
-        }
-      },
-      {
-        id: 'notif-admin-app1',
-        title: '🐾 Nueva Postulación de Adopción: Mateo',
-        message: 'Laura Camila Rodríguez (Tel: 3154442211) se ha postulado para adoptar a Mateo. Ubicación: Barrio Ospina Pérez. Requiere evaluación.',
-        type: 'adopcion',
-        timestamp: 'Ayer, 03:40 PM',
-        read: false,
-        linkTab: 'admin',
-        targetRole: 'admin',
-        metadata: {
-          petName: 'Mateo',
-          applicantName: 'Laura Camila Rodríguez',
-          applicationId: 'app-sample-1'
-        }
-      },
-      {
-        id: 'notif-admin-msg1',
-        title: '📩 Nuevo Mensaje de Contacto',
-        message: 'Andrés Morales (Tel: 3182223344) ha enviado un mensaje: "Donación de medicamentos e insumos para la próxima brigada".',
-        type: 'sistema',
-        timestamp: 'Ayer, 11:20 AM',
-        read: false,
-        linkTab: 'admin',
-        targetRole: 'admin'
-      },
-      {
-        id: 'notif-admin-reg1',
-        title: '📋 Nueva Inscripción en Brigada: Gran Jornada de Esterilización',
-        message: 'Gloria Patricia Silva ha inscrito a "Kira" (Perro) para la jornada en el Polideportivo Municipal. Tel: 3209876543.',
-        type: 'evento',
-        timestamp: 'Hace 2 días',
-        read: true,
-        linkTab: 'admin',
-        targetRole: 'admin'
-      },
-      {
-        id: 'notif-user-rem1',
-        title: '🗓️ Recordatorio de Brigada Próxima',
-        message: 'La Gran Jornada de Esterilización en el Polideportivo Municipal se aproxima. Recuerda llevar a tu mascota en ayuno de 8 horas.',
-        type: 'evento',
-        timestamp: 'Hoy, 08:00 AM',
-        read: false,
-        linkTab: 'eventos',
-        isReminder: true,
-        targetRole: 'user'
-      }
-    ];
-    return getItem<AppNotification[]>(NOTIFICATIONS_KEY, initialNotifs);
+  // --- ADMIN NOTIFICATIONS (Exclusivas para el Panel de Control: Postulaciones de adopción y Reportes) ---
+  getAdminNotifications(): AppNotification[] {
+    const list = getItem<AppNotification[]>(ADMIN_NOTIFICATIONS_KEY, INITIAL_ADMIN_NOTIFICATIONS);
+    // Filtrar estrictamente solo postulaciones y reportes para administradores
+    return list.filter(n => n.type === 'reporte' || n.type === 'adopcion');
   },
 
-  addNotification(notif: Omit<AppNotification, 'id' | 'timestamp' | 'read'>): AppNotification {
-    const list = this.getNotifications();
+  addAdminNotification(notif: Omit<AppNotification, 'id' | 'timestamp' | 'read' | 'targetRole'>): AppNotification {
+    const list = getItem<AppNotification[]>(ADMIN_NOTIFICATIONS_KEY, INITIAL_ADMIN_NOTIFICATIONS);
     const newNotif: AppNotification = {
       ...notif,
-      id: `notif-${Date.now()}`,
+      id: `admin-notif-${Date.now()}`,
       timestamp: 'Hace un momento',
-      read: false
+      read: false,
+      targetRole: 'admin'
     };
     list.unshift(newNotif);
-    setItem(NOTIFICATIONS_KEY, list);
+    setItem(ADMIN_NOTIFICATIONS_KEY, list);
     window.dispatchEvent(new Event('pata-data-change'));
     window.dispatchEvent(new Event('pata-notifications-change'));
     return newNotif;
   },
 
-  markNotificationRead(notifId: string): AppNotification[] {
-    const list = this.getNotifications();
+  markAdminNotificationRead(notifId: string): AppNotification[] {
+    const list = getItem<AppNotification[]>(ADMIN_NOTIFICATIONS_KEY, INITIAL_ADMIN_NOTIFICATIONS);
     const updated = list.map(n => n.id === notifId ? { ...n, read: true } : n);
-    setItem(NOTIFICATIONS_KEY, updated);
+    setItem(ADMIN_NOTIFICATIONS_KEY, updated);
     window.dispatchEvent(new Event('pata-data-change'));
     window.dispatchEvent(new Event('pata-notifications-change'));
     return updated;
   },
 
-  markNotificationUnread(notifId: string): AppNotification[] {
-    const list = this.getNotifications();
+  markAdminNotificationUnread(notifId: string): AppNotification[] {
+    const list = getItem<AppNotification[]>(ADMIN_NOTIFICATIONS_KEY, INITIAL_ADMIN_NOTIFICATIONS);
     const updated = list.map(n => n.id === notifId ? { ...n, read: false } : n);
-    setItem(NOTIFICATIONS_KEY, updated);
+    setItem(ADMIN_NOTIFICATIONS_KEY, updated);
     window.dispatchEvent(new Event('pata-data-change'));
     window.dispatchEvent(new Event('pata-notifications-change'));
     return updated;
   },
 
-  deleteNotification(notifId: string): boolean {
-    const list = this.getNotifications();
+  markAllAdminNotificationsRead(): AppNotification[] {
+    const list = getItem<AppNotification[]>(ADMIN_NOTIFICATIONS_KEY, INITIAL_ADMIN_NOTIFICATIONS);
+    const updated = list.map(n => ({ ...n, read: true }));
+    setItem(ADMIN_NOTIFICATIONS_KEY, updated);
+    window.dispatchEvent(new Event('pata-data-change'));
+    window.dispatchEvent(new Event('pata-notifications-change'));
+    return updated;
+  },
+
+  deleteAdminNotification(notifId: string): boolean {
+    const list = getItem<AppNotification[]>(ADMIN_NOTIFICATIONS_KEY, INITIAL_ADMIN_NOTIFICATIONS);
     const updated = list.filter(n => n.id !== notifId);
-    setItem(NOTIFICATIONS_KEY, updated);
+    setItem(ADMIN_NOTIFICATIONS_KEY, updated);
     window.dispatchEvent(new Event('pata-data-change'));
     window.dispatchEvent(new Event('pata-notifications-change'));
     return true;
-  },
-
-  markAllNotificationsRead(): AppNotification[] {
-    const list = this.getNotifications();
-    const updated = list.map(n => ({ ...n, read: true }));
-    setItem(NOTIFICATIONS_KEY, updated);
-    window.dispatchEvent(new Event('pata-data-change'));
-    window.dispatchEvent(new Event('pata-notifications-change'));
-    return updated;
-  },
-
-  getUserNotifications(user?: { id?: string; email?: string; role?: string } | null): AppNotification[] {
-    const list = this.getNotifications();
-    const cleanEmail = user?.email?.toLowerCase().trim() || 
-      (typeof window !== 'undefined' ? localStorage.getItem('pata_last_applicant_email')?.toLowerCase().trim() : null);
-    const userId = user?.id;
-    const isAdmin = (user?.role === 'admin') || (cleanEmail ? AUTHORIZED_ADMIN_EMAILS.includes(cleanEmail) : false);
-
-    if (isAdmin) {
-      // En el panel de control / administradores:
-      // "que en el panel de control nos lleguen notificaciones de los reportes que an realizado los usuarios, laas postulaciones de adopcion , no lo mismo que a los usuarios"
-      // Notificaciones exclusivas de gestión:
-      // - Reportes realizados por los usuarios
-      // - Postulaciones de adopción
-      // - Mensajes de contacto de los usuarios
-      // - Personas inscritas a brigadas
-      // Se excluyen totalmente los recordatorios dirigidos a los usuarios o estados de aprobación de usuario.
-      return list.filter(n => {
-        // Excluir notificaciones dirigidas al usuario común
-        if (n.targetRole === 'user') return false;
-        if (n.isReminder === true) return false;
-        if (n.statusType === 'aprobada' || n.statusType === 'rechazada') return false;
-
-        // Válidas para administración:
-        return n.targetRole === 'admin' || n.type === 'reporte' || (n.type === 'adopcion' && !n.statusType);
-      });
-    }
-
-    // Usuarios comunes (ciudadano, voluntario o visitante):
-    // "a los usuarios solo les debe llegar notificaciones de recordatorio para brigadas y si fue aceptada o rechazada su solicitud de adopcion"
-    // "que solo a los administradores le llegue las notificaciones de mensajes de los usuarios y de las personas que se inscrbieron a brigadas, no a los usuarios"
-    return list.filter(n => {
-      // Descartar notificaciones exclusivas de administradores
-      if (n.targetRole === 'admin') return false;
-
-      // 1. Notificaciones de recordatorio para brigadas
-      const isBrigadeReminder = n.type === 'evento' && (
-        n.isReminder === true || 
-        n.title.toLowerCase().includes('recordatorio')
-      );
-      if (isBrigadeReminder) {
-        if (n.userId || n.userEmail) {
-          return Boolean((userId && n.userId === userId) || (cleanEmail && n.userEmail?.toLowerCase().trim() === cleanEmail));
-        }
-        return true;
-      }
-
-      // 2. Notificaciones de adopción ACEPTADA o RECHAZADA
-      const isAdoptionDecision = n.type === 'adopcion' && (
-        n.statusType === 'aprobada' || n.statusType === 'rechazada'
-      );
-      if (isAdoptionDecision) {
-        return Boolean((userId && n.userId === userId) || (cleanEmail && n.userEmail?.toLowerCase().trim() === cleanEmail));
-      }
-
-      // Cualquier otra notificación queda restringida
-      return false;
-    });
-  },
-
-  getAdminNotifications(): AppNotification[] {
-    return this.getUserNotifications({ role: 'admin' });
   },
 
   getAdminUnreadCount(): number {
     return this.getAdminNotifications().filter(n => !n.read).length;
   },
 
+  // --- USER NOTIFICATIONS (Exclusivas para usuarios: Recordatorios de brigadas inscritas, nueva brigada y estado de adopción) ---
+  getUserNotifications(user?: { id?: string; email?: string; role?: string } | null): AppNotification[] {
+    const list = getItem<AppNotification[]>(USER_NOTIFICATIONS_KEY, INITIAL_USER_NOTIFICATIONS);
+    const cleanEmail = user?.email?.toLowerCase().trim() || 
+      (typeof window !== 'undefined' ? localStorage.getItem('pata_last_applicant_email')?.toLowerCase().trim() : null);
+    const userId = user?.id;
+
+    return list.filter(n => {
+      // 1. Notificaciones de nueva brigada (para todos los usuarios)
+      if (n.type === 'evento' && n.isNewBrigade === true) {
+        return true;
+      }
+
+      // 2. Recordatorios de brigadas a las que están inscritos
+      if (n.type === 'evento' && (n.isReminder === true || n.title.toLowerCase().includes('recordatorio'))) {
+        if (n.userId || n.userEmail) {
+          if (userId && n.userId === userId) return true;
+          if (cleanEmail && n.userEmail?.toLowerCase().trim() === cleanEmail) return true;
+          return false;
+        }
+        return true;
+      }
+
+      // 3. Notificación de postulación aceptada o rechazada
+      if (n.type === 'adopcion' && (n.statusType === 'aprobada' || n.statusType === 'rechazada')) {
+        if (n.userId || n.userEmail) {
+          if (userId && n.userId === userId) return true;
+          if (cleanEmail && n.userEmail?.toLowerCase().trim() === cleanEmail) return true;
+          return false;
+        }
+        return true;
+      }
+
+      // Descartar cualquier reporte u otra notificación en el canal de usuario
+      return false;
+    });
+  },
+
+  addUserNotification(notif: Omit<AppNotification, 'id' | 'timestamp' | 'read' | 'targetRole'>): AppNotification {
+    const list = getItem<AppNotification[]>(USER_NOTIFICATIONS_KEY, INITIAL_USER_NOTIFICATIONS);
+    const newNotif: AppNotification = {
+      ...notif,
+      id: `user-notif-${Date.now()}`,
+      timestamp: 'Hace un momento',
+      read: false,
+      targetRole: 'user'
+    };
+    list.unshift(newNotif);
+    setItem(USER_NOTIFICATIONS_KEY, list);
+    window.dispatchEvent(new Event('pata-data-change'));
+    window.dispatchEvent(new Event('pata-notifications-change'));
+    return newNotif;
+  },
+
+  markUserNotificationRead(notifId: string): AppNotification[] {
+    const list = getItem<AppNotification[]>(USER_NOTIFICATIONS_KEY, INITIAL_USER_NOTIFICATIONS);
+    const updated = list.map(n => n.id === notifId ? { ...n, read: true } : n);
+    setItem(USER_NOTIFICATIONS_KEY, updated);
+    window.dispatchEvent(new Event('pata-data-change'));
+    window.dispatchEvent(new Event('pata-notifications-change'));
+    return updated;
+  },
+
+  markAllUserNotificationsRead(user?: { id?: string; email?: string } | null): AppNotification[] {
+    const list = getItem<AppNotification[]>(USER_NOTIFICATIONS_KEY, INITIAL_USER_NOTIFICATIONS);
+    const updated = list.map(n => ({ ...n, read: true }));
+    setItem(USER_NOTIFICATIONS_KEY, updated);
+    window.dispatchEvent(new Event('pata-data-change'));
+    window.dispatchEvent(new Event('pata-notifications-change'));
+    return updated;
+  },
+
+  deleteUserNotification(notifId: string): boolean {
+    const list = getItem<AppNotification[]>(USER_NOTIFICATIONS_KEY, INITIAL_USER_NOTIFICATIONS);
+    const updated = list.filter(n => n.id !== notifId);
+    setItem(USER_NOTIFICATIONS_KEY, updated);
+    window.dispatchEvent(new Event('pata-data-change'));
+    window.dispatchEvent(new Event('pata-notifications-change'));
+    return true;
+  },
+
+  getUserUnreadCount(user?: { id?: string; email?: string; role?: string } | null): number {
+    return this.getUserNotifications(user).filter(n => !n.read).length;
+  },
+
+  // Alias y métodos de compatibilidad:
+  getNotifications(): AppNotification[] {
+    return this.getAdminNotifications();
+  },
+
+  addNotification(notif: Omit<AppNotification, 'id' | 'timestamp' | 'read'>): AppNotification {
+    if (notif.targetRole === 'admin' || notif.type === 'reporte' || (notif.type === 'adopcion' && !notif.statusType)) {
+      return this.addAdminNotification(notif);
+    }
+    return this.addUserNotification(notif);
+  },
+
+  markNotificationRead(notifId: string): AppNotification[] {
+    this.markAdminNotificationRead(notifId);
+    return this.markUserNotificationRead(notifId);
+  },
+
+  markNotificationUnread(notifId: string): AppNotification[] {
+    return this.markAdminNotificationUnread(notifId);
+  },
+
+  markAllNotificationsRead(): AppNotification[] {
+    this.markAllAdminNotificationsRead();
+    return this.markAllUserNotificationsRead();
+  },
+
+  deleteNotification(notifId: string): boolean {
+    this.deleteAdminNotification(notifId);
+    return this.deleteUserNotification(notifId);
+  },
+
   getUnreadCount(user?: { id?: string; email?: string; role?: string } | null): number {
-    const list = this.getUserNotifications(user);
-    return list.filter(n => !n.read).length;
+    return this.getUserUnreadCount(user);
   },
 
   // --- CHAT SYSTEM ---

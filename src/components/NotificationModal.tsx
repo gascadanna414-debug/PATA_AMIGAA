@@ -46,13 +46,16 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
 
   if (!isOpen) return null;
 
+  const isAdmin = currentUser?.role === 'admin' || 
+    (currentUser?.email && ['fundacionpataamigatol@gmail.com', 'admin@pataamiga.org', 'alcaldia@purificacion-tolima.gov.co'].includes(currentUser.email.toLowerCase().trim()));
+
   const handleMarkAllAsRead = () => {
-    StoreController.markAllNotificationsRead();
+    StoreController.markAllUserNotificationsRead(currentUser);
     setNotifications(StoreController.getUserNotifications(currentUser));
   };
 
   const handleNotificationClick = (notif: AppNotification) => {
-    StoreController.markNotificationRead(notif.id);
+    StoreController.markUserNotificationRead(notif.id);
     setNotifications(StoreController.getUserNotifications(currentUser));
     if (notif.linkTab && onNavigateToTab) {
       onNavigateToTab(notif.linkTab);
@@ -73,10 +76,10 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm sm:text-base font-bold font-['Fraunces',serif]">
-                Avisos y Notificaciones
+                Avisos y Recordatorios
               </h3>
               <p className="text-[11px] text-[#D8C7BA]">
-                {currentUser ? `Bandeja de ${currentUser.name}` : 'Purificación, Tolima'}
+                {currentUser ? `Bandeja de ${currentUser.name}` : 'Comunidad de Purificación, Tolima'}
               </p>
             </div>
           </div>
@@ -88,6 +91,25 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Admin Quick Switch Notice if user is Admin */}
+        {isAdmin && (
+          <div className="bg-amber-50/90 px-4 py-2.5 border-b border-amber-200 flex items-center justify-between gap-2 text-xs text-amber-950">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-600 shrink-0"></span>
+              <span>¿Buscas los <strong>reportes</strong> y <strong>postulaciones</strong> de usuarios?</span>
+            </div>
+            <button
+              onClick={() => {
+                if (onNavigateToTab) onNavigateToTab('admin');
+                onClose();
+              }}
+              className="text-xs font-bold text-[#9E6B38] hover:underline shrink-0 cursor-pointer"
+            >
+              Ir al Buzón Admin →
+            </button>
+          </div>
+        )}
 
         {/* Toolbar */}
         <div className="px-5 py-2.5 bg-[#FAF6F0] border-b border-[#E8DFD3] flex items-center justify-between text-xs">
@@ -111,14 +133,15 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
             <div className="text-center py-10 px-4 space-y-2">
               <Bell className="w-8 h-8 text-[#D8C7BA] mx-auto opacity-50" />
               <p className="text-xs text-[#8A7568]">
-                No tienes notificaciones pendientes.
+                No tienes recordatorios ni notificaciones pendientes.
               </p>
             </div>
           ) : (
             notifications.map(notif => {
-              const isAdoption = notif.type === 'adopcion';
               const isApproved = notif.statusType === 'aprobada';
               const isRejected = notif.statusType === 'rechazada';
+              const isNewBrigade = notif.isNewBrigade;
+              const isReminder = notif.isReminder || notif.title.toLowerCase().includes('recordatorio');
 
               const getIcon = () => {
                 if (isApproved) {
@@ -127,16 +150,10 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                 if (isRejected) {
                   return <XCircle className="w-4 h-4 text-rose-600" />;
                 }
-                switch (notif.type) {
-                  case 'evento':
-                    return <Calendar className="w-4 h-4 text-[#9E6B38]" />;
-                  case 'reporte':
-                    return <AlertCircle className="w-4 h-4 text-red-600" />;
-                  case 'adopcion':
-                    return <Heart className="w-4 h-4 text-amber-600" />;
-                  default:
-                    return <Bell className="w-4 h-4 text-[#9E6B38]" />;
+                if (isNewBrigade) {
+                  return <Sparkles className="w-4 h-4 text-amber-600" />;
                 }
+                return <Calendar className="w-4 h-4 text-[#9E6B38]" />;
               };
 
               return (
@@ -148,9 +165,11 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                       ? 'bg-emerald-50/70 hover:bg-emerald-50 border border-emerald-200'
                       : isRejected
                         ? 'bg-rose-50/60 hover:bg-rose-50 border border-rose-200'
-                        : notif.read
-                          ? 'bg-white hover:bg-[#FAF6F0]'
-                          : 'bg-[#FAF6F0] hover:bg-[#F3ECE0] border border-[#E8DFD3]'
+                        : isNewBrigade
+                          ? 'bg-amber-50/60 hover:bg-amber-50 border border-amber-200'
+                          : notif.read
+                            ? 'bg-white hover:bg-[#FAF6F0]'
+                            : 'bg-[#FAF6F0] hover:bg-[#F3ECE0] border border-[#E8DFD3]'
                   }`}
                 >
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs border ${
@@ -158,14 +177,16 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                       ? 'bg-white border-emerald-200' 
                       : isRejected 
                         ? 'bg-white border-rose-200' 
-                        : 'bg-white border-[#E8DFD3]'
+                        : isNewBrigade
+                          ? 'bg-white border-amber-200'
+                          : 'bg-white border-[#E8DFD3]'
                   }`}>
                     {getIcon()}
                   </div>
 
                   <div className="space-y-1.5 flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                      <div className="flex items-center gap-1.5 min-w-0">
+                      <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
                         <h4 className="text-xs font-bold text-[#2C1E14] truncate">
                           {notif.title}
                         </h4>
@@ -177,6 +198,16 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                         {isRejected && (
                           <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 shrink-0">
                             No aprobada
+                          </span>
+                        )}
+                        {isNewBrigade && (
+                          <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 shrink-0">
+                            Nueva Brigada
+                          </span>
+                        )}
+                        {isReminder && !isApproved && !isRejected && (
+                          <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 shrink-0">
+                            Recordatorio
                           </span>
                         )}
                       </div>
@@ -217,7 +248,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
         {/* Modal Footer */}
         <div className="p-3 bg-[#FAF6F0] border-t border-[#E8DFD3] text-center">
           <p className="text-[11px] text-[#8A7568]">
-            🔔 Notificaciones en tiempo real sobre adopciones, eventos y rescates en Purificación.
+            🔔 Avisos sobre recordatorios de brigadas inscritas, nuevas brigadas de salud y estado de tus postulaciones de adopción.
           </p>
         </div>
       </div>

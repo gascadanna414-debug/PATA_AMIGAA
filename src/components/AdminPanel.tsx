@@ -160,29 +160,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   }, []);
 
   const handleMarkAllAdminNotifsRead = () => {
-    StoreController.markAllNotificationsRead();
+    StoreController.markAllAdminNotificationsRead();
     setAdminNotifications(StoreController.getAdminNotifications());
     showNotification('Todas las notificaciones administrativas han sido marcadas como leídas.');
   };
 
   const handleToggleAdminNotifRead = (notifId: string, currentRead: boolean) => {
     if (currentRead) {
-      StoreController.markNotificationUnread(notifId);
+      StoreController.markAdminNotificationUnread(notifId);
     } else {
-      StoreController.markNotificationRead(notifId);
+      StoreController.markAdminNotificationRead(notifId);
     }
     setAdminNotifications(StoreController.getAdminNotifications());
   };
 
   const handleDeleteAdminNotif = (notifId: string) => {
-    StoreController.deleteNotification(notifId);
+    StoreController.deleteAdminNotification(notifId);
     setAdminNotifications(StoreController.getAdminNotifications());
     showNotification('Notificación eliminada de la bandeja.');
   };
 
   const handleNavigateFromNotif = (notif: AppNotification) => {
-    // Marcar como leída
-    StoreController.markNotificationRead(notif.id);
+    // Marcar como leída en buzón administrativo
+    StoreController.markAdminNotificationRead(notif.id);
     setAdminNotifications(StoreController.getAdminNotifications());
 
     if (notif.type === 'reporte') {
@@ -198,15 +198,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     } else if (notif.type === 'adopcion') {
       setActiveAdminTab('solicitudes');
       setSearchQuery('');
-    } else if (notif.type === 'sistema') {
-      setActiveAdminTab('mensajes');
-      setMessageFilter('todos');
-      setSearchQuery('');
-    } else if (notif.type === 'evento') {
-      setActiveAdminTab('brigadas');
-      if (notif.eventId) {
-        setViewingRegistrationsEventId(notif.eventId);
-      }
     }
   };
 
@@ -957,11 +948,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </h2>
               </div>
               <p className="text-xs text-[#6E574B] max-w-2xl">
-                Recibe en tiempo real las alertas generadas por los usuarios en Purificación: 
-                <strong> nuevos reportes de rescate animal</strong>, 
-                <strong> postulaciones para adopción</strong>, 
-                <strong> mensajes de contacto</strong> e 
-                <strong> inscripciones a brigadas</strong>.
+                Recibe en tiempo real las alertas administrativas exclusivas del panel: 
+                <strong> postulaciones de adopción de mascotas</strong> y 
+                <strong> reportes ciudadanos de rescate animal</strong> en Purificación.
               </p>
             </div>
 
@@ -984,10 +973,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <div className="flex items-center gap-1.5 flex-wrap">
               {[
                 { id: 'todos', label: 'Todas las Alertas', count: adminNotifications.length },
-                { id: 'reportes', label: '🚨 Reportes Ciudadanos', count: adminNotifications.filter(n => n.type === 'reporte').length },
                 { id: 'adopciones', label: '🐾 Postulaciones Adopción', count: adminNotifications.filter(n => n.type === 'adopcion').length },
-                { id: 'mensajes', label: '📩 Mensajes de Contacto', count: adminNotifications.filter(n => n.type === 'sistema').length },
-                { id: 'brigadas', label: '📋 Inscritos en Brigadas', count: adminNotifications.filter(n => n.type === 'evento').length }
+                { id: 'reportes', label: '🚨 Reportes Ciudadanos', count: adminNotifications.filter(n => n.type === 'reporte').length }
               ].map(f => (
                 <button
                   key={f.id}
@@ -1026,8 +1013,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 if (adminNotifOnlyUnread && notif.read) return false;
                 if (adminNotifFilter === 'reportes' && notif.type !== 'reporte') return false;
                 if (adminNotifFilter === 'adopciones' && notif.type !== 'adopcion') return false;
-                if (adminNotifFilter === 'mensajes' && notif.type !== 'sistema') return false;
-                if (adminNotifFilter === 'brigadas' && notif.type !== 'evento') return false;
                 return true;
               });
 
@@ -1065,20 +1050,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         <div className="space-y-2">
                           <div className="flex items-center justify-between gap-2">
                             <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
-                              isReport ? 'bg-red-100 text-red-800' :
-                              isAdoption ? 'bg-amber-100 text-amber-900' :
-                              isEvent ? 'bg-blue-100 text-blue-800' :
-                              'bg-[#FAF0E6] text-[#86582A]'
+                              isReport ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-900'
                             }`}>
-                              {isReport && <AlertCircle className="w-3 h-3" />}
-                              {isAdoption && <Heart className="w-3 h-3" />}
-                              {isEvent && <Calendar className="w-3 h-3" />}
-                              {isSystem && <Mail className="w-3 h-3" />}
+                              {isReport ? <AlertCircle className="w-3 h-3" /> : <Heart className="w-3 h-3" />}
                               <span>
-                                {isReport ? 'Reporte Ciudadano' :
-                                 isAdoption ? 'Postulación de Adopción' :
-                                 isEvent ? 'Inscripción en Brigada' :
-                                 'Mensaje de Contacto'}
+                                {isReport ? '🚨 Reporte Ciudadano' : '🐾 Postulación de Adopción'}
                               </span>
                             </span>
 
@@ -1110,10 +1086,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             onClick={() => handleNavigateFromNotif(notif)}
                             className="px-3 py-1.5 bg-[#2C1E14] hover:bg-[#3D2C1F] text-white text-xs font-semibold rounded-full cursor-pointer transition flex items-center gap-1.5 shadow-xs"
                           >
-                            {isReport && <span>🚨 Atender Reporte</span>}
-                            {isAdoption && <span>🐾 Evaluar Postulación</span>}
-                            {isSystem && <span>📩 Ver Mensaje</span>}
-                            {isEvent && <span>📋 Ver Inscritos</span>}
+                            {isReport ? <span>🚨 Atender Reporte</span> : <span>🐾 Evaluar Postulación</span>}
                             <ArrowRight className="w-3 h-3 text-[#9E6B38]" />
                           </button>
 
