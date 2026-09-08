@@ -3,11 +3,24 @@ import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import nodemailer from 'nodemailer';
 import 'dotenv/config';
+import { 
+  getDatabase, 
+  saveDatabase, 
+  addReportToServer, 
+  updateReportOnServer, 
+  addAdoptionApplicationToServer, 
+  updateAdoptionApplicationOnServer, 
+  updatePetStatusOnServer, 
+  savePetOnServer, 
+  deletePetOnServer, 
+  syncClientDataWithServer 
+} from './server/liveDatabase';
 
 const app = express();
 const PORT = 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
 const DEFAULT_ADMIN_EMAILS = [
   'gascadanna414@gmail.com',
@@ -194,15 +207,16 @@ app.get('/api/email/status', (req: Request, res: Response) => {
   });
 });
 
-// Dispatch real email alert to all administrators
-app.post('/api/email/send-admin-alert', async (req: Request, res: Response) => {
+// Internal email dispatcher used by endpoints and events
+export async function sendInternalAdminEmail(params: {
+  title: string;
+  message: string;
+  type?: string;
+  metadata?: Record<string, any>;
+  recipients?: string[];
+}): Promise<{ delivered: boolean; provider: string; messageId?: string; error?: string }> {
   try {
-    const { title, message, type = 'sistema', metadata, recipients } = req.body;
-
-    if (!title || !message) {
-      return res.status(400).json({ success: false, error: 'title and message are required' });
-    }
-
+    const { title, message, type = 'sistema', metadata, recipients } = params;
     const targetRecipients: string[] = Array.isArray(recipients) && recipients.length > 0 
       ? recipients 
       : DEFAULT_ADMIN_EMAILS;
@@ -212,28 +226,10 @@ app.post('/api/email/send-admin-alert', async (req: Request, res: Response) => {
     const subject = `[Pata Amiga Purificación - Admin] ${title}`;
 
     if (!emailConfig.configured) {
-      console.warn('[Email Dispatch] Intento de envío de correo sin proveedor configurado en .env');
-      return res.json({
-        success: false,
-        delivered: false,
-        configured: false,
-        provider: 'none',
-        recipients: targetRecipients,
-        subject,
-        message: 'Credenciales de correo no configuradas aún en variables de entorno.',
-        instructions: {
-          recommended: 'Gmail SMTP',
-          steps: [
-            '1. Ve a tu cuenta de Google > Seguridad > Verificación en 2 pasos.',
-            '2. Crea una "Contraseña de aplicaciones" para "Pata Amiga".',
-            '3. Configura en las variables de entorno: GMAIL_USER=tu_correo@gmail.com y GMAIL_APP_PASSWORD=tu_contraseña_de_16_letras.',
-            '4. ¡Listo! Los correos llegarán instantáneamente a todos los administradores.'
-          ]
-        }
-      });
+      console.warn('[Email Dispatch] Credenciales de correo no configuradas aún en .env');
+      return { delivered: false, provider: 'none', error: 'No email credentials configured' };
     }
 
-    // 1. Send via Resend REST API if configured
     if (emailConfig.provider === 'resend') {
       const resendRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -248,46 +244,82 @@ app.post('/api/email/send-admin-alert', async (req: Request, res: Response) => {
           html: htmlBody
         })
       });
-
-      const resendData = await resendRes.json();
+      const data = await resendRes.json();
       if (!resendRes.ok) {
-        console.error('[Resend Error]', resendData);
-        return res.status(500).json({ success: false, error: resendData, provider: 'resend' });
+        return { delivered: false, provider: 'resend', error: JSON.stringify(data) };
       }
-
-      console.info(`[Email Sent via Resend] Despachado a ${targetRecipients.join(', ')}`);
-      return res.json({
-        success: true,
-        delivered: true,
-        provider: 'resend',
-        recipients: targetRecipients,
-        data: resendData
-      });
+      return { delivered: true, provider: 'resend', messageId: data.id };
     }
 
-    // 2. Send via Nodemailer (Gmail SMTP or generic SMTP)
     const transporter = getTransporter();
     if (!transporter) {
-      return res.status(500).json({ success: false, error: 'No transporter available' });
+      return { delivered: false, provider: 'smtp', error: 'No transporter available' };
     }
 
-    const mailOptions = {
+    const info = await transporter.sendMail({
       from: emailConfig.fromEmail,
       to: targetRecipients.join(', '),
       subject,
       text: `${title}\n\n${message}\n\nPata Amiga Purificación, Tolima`,
       html: htmlBody
-    };
+    });
 
-    const info = await transporter.sendMail(mailOptions);
-    console.info(`[Email Sent via ${emailConfig.provider}] Despachado con éxito a: ${targetRecipients.join(', ')} (ID: ${info.messageId})`);
+    return { delivered: true, provider: emailConfig.provider, messageId: info.messageId };
+  } catch (err: any) {
+    console.error('[Internal Email Dispatch Error]', err);
+    return { delivered: false, provider: 'error', error: err.message };
+  }
+}
+
+// Dispatch real email alert to all administrators
+app.post('/api/email/send-admin-alert', async (req: Request, res: Response) => {
+  try {
+    const { title, message, type = 'sistema', metadata, recipients } = req.body;
+
+    if (!title || !message) {
+      return res.status(400).json({ success: false, error: 'title and message are required' });
+    }
+
+    const targetRecipients: string[] = Array.isArray(recipients) && recipients.length > 0 
+      ? recipients 
+      : DEFAULT_ADMIN_EMAILS;
+
+    const emailConfig = getEmailConfig();
+
+    if (!emailConfig.configured) {
+      console.warn('[Email Dispatch] Intento de envío de correo sin proveedor configurado en .env');
+      return res.json({
+        success: false,
+        delivered: false,
+        configured: false,
+        provider: 'none',
+        recipients: targetRecipients,
+        subject: `[Pata Amiga Purificación - Admin] ${title}`,
+        message: 'Credenciales de correo no configuradas aún en variables de entorno.',
+        instructions: {
+          recommended: 'Gmail SMTP',
+          steps: [
+            '1. Ve a tu cuenta de Google > Seguridad > Verificación en 2 pasos.',
+            '2. Crea una "Contraseña de aplicaciones" para "Pata Amiga".',
+            '3. Configura en las variables de entorno: GMAIL_USER=tu_correo@gmail.com y GMAIL_APP_PASSWORD=tu_contraseña_de_16_letras.',
+            '4. ¡Listo! Los correos llegarán instantáneamente a todos los administradores.'
+          ]
+        }
+      });
+    }
+
+    const result = await sendInternalAdminEmail({ title, message, type, metadata, recipients: targetRecipients });
+
+    if (!result.delivered) {
+      return res.status(500).json({ success: false, error: result.error, provider: result.provider });
+    }
 
     return res.json({
       success: true,
       delivered: true,
-      provider: emailConfig.provider,
+      provider: result.provider,
       recipients: targetRecipients,
-      messageId: info.messageId
+      messageId: result.messageId
     });
 
   } catch (err: any) {
@@ -379,6 +411,157 @@ app.post('/api/email/test', async (req: Request, res: Response) => {
       recipients: DEFAULT_ADMIN_EMAILS,
       messageId: info.messageId
     });
+  } catch (e: any) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// ==================== LIVE DATABASE & REAL-TIME SYNC API ROUTES ====================
+
+// 1. Get full centralized database
+app.get('/api/data', (req: Request, res: Response) => {
+  try {
+    const db = getDatabase();
+    return res.json({ success: true, data: db });
+  } catch (e: any) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 2. Full synchronization and merge
+app.post('/api/data/sync', (req: Request, res: Response) => {
+  try {
+    const updatedDb = syncClientDataWithServer(req.body);
+    return res.json({ success: true, data: updatedDb });
+  } catch (e: any) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 3. Create a new animal report (persisted globally across all devices & profiles)
+app.post('/api/reports', async (req: Request, res: Response) => {
+  try {
+    const reportData = req.body;
+    if (!reportData || !reportData.animalType) {
+      return res.status(400).json({ success: false, error: 'Faltan datos requeridos del reporte' });
+    }
+    const { report, state } = addReportToServer(reportData);
+
+    // Fire automatic email alert to the 4 administrators
+    sendInternalAdminEmail({
+      title: `🚨 Nuevo Reporte Animal en Purificación: ${report.animalType}`,
+      message: `Se ha recibido un nuevo reporte de rescate en el barrio ${report.neighborhood || 'Purificación Tolima'}.\n\nUrgencia: ${report.urgency || 'Normal'}\nDirección: ${report.addressDetails || 'Purificación Tolima'}\nReportante: ${report.reporterName || 'Anónimo'} (Tel: ${report.reporterPhone || 'Sin teléfono'})\nDescripción: ${report.description || 'Sin descripción'}`,
+      type: 'reporte',
+      metadata: {
+        'Tipo de Animal': report.animalType,
+        'Barrio': report.neighborhood,
+        'Urgencia': report.urgency,
+        'Reportante': `${report.reporterName} (${report.reporterPhone})`,
+        'Fecha': report.reportedAt || new Date().toLocaleString()
+      }
+    }).catch(e => console.warn('[Auto-Email Report Alert Error]', e?.message));
+
+    return res.json({ success: true, report, data: state });
+  } catch (e: any) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 4. Update animal report (status, assigned rescuer, admin notes)
+app.patch('/api/reports/:id', (req: Request, res: Response) => {
+  try {
+    const { report, state } = updateReportOnServer(req.params.id, req.body);
+    if (!report) {
+      return res.status(404).json({ success: false, error: 'Reporte no encontrado' });
+    }
+    return res.json({ success: true, report, data: state });
+  } catch (e: any) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 5. Submit adoption application (updates pet to 'en_proceso' globally across all devices & profiles)
+app.post('/api/adoption-applications', async (req: Request, res: Response) => {
+  try {
+    const appData = req.body;
+    if (!appData || !appData.petId || !appData.applicantName) {
+      return res.status(400).json({ success: false, error: 'Faltan datos de la postulación' });
+    }
+    const { application, state } = addAdoptionApplicationToServer(appData);
+
+    // Fire automatic email alert to the 4 administrators
+    sendInternalAdminEmail({
+      title: `🐾 Nueva Postulación de Adopción: ${application.petName}`,
+      message: `${application.applicantName} se ha postulado para adoptar a ${application.petName} en Purificación Tolima.\n\nTeléfono: ${application.applicantPhone}\nCorreo: ${application.applicantEmail}\nCiudad/Sector: ${application.applicantCity}\nTipo de vivienda: ${application.housingType}\nMotivo: ${application.reasonForAdoption}`,
+      type: 'adopcion',
+      metadata: {
+        'Mascota': application.petName,
+        'Postulante': application.applicantName,
+        'Teléfono': application.applicantPhone,
+        'Correo': application.applicantEmail,
+        'Vivienda': application.housingType,
+        'Fecha': application.submittedAt || new Date().toLocaleString()
+      }
+    }).catch(e => console.warn('[Auto-Email Adoption Alert Error]', e?.message));
+
+    return res.json({ success: true, application, pets: state.pets, data: state });
+  } catch (e: any) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 6. Update adoption application status (Approve -> marks pet 'adoptado', Reject -> marks pet 'disponible')
+app.patch('/api/adoption-applications/:id', (req: Request, res: Response) => {
+  try {
+    const { status, adminNote } = req.body;
+    if (!status) {
+      return res.status(400).json({ success: false, error: 'Se requiere el estado de la postulación' });
+    }
+    const { application, state } = updateAdoptionApplicationOnServer(req.params.id, status, adminNote);
+    if (!application) {
+      return res.status(404).json({ success: false, error: 'Postulación no encontrada' });
+    }
+    return res.json({ success: true, application, pets: state.pets, data: state });
+  } catch (e: any) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 7. Update pet status or details
+app.patch('/api/pets/:id', (req: Request, res: Response) => {
+  try {
+    if (req.body.status && Object.keys(req.body).length === 1) {
+      const { pet, state } = updatePetStatusOnServer(req.params.id, req.body.status);
+      return res.json({ success: true, pet, data: state });
+    }
+    const db = getDatabase();
+    const existing = db.pets.find(p => p.id === req.params.id);
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'Mascota no encontrada' });
+    }
+    const updatedPet = { ...existing, ...req.body };
+    const { pet, state } = savePetOnServer(updatedPet);
+    return res.json({ success: true, pet, data: state });
+  } catch (e: any) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 8. Add new pet to catalog
+app.post('/api/pets', (req: Request, res: Response) => {
+  try {
+    const { pet, state } = savePetOnServer(req.body);
+    return res.json({ success: true, pet, data: state });
+  } catch (e: any) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 9. Delete pet from catalog
+app.delete('/api/pets/:id', (req: Request, res: Response) => {
+  try {
+    const { state } = deletePetOnServer(req.params.id);
+    return res.json({ success: true, data: state });
   } catch (e: any) {
     return res.status(500).json({ success: false, error: e.message });
   }

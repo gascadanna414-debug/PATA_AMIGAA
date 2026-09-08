@@ -52,6 +52,9 @@ export const AdoptionsView: React.FC<AdoptionsViewProps> = ({
     setPets(StoreController.getAdoptionPets());
     setUserApplications(StoreController.getUserAdoptionApplications(currentUser));
 
+    // Immediate background sync with centralized server
+    StoreController.syncWithServer();
+
     const handleDataChange = () => {
       setPets(StoreController.getAdoptionPets());
       setUserApplications(StoreController.getUserAdoptionApplications(currentUser));

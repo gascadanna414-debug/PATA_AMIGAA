@@ -60,6 +60,135 @@ function setItem<T>(key: string, value: T): void {
   }
 }
 
+let isSyncing = false;
+let lastServerTimestamp = 0;
+
+export async function syncWithCentralServer(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  if (isSyncing) return false;
+  isSyncing = true;
+  try {
+    const res = await fetch('/api/data');
+    if (!res.ok) {
+      isSyncing = false;
+      return false;
+    }
+    const json = await res.json();
+    if (!json.success || !json.data) {
+      isSyncing = false;
+      return false;
+    }
+
+    const serverData = json.data;
+    if (serverData.lastUpdated && serverData.lastUpdated === lastServerTimestamp) {
+      isSyncing = false;
+      return false;
+    }
+
+    lastServerTimestamp = serverData.lastUpdated || Date.now();
+    let hasChanges = false;
+
+    // 1. Sync Reports globally
+    if (Array.isArray(serverData.reports)) {
+      const localReportsRaw = localStorage.getItem(REPORTS_KEY);
+      const localReports: AnimalReport[] = localReportsRaw ? JSON.parse(localReportsRaw) : INITIAL_ANIMAL_REPORTS;
+      const localMap = new Map(localReports.map(r => [r.id, r]));
+      let reportsChanged = false;
+      for (const sr of serverData.reports) {
+        const lr = localMap.get(sr.id);
+        if (!lr || lr.status !== sr.status || lr.statusNote !== sr.statusNote || lr.assignedRescuer !== sr.assignedRescuer) {
+          reportsChanged = true;
+          break;
+        }
+      }
+      if (reportsChanged || serverData.reports.length !== localReports.length) {
+        localStorage.setItem(REPORTS_KEY, JSON.stringify(serverData.reports));
+        hasChanges = true;
+        window.dispatchEvent(new Event('pata-reports-change'));
+      }
+    }
+
+    // 2. Sync Adoption Applications globally
+    if (Array.isArray(serverData.adoptionApplications)) {
+      const localAppsRaw = localStorage.getItem(ADOPTION_APPS_KEY);
+      const localApps: AdoptionApplication[] = localAppsRaw ? JSON.parse(localAppsRaw) : INITIAL_ADOPTION_APPLICATIONS;
+      const localMap = new Map(localApps.map(a => [a.id, a]));
+      let appsChanged = false;
+      for (const sa of serverData.adoptionApplications) {
+        const la = localMap.get(sa.id);
+        if (!la || la.status !== sa.status || la.statusNote !== sa.statusNote) {
+          appsChanged = true;
+          break;
+        }
+      }
+      if (appsChanged || serverData.adoptionApplications.length !== localApps.length) {
+        localStorage.setItem(ADOPTION_APPS_KEY, JSON.stringify(serverData.adoptionApplications));
+        hasChanges = true;
+      }
+    }
+
+    // 3. Sync Pets globally (including real-time status across all profiles)
+    if (Array.isArray(serverData.pets)) {
+      const localPetsRaw = localStorage.getItem(PETS_KEY);
+      const localPets: AdoptionPet[] = localPetsRaw ? JSON.parse(localPetsRaw) : INITIAL_ADOPTION_PETS;
+      const localMap = new Map(localPets.map(p => [p.id, p]));
+      let petsChanged = false;
+      for (const sp of serverData.pets) {
+        const lp = localMap.get(sp.id);
+        if (!lp || lp.status !== sp.status) {
+          petsChanged = true;
+          break;
+        }
+      }
+      if (petsChanged || serverData.pets.length !== localPets.length) {
+        localStorage.setItem(PETS_KEY, JSON.stringify(serverData.pets));
+        hasChanges = true;
+        window.dispatchEvent(new Event('pata-pets-change'));
+      }
+    }
+
+    // 4. Sync Admin Notifications globally
+    if (Array.isArray(serverData.adminNotifications) && serverData.adminNotifications.length > 0) {
+      localStorage.setItem(ADMIN_NOTIFICATIONS_KEY, JSON.stringify(serverData.adminNotifications));
+      window.dispatchEvent(new Event('pata-notifications-change'));
+    }
+
+    if (hasChanges) {
+      window.dispatchEvent(new Event('pata-data-change'));
+    }
+
+    isSyncing = false;
+    return true;
+  } catch (err) {
+    isSyncing = false;
+    return false;
+  }
+}
+
+// Background auto-sync listener across all browser tabs and profiles
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    syncWithCentralServer();
+  }, 100);
+
+  setInterval(() => {
+    if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+      syncWithCentralServer();
+    }
+  }, 3500);
+
+  window.addEventListener('focus', () => {
+    syncWithCentralServer();
+  });
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        syncWithCentralServer();
+      }
+    });
+  }
+}
+
 const INITIAL_ADMIN_NOTIFICATIONS: AppNotification[] = [
   {
     id: 'admin-notif-rep-1',
@@ -359,6 +488,10 @@ export const StoreController = {
     return true;
   },
 
+  syncWithServer(): Promise<boolean> {
+    return syncWithCentralServer();
+  },
+
   updatePetStatus(petId: string, status: 'disponible' | 'en_proceso' | 'adoptado'): AdoptionPet[] {
     const pets = this.getAdoptionPets();
     const updated = pets.map(p => p.id === petId ? { ...p, status } : p);
@@ -366,6 +499,11 @@ export const StoreController = {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('pata-data-change'));
       window.dispatchEvent(new Event('pata-pets-change'));
+      fetch(`/api/pets/${petId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      }).then(() => syncWithCentralServer()).catch(e => console.warn('[Pet Status API Error]', e));
     }
     return updated;
   },
@@ -438,6 +576,11 @@ export const StoreController = {
       window.dispatchEvent(new Event('pata-data-change'));
       window.dispatchEvent(new Event('pata-pets-change'));
       window.dispatchEvent(new Event('pata-notifications-change'));
+      fetch('/api/adoption-applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newApp)
+      }).then(() => syncWithCentralServer()).catch(e => console.warn('[Submit Adoption Application API Error]', e));
     }
 
     return newApp;
@@ -535,6 +678,11 @@ export const StoreController = {
       window.dispatchEvent(new Event('pata-data-change'));
       window.dispatchEvent(new Event('pata-pets-change'));
       window.dispatchEvent(new Event('pata-notifications-change'));
+      fetch(`/api/adoption-applications/${appId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, adminNote })
+      }).then(() => syncWithCentralServer()).catch(e => console.warn('[Update Application API Error]', e));
     }
 
     return true;
@@ -617,6 +765,15 @@ export const StoreController = {
       }
     });
 
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('pata-reports-change'));
+      fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newReport)
+      }).then(() => syncWithCentralServer()).catch(e => console.warn('[Create Report API Error]', e));
+    }
+
     return newReport;
   },
 
@@ -638,6 +795,14 @@ export const StoreController = {
       return r;
     });
     setItem(REPORTS_KEY, updated);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('pata-reports-change'));
+      fetch(`/api/reports/${reportId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, statusNote, assignedRescuer })
+      }).then(() => syncWithCentralServer()).catch(e => console.warn('[Update Report Status API Error]', e));
+    }
     return updated;
   },
 

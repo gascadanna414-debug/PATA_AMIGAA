@@ -34,6 +34,35 @@ export const ReportView: React.FC<ReportViewProps> = ({
 }) => {
   const [reports, setReports] = useState<AnimalReport[]>(() => StoreController.getReports());
 
+  // Real-time synchronization across all tabs, users, and server updates
+  React.useEffect(() => {
+    const handleReportsUpdate = () => {
+      setReports(StoreController.getReports());
+    };
+
+    window.addEventListener('pata-data-change', handleReportsUpdate);
+    window.addEventListener('pata-reports-change', handleReportsUpdate);
+    window.addEventListener('storage', handleReportsUpdate);
+
+    // Trigger immediate background sync with server
+    StoreController.syncWithServer();
+
+    return () => {
+      window.removeEventListener('pata-data-change', handleReportsUpdate);
+      window.removeEventListener('pata-reports-change', handleReportsUpdate);
+      window.removeEventListener('storage', handleReportsUpdate);
+    };
+  }, []);
+
+  // Update contact defaults when current logged-in profile changes
+  React.useEffect(() => {
+    if (currentUser) {
+      if (!reporterName) setReporterName(currentUser.name);
+      if (!reporterEmail) setReporterEmail(currentUser.email);
+      if (!reporterPhone && currentUser.phone) setReporterPhone(currentUser.phone);
+    }
+  }, [currentUser]);
+
   // Form states
   const [reporterName, setReporterName] = useState(currentUser?.name || '');
   const [reporterEmail, setReporterEmail] = useState(currentUser?.email || '');
