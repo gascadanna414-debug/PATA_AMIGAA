@@ -86,6 +86,7 @@ export const EventsView: React.FC<EventsViewProps> = ({
         const res = StoreController.registerForEvent({
           eventId: selectedEvent.id,
           eventTitle: selectedEvent.title,
+          userId: currentUser?.id,
           ownerName,
           ownerEmail,
           ownerPhone,

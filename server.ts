@@ -104,8 +104,9 @@ function getTransporter() {
 function buildHtmlEmail(title: string, message: string, type: string, metadata?: any): string {
   const isReport = type === 'reporte';
   const isAdoption = type === 'adopcion';
-  const headerBg = isReport ? '#DC2626' : isAdoption ? '#D97706' : '#2C1E14';
-  const badgeText = isReport ? '🚨 REPORTE DE RESCATE' : isAdoption ? '🐾 POSTULACIÓN DE ADOPCIÓN' : '📩 MENSAJE RECIBIDO';
+  const isEvent = type === 'evento';
+  const headerBg = isReport ? '#DC2626' : isAdoption ? '#D97706' : isEvent ? '#4F46E5' : '#2C1E14';
+  const badgeText = isReport ? '🚨 REPORTE DE RESCATE' : isAdoption ? '🐾 POSTULACIÓN DE ADOPCIÓN' : isEvent ? '📋 BRIGADA DE SALUD Y VETERINARIA' : '📩 MENSAJE RECIBIDO';
 
   let metadataHtml = '';
   if (metadata) {
@@ -522,6 +523,52 @@ app.patch('/api/adoption-applications/:id', (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: 'Postulación no encontrada' });
     }
     return res.json({ success: true, application, pets: state.pets, data: state });
+  } catch (e: any) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 6.1 Register for health event / brigada (notifies admins by email and monitors capacity)
+app.post('/api/event-registrations', async (req: Request, res: Response) => {
+  try {
+    const { registration, event, isSoldOut } = req.body;
+    if (!registration || !event) {
+      return res.status(400).json({ success: false, error: 'Faltan datos del registro o evento' });
+    }
+
+    // Fire automatic email alert to the 4 administrators about the new registration
+    sendInternalAdminEmail({
+      title: `📋 Nueva Inscripción en Brigada: ${event.title}`,
+      message: `${registration.ownerName} ha inscrito a su mascota "${registration.petName}" (${registration.petSpecies || 'Mascota'}) para la brigada "${event.title}" en Purificación Tolima.\n\nFecha y Hora: ${event.date} - ${event.time}\nLugar: ${event.locationName} (${event.address})\nTeléfono del tutor: ${registration.ownerPhone}\nCorreo del tutor: ${registration.ownerEmail}\nCódigo de confirmación: ${registration.confirmationCode}\nCupos: ${event.registeredCount || 1}/${event.capacity || 25}`,
+      type: 'evento',
+      metadata: {
+        'Brigada': event.title,
+        'Tutor / Propietario': registration.ownerName,
+        'Mascota': `${registration.petName} (${registration.petSpecies || 'Mascota'}, ${registration.petAge || 'Edad no esp.'})`,
+        'Teléfono': registration.ownerPhone,
+        'Código Reserva': registration.confirmationCode,
+        'Fecha y Lugar': `${event.date} - ${event.locationName}`,
+        'Cupos Ocupados': `${event.registeredCount || 1}/${event.capacity || 25}`
+      }
+    }).catch(e => console.warn('[Auto-Email Event Registration Alert Error]', e?.message));
+
+    // If available spots are now exhausted, fire immediate emergency email to admins
+    if (isSoldOut) {
+      sendInternalAdminEmail({
+        title: `⚠️ ¡CUPOS AGOTADOS! Brigada: ${event.title}`,
+        message: `ATENCIÓN ADMINISTRACIÓN: Se han agotado todos los cupos disponibles (${event.capacity || 25} cupos) para la jornada "${event.title}" en ${event.locationName} (${event.date}).\n\nEl sistema ha bloqueado automáticamente nuevas inscripciones para este evento. Si se requiere habilitar más cupos, ingresen al Panel de Administración.`,
+        type: 'evento',
+        metadata: {
+          'Brigada': event.title,
+          'Estado': 'CUPOS AGOTADOS',
+          'Aforo alcanzado': `${event.registeredCount || 25} mascotas`,
+          'Lugar': event.locationName,
+          'Fecha': event.date
+        }
+      }).catch(e => console.warn('[Auto-Email Event Soldout Alert Error]', e?.message));
+    }
+
+    return res.json({ success: true });
   } catch (e: any) {
     return res.status(500).json({ success: false, error: e.message });
   }

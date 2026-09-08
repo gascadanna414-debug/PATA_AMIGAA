@@ -191,6 +191,58 @@ if (typeof window !== 'undefined') {
 
 const INITIAL_ADMIN_NOTIFICATIONS: AppNotification[] = [
   {
+    id: 'admin-notif-event-soldout-1',
+    title: '⚠️ ¡Cupos Agotados! Gran Jornada de Esterilización',
+    message: 'Se han completado los 25 cupos disponibles para la jornada en el Polideportivo Municipal de Purificación. El sistema ha cerrado automáticamente nuevas inscripciones para este evento.',
+    type: 'evento',
+    timestamp: 'Hoy, 11:30 AM',
+    read: false,
+    linkTab: 'admin',
+    targetRole: 'admin',
+    emailDispatch: {
+      sentAt: 'Hoy, 11:30 AM',
+      recipients: ['gascadanna414@gmail.com', 'sofiaaa.123791@gmail.com', 'adrianamacana2@gmail.com', 'marimasmela15@gmail.com'],
+      status: 'enviado',
+      subject: '[Pata Amiga Purificación - Admin] ⚠️ ¡Cupos Agotados! Gran Jornada de Esterilización',
+      preview: 'Se han completado los 25 cupos disponibles para la jornada en el Polideportivo Municipal.'
+    },
+    metadata: {
+      eventId: 'event-1',
+      eventTitle: 'Gran Jornada de Esterilización Gratuita',
+      isSoldOut: true,
+      totalSpots: 25,
+      location: 'Polideportivo Municipal de Purificación'
+    }
+  },
+  {
+    id: 'admin-notif-event-reg-1',
+    title: '📋 Nueva Inscripción en Brigada: Gran Jornada de Esterilización',
+    message: 'Carlos Mendoza (Tel: 3105558899) inscribió a su mascota "Rocky" (Perro, 2 años) para la jornada en el Polideportivo Municipal. Código: PA-TOL-8841. Cupos ocupados: 24/25.',
+    type: 'evento',
+    timestamp: 'Hoy, 10:45 AM',
+    read: false,
+    linkTab: 'admin',
+    targetRole: 'admin',
+    emailDispatch: {
+      sentAt: 'Hoy, 10:45 AM',
+      recipients: ['gascadanna414@gmail.com', 'sofiaaa.123791@gmail.com', 'adrianamacana2@gmail.com', 'marimasmela15@gmail.com'],
+      status: 'enviado',
+      subject: '[Pata Amiga Purificación - Admin] 📋 Nueva Inscripción en Brigada: Rocky',
+      preview: 'Carlos Mendoza inscribió a su canino "Rocky". Tel: 3105558899.'
+    },
+    metadata: {
+      eventId: 'event-1',
+      eventTitle: 'Gran Jornada de Esterilización Gratuita',
+      ownerName: 'Carlos Mendoza',
+      ownerPhone: '3105558899',
+      petName: 'Rocky',
+      petSpecies: 'Perro',
+      confirmationCode: 'PA-TOL-8841',
+      registeredCount: 24,
+      capacity: 25
+    }
+  },
+  {
     id: 'admin-notif-rep-1',
     title: '🚨 Nuevo Reporte Animal: Perro (URGENTE)',
     message: 'Ubicación: Barrio Camilo Torres - Carrera 5 con Calle 4. Reportado por Carlos Mendoza (Tel: 3105558899). Animal con herida en pata delantera.',
@@ -269,32 +321,6 @@ const INITIAL_USER_NOTIFICATIONS: AppNotification[] = [
     read: false,
     linkTab: 'eventos',
     targetRole: 'user'
-  },
-  {
-    id: 'user-notif-rem-1',
-    title: '🗓️ Recordatorio de Brigada Próxima',
-    message: 'Recuerda que la jornada veterinaria en el Polideportivo Municipal se aproxima. Para cirugías o esterilizaciones, tu mascota debe estar en ayuno estricto de 8 horas y llevar carné de vacunación.',
-    type: 'evento',
-    isReminder: true,
-    timestamp: 'Hoy, 08:00 AM',
-    read: false,
-    linkTab: 'eventos',
-    targetRole: 'user'
-  },
-  {
-    id: 'user-notif-app-accepted-1',
-    title: '🎉 ¡Postulación Aprobada para Adopción: Mateo!',
-    message: '¡Felicidades! Tu postulación para adoptar a Mateo ha sido APROBADA con éxito por el equipo de Pata Amiga Purificación. Nos comunicaremos contigo al 315 444 2211 para coordinar más datos necesarios y ultimar detalles de la adopción responsable.',
-    type: 'adopcion',
-    statusType: 'aprobada',
-    timestamp: 'Ayer, 04:30 PM',
-    read: true,
-    linkTab: 'adopciones',
-    targetRole: 'user',
-    metadata: {
-      petName: 'Mateo',
-      applicantName: 'Tutor Solicitante'
-    }
   }
 ];
 
@@ -968,12 +994,66 @@ export const StoreController = {
       userId: regData.userId,
       userEmail: regData.ownerEmail.trim().toLowerCase(),
       title: `🗓️ Recordatorio de Cita para Brigada: ${event.title}`,
-      message: `¡Hola ${regData.ownerName}! Recuerda tu cita para ${regData.petName} en la jornada del ${event.date} a las ${event.time} en ${event.locationName} (${event.address}). Código de reserva: ${confirmationCode}. Recuerda llevar carné de vacunación y cumplir con ayuno si aplica procedimiento quirúrgico.`,
+      message: `¡Hola ${regData.ownerName}! Se acerca tu cita para tu mascota "${regData.petName}" en la ${event.title}. Fecha: ${event.date} a las ${event.time} en ${event.locationName} (${event.address}). Código de reserva: ${confirmationCode}. Recuerda llevar carné de vacunación y cumplir con ayuno si aplica procedimiento quirúrgico.`,
       type: 'evento',
       isReminder: true,
       eventId: event.id,
       linkTab: 'eventos'
     });
+
+    // In-app notification strictly for ADMINISTRATORS: Persona inscrita a brigada
+    const currentSpots = event.registeredCount;
+    const maxSpots = event.capacity || MAX_EVENT_CAPACITY;
+    this.addAdminNotification({
+      title: `📋 Nueva Inscripción en Brigada: ${event.title}`,
+      message: `${regData.ownerName} (Tel: ${regData.ownerPhone}) inscribió a su mascota "${regData.petName}" (${regData.petSpecies || 'Mascota'}, ${regData.petAge || 'edad no esp.'}) para la brigada "${event.title}" programada para el ${event.date} en ${event.locationName}. Código: ${confirmationCode}. Cupos ocupados: ${currentSpots}/${maxSpots}.`,
+      type: 'evento',
+      linkTab: 'admin',
+      metadata: {
+        eventId: event.id,
+        eventTitle: event.title,
+        ownerName: regData.ownerName,
+        ownerPhone: regData.ownerPhone,
+        petName: regData.petName,
+        petSpecies: regData.petSpecies,
+        confirmationCode,
+        registeredCount: currentSpots,
+        capacity: maxSpots
+      }
+    });
+
+    // If available spots are now exhausted: send emergency admin alert for SOLD OUT
+    if (currentSpots >= maxSpots) {
+      this.addAdminNotification({
+        title: `⚠️ ¡Cupos Agotados! ${event.title}`,
+        message: `Se han completado los ${maxSpots} cupos disponibles para la brigada "${event.title}" programada para el ${event.date} en ${event.locationName}. El sistema ha cerrado automáticamente nuevas inscripciones para este evento.`,
+        type: 'evento',
+        linkTab: 'admin',
+        metadata: {
+          eventId: event.id,
+          eventTitle: event.title,
+          location: event.locationName,
+          isSoldOut: true,
+          totalSpots: maxSpots
+        }
+      });
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('pata-data-change'));
+      window.dispatchEvent(new Event('pata-notifications-change'));
+      
+      // Dispatch alert to backend server to trigger real emails to the 4 administrators
+      fetch('/api/event-registrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          registration: newReg,
+          event,
+          isSoldOut: currentSpots >= maxSpots
+        })
+      }).catch(e => console.warn('[Event Registration API Alert Error]', e));
+    }
 
     return { registration: newReg, event };
   },
@@ -1021,11 +1101,11 @@ export const StoreController = {
     return list;
   },
 
-  // --- ADMIN NOTIFICATIONS (Exclusivas para el Buzón Interno del Panel de Control: Postulaciones, Reportes y Mensajes) ---
+  // --- ADMIN NOTIFICATIONS (Exclusivas para el Buzón Interno del Panel de Control: Postulaciones, Reportes, Inscripciones a Brigadas, Cupos Agotados y Mensajes) ---
   getAdminNotifications(): AppNotification[] {
     const list = getItem<AppNotification[]>(ADMIN_NOTIFICATIONS_KEY, INITIAL_ADMIN_NOTIFICATIONS);
-    // Filtrar estrictamente solo notificaciones del buzón de administradores
-    return list.filter(n => n.type === 'reporte' || n.type === 'adopcion' || n.type === 'sistema');
+    // Filtrar estrictamente notificaciones del buzón de administradores
+    return list.filter(n => n.targetRole === 'admin' || n.type === 'reporte' || n.type === 'adopcion' || n.type === 'evento' || n.type === 'sistema');
   },
 
   addAdminNotification(notif: Omit<AppNotification, 'id' | 'timestamp' | 'read' | 'targetRole'>): AppNotification {
@@ -1299,7 +1379,7 @@ export const StoreController = {
   // --- USER NOTIFICATIONS (Exclusivas para usuarios autenticados: Recordatorios de brigadas inscritas y estado de adopción) ---
   getUserNotifications(user?: { id?: string; email?: string; role?: string } | null): AppNotification[] {
     // Si no ha iniciado sesión en un perfil, no deben aparecer notificaciones
-    if (!user || !user.id) {
+    if (!user || (!user.id && !user.email)) {
       return [];
     }
 
@@ -1307,35 +1387,134 @@ export const StoreController = {
     const cleanEmail = user.email?.toLowerCase().trim();
     const userId = user.id;
 
-    return list.filter(n => {
-      // 1. Notificaciones de nueva brigada (para usuarios autenticados)
+    // 1. Filtrar lista persistida de forma ESTRICTA por destinatario
+    const filtered = list.filter(n => {
+      // Excluir cualquier notificación destinada al rol de administrador
+      if (n.targetRole === 'admin') {
+        return false;
+      }
+
+      // Si tiene destinatario explícito, solo permitimos si coincide con este usuario
+      if (n.userId || n.userEmail) {
+        const matchesId = Boolean(userId && n.userId === userId);
+        const matchesEmail = Boolean(cleanEmail && n.userEmail?.toLowerCase().trim() === cleanEmail);
+        return matchesId || matchesEmail;
+      }
+
+      // Si NO tiene destinatario explícito:
+      // ÚNICAMENTE permitimos anuncios comunitarios generales de apertura de nueva brigada
+      // NUNCA permitir que le lleguen adopciones de otros ni recordatorios ajenos
       if (n.type === 'evento' && n.isNewBrigade === true) {
         return true;
       }
 
-      // 2. Recordatorios de brigadas a las que están inscritos
-      if (n.type === 'evento' && (n.isReminder === true || n.title.toLowerCase().includes('recordatorio'))) {
-        if (n.userId || n.userEmail) {
-          if (userId && n.userId === userId) return true;
-          if (cleanEmail && n.userEmail?.toLowerCase().trim() === cleanEmail) return true;
-          return false;
-        }
-        return true;
-      }
-
-      // 3. Notificación de postulación aceptada o rechazada
-      if (n.type === 'adopcion' && (n.statusType === 'aprobada' || n.statusType === 'rechazada')) {
-        if (n.userId || n.userEmail) {
-          if (userId && n.userId === userId) return true;
-          if (cleanEmail && n.userEmail?.toLowerCase().trim() === cleanEmail) return true;
-          return false;
-        }
-        return true;
-      }
-
-      // Descartar cualquier reporte u otra notificación en el canal de usuario
       return false;
     });
+
+    // 2. Sincronizar dinámicamente recordatorios reales de brigadas a las que ESTE usuario se inscribió
+    try {
+      const allRegistrations = this.getEventRegistrations();
+      const userRegs = allRegistrations.filter(r => {
+        if (userId && r.userId === userId) return true;
+        if (cleanEmail && r.ownerEmail?.toLowerCase().trim() === cleanEmail) return true;
+        return false;
+      });
+
+      const allEvents = this.getEvents();
+      userRegs.forEach(reg => {
+        const matchingEvent = allEvents.find(e => e.id === reg.eventId);
+        const reminderId = `dynamic-rem-${reg.id}`;
+        const alreadyHasReminder = filtered.some(n => 
+          n.id === reminderId || 
+          (n.isReminder && (n.eventId === reg.eventId || (reg.petName && n.title.includes(reg.petName))))
+        );
+
+        if (!alreadyHasReminder && matchingEvent) {
+          filtered.unshift({
+            id: reminderId,
+            userId,
+            userEmail: cleanEmail,
+            title: `🗓️ Recordatorio: Se acerca tu Brigada (${matchingEvent.title})`,
+            message: `¡Hola ${reg.ownerName}! Te recordamos tu cita para tu mascota "${reg.petName}" en la ${matchingEvent.title}. Fecha: ${matchingEvent.date} a las ${matchingEvent.time}. Lugar: ${matchingEvent.locationName} (${matchingEvent.address}). Código de reserva: ${reg.confirmationCode}. Recuerda llevar carné de vacunación y cumplir con ayuno de 8 horas si aplica cirugía o esterilización.`,
+            type: 'evento',
+            isReminder: true,
+            eventId: matchingEvent.id,
+            timestamp: 'Recordatorio activo',
+            read: false,
+            linkTab: 'eventos',
+            targetRole: 'user'
+          });
+        }
+      });
+    } catch (e) {
+      console.warn('Error synchronizing dynamic brigade reminders:', e);
+    }
+
+    // 3. Sincronizar dinámicamente estado de postulaciones de adopción de ESTE usuario
+    try {
+      const allApps = this.getAdoptionApplications();
+      const userApps = allApps.filter(a => {
+        if (userId && a.userId === userId) return true;
+        if (cleanEmail && a.applicantEmail?.toLowerCase().trim() === cleanEmail) return true;
+        return false;
+      });
+
+      userApps.forEach(app => {
+        const appNotifId = `dynamic-app-${app.id}-${app.status}`;
+        const alreadyHasAppNotif = filtered.some(n => 
+          n.id === appNotifId || 
+          (n.metadata?.applicationId === app.id && n.statusType === app.status)
+        );
+
+        if (!alreadyHasAppNotif) {
+          if (app.status === 'aprobada') {
+            filtered.unshift({
+              id: appNotifId,
+              userId,
+              userEmail: cleanEmail,
+              title: `🎉 ¡Postulación Aprobada para Adopción: ${app.petName}!`,
+              message: `¡Felicidades, ${app.applicantName}! Tu solicitud para adoptar a ${app.petName} ha sido APROBADA con éxito por el equipo de Pata Amiga Purificación. Nos comunicaremos contigo al ${app.applicantPhone} para coordinar más datos necesarios y ultimar detalles de la entrega responsable.`,
+              type: 'adopcion',
+              statusType: 'aprobada',
+              timestamp: app.reviewedAt || 'Reciente',
+              read: false,
+              linkTab: 'adopciones',
+              targetRole: 'user',
+              metadata: {
+                applicationId: app.id,
+                petName: app.petName,
+                applicantName: app.applicantName,
+                statusNote: app.statusNote
+              }
+            });
+          } else if (app.status === 'rechazada') {
+            filtered.unshift({
+              id: appNotifId,
+              userId,
+              userEmail: cleanEmail,
+              title: `Aviso sobre tu postulación de adopción (${app.petName})`,
+              message: `Hola ${app.applicantName}. Tu solicitud para adoptar a ${app.petName} no ha podido ser aprobada en esta ocasión. ${app.statusNote ? `Nota: "${app.statusNote}". ` : ''}Te invitamos a postularte por otros peluditos disponibles.`,
+              type: 'adopcion',
+              statusType: 'rechazada',
+              timestamp: app.reviewedAt || 'Reciente',
+              read: false,
+              linkTab: 'adopciones',
+              targetRole: 'user',
+              metadata: {
+                applicationId: app.id,
+                petName: app.petName,
+                applicantName: app.applicantName,
+                statusNote: app.statusNote
+              }
+            });
+          }
+        }
+      });
+    } catch (e) {
+      console.warn('Error synchronizing dynamic adoption notifications:', e);
+    }
+
+    return filtered;
   },
 
   addUserNotification(notif: Omit<AppNotification, 'id' | 'timestamp' | 'read' | 'targetRole'>): AppNotification {
@@ -1365,7 +1544,21 @@ export const StoreController = {
 
   markAllUserNotificationsRead(user?: { id?: string; email?: string } | null): AppNotification[] {
     const list = getItem<AppNotification[]>(USER_NOTIFICATIONS_KEY, INITIAL_USER_NOTIFICATIONS);
-    const updated = list.map(n => ({ ...n, read: true }));
+    const cleanEmail = user?.email?.toLowerCase().trim();
+    const userId = user?.id;
+
+    const updated = list.map(n => {
+      if (!user) return n;
+      // Mark as read only if it pertains to this user or is general
+      const matchesId = Boolean(userId && n.userId === userId);
+      const matchesEmail = Boolean(cleanEmail && n.userEmail?.toLowerCase().trim() === cleanEmail);
+      const isGeneral = !n.userId && !n.userEmail;
+      if (matchesId || matchesEmail || isGeneral) {
+        return { ...n, read: true };
+      }
+      return n;
+    });
+
     setItem(USER_NOTIFICATIONS_KEY, updated);
     window.dispatchEvent(new Event('pata-data-change'));
     window.dispatchEvent(new Event('pata-notifications-change'));
@@ -1382,7 +1575,7 @@ export const StoreController = {
   },
 
   getUserUnreadCount(user?: { id?: string; email?: string; role?: string } | null): number {
-    if (!user || !user.id) {
+    if (!user || (!user.id && !user.email)) {
       return 0;
     }
     return this.getUserNotifications(user).filter(n => !n.read).length;
@@ -1394,7 +1587,12 @@ export const StoreController = {
   },
 
   addNotification(notif: Omit<AppNotification, 'id' | 'timestamp' | 'read'>): AppNotification {
-    if (notif.targetRole === 'admin' || notif.type === 'reporte' || (notif.type === 'adopcion' && !notif.statusType)) {
+    if (
+      notif.targetRole === 'admin' ||
+      notif.type === 'reporte' ||
+      (notif.type === 'adopcion' && !notif.statusType) ||
+      (notif.type === 'evento' && !notif.isReminder && !notif.isNewBrigade)
+    ) {
       return this.addAdminNotification(notif);
     }
     return this.addUserNotification(notif);

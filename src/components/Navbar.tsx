@@ -38,25 +38,32 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenProfile
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isAdmin = AuthController.isAdmin(currentUser);
+
   const [unreadCount, setUnreadCount] = useState<number>(() => {
-    return currentUser ? StoreController.getUserUnreadCount(currentUser) : 0;
+    if (!currentUser) return 0;
+    return isAdmin ? StoreController.getAdminUnreadCount() : StoreController.getUserUnreadCount(currentUser);
   });
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const isAdmin = AuthController.isAdmin(currentUser);
-
   useEffect(() => {
-    setUnreadCount(currentUser ? StoreController.getUserUnreadCount(currentUser) : 0);
-    const handleDataChange = () => {
-      setUnreadCount(currentUser ? StoreController.getUserUnreadCount(currentUser) : 0);
+    const updateCount = () => {
+      if (!currentUser) {
+        setUnreadCount(0);
+      } else if (isAdmin) {
+        setUnreadCount(StoreController.getAdminUnreadCount());
+      } else {
+        setUnreadCount(StoreController.getUserUnreadCount(currentUser));
+      }
     };
-    window.addEventListener('pata-data-change', handleDataChange);
-    window.addEventListener('pata-notifications-change', handleDataChange);
+    updateCount();
+    window.addEventListener('pata-data-change', updateCount);
+    window.addEventListener('pata-notifications-change', updateCount);
     return () => {
-      window.removeEventListener('pata-data-change', handleDataChange);
-      window.removeEventListener('pata-notifications-change', handleDataChange);
+      window.removeEventListener('pata-data-change', updateCount);
+      window.removeEventListener('pata-notifications-change', updateCount);
     };
-  }, [currentUser]);
+  }, [currentUser, isAdmin]);
 
   const handleRequestLogout = () => {
     setShowLogoutConfirm(true);

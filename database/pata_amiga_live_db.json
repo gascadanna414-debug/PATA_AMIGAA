@@ -25,7 +25,7 @@
       "photos": [
         "/images/mona_dog_1788225963408.jpg"
       ],
-      "status": "disponible",
+      "status": "en_proceso",
       "rescuerName": "Equipo Voluntario Pata Amiga",
       "rescuerContact": "+57 312 890 4521",
       "rescuerLocation": "Barrio Ospina Pérez, Purificación Tolima",
@@ -87,7 +87,7 @@
       "photos": [
         "/images/kiara_cat_rescue_1788226493062.jpg"
       ],
-      "status": "disponible",
+      "status": "en_proceso",
       "rescuerName": "Dra. Andrea Castro",
       "rescuerContact": "+57 314 772 1093",
       "rescuerLocation": "Barrio El Triunfo, Purificación Tolima",
@@ -797,6 +797,31 @@
   ],
   "adoptionApplications": [
     {
+      "petId": "pet-kiara",
+      "petName": "Kiara",
+      "applicantName": "Carlos Mendoza",
+      "applicantEmail": "carlos@test.com",
+      "applicantPhone": "3123456789",
+      "applicantCity": "Purificación, Tolima",
+      "housingType": "Casa con patio",
+      "hasOtherPets": false,
+      "reasonForAdoption": "Quiero darle un hogar lleno de amor"
+    },
+    {
+      "id": "test-app-1",
+      "petId": "pet-mona",
+      "petName": "Mona",
+      "applicantName": "Juan Perez",
+      "applicantEmail": "juan@test.com",
+      "applicantPhone": "3101234567",
+      "applicantCity": "Purificacion",
+      "housingType": "Casa con patio",
+      "hasOtherPets": false,
+      "reasonForAdoption": "Quiero adoptar",
+      "status": "pendiente",
+      "submittedAt": "Hoy"
+    },
+    {
       "id": "app-sample-1",
       "petId": "pet-mateo",
       "petName": "Mateo",
@@ -1077,8 +1102,40 @@
       "likes": 56
     }
   ],
-  "adminNotifications": [],
+  "adminNotifications": [
+    {
+      "id": "notif-app-1788832029602",
+      "title": "🐾 Nueva Postulación de Adopción: Kiara",
+      "message": "Carlos Mendoza (3123456789) se ha postulado para adoptar a Kiara. Ubicación: Purificación, Tolima.",
+      "type": "adopcion",
+      "timestamp": "Ahora mismo",
+      "read": false,
+      "linkTab": "admin",
+      "targetRole": "admin",
+      "metadata": {
+        "petName": "Kiara",
+        "applicantName": "Carlos Mendoza",
+        "applicantPhone": "3123456789"
+      }
+    },
+    {
+      "id": "notif-app-1788831703319",
+      "title": "🐾 Nueva Postulación de Adopción: Mona",
+      "message": "Juan Perez (3101234567) se ha postulado para adoptar a Mona. Ubicación: Purificacion.",
+      "type": "adopcion",
+      "timestamp": "Ahora mismo",
+      "read": false,
+      "linkTab": "admin",
+      "targetRole": "admin",
+      "metadata": {
+        "petName": "Mona",
+        "applicantName": "Juan Perez",
+        "applicantPhone": "3101234567",
+        "applicationId": "test-app-1"
+      }
+    }
+  ],
   "userNotifications": [],
   "registeredUsers": [],
-  "lastUpdated": 1788830659112
+  "lastUpdated": 1788832029602
 }

@@ -1129,6 +1129,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <div className="flex items-center gap-1.5 flex-wrap">
               {[
                 { id: 'todos', label: 'Todas las Alertas', count: adminNotifications.length },
+                { id: 'brigadas', label: '📋 Brigadas e Inscripciones', count: adminNotifications.filter(n => n.type === 'evento').length },
                 { id: 'adopciones', label: '🐾 Postulaciones Adopción', count: adminNotifications.filter(n => n.type === 'adopcion').length },
                 { id: 'reportes', label: '🚨 Reportes Ciudadanos', count: adminNotifications.filter(n => n.type === 'reporte').length },
                 { id: 'mensajes', label: '📩 Mensajes y Sistema', count: adminNotifications.filter(n => n.type === 'sistema').length }
@@ -1168,6 +1169,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             {(() => {
               const filteredNotifs = adminNotifications.filter(notif => {
                 if (adminNotifOnlyUnread && notif.read) return false;
+                if (adminNotifFilter === 'brigadas' && notif.type !== 'evento') return false;
                 if (adminNotifFilter === 'reportes' && notif.type !== 'reporte') return false;
                 if (adminNotifFilter === 'adopciones' && notif.type !== 'adopcion') return false;
                 if (adminNotifFilter === 'mensajes' && notif.type !== 'sistema') return false;
@@ -1182,7 +1184,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       No hay notificaciones en este filtro
                     </h3>
                     <p className="text-xs text-[#8A7568] max-w-sm mx-auto">
-                      Cuando los usuarios envíen reportes de rescate, solicitudes de adopción o mensajes, aparecerán organizadas aquí y se enviará la notificación por correo a cada administrador.
+                      Cuando los usuarios se inscriban a brigadas veterinarias, se agoten los cupos, se envíen reportes de rescate o solicitudes de adopción, aparecerán organizadas aquí y se enviará la notificación por correo a cada administrador.
                     </p>
                   </div>
                 );
@@ -1193,6 +1195,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   {filteredNotifs.map(notif => {
                     const isReport = notif.type === 'reporte';
                     const isAdoption = notif.type === 'adopcion';
+                    const isEvent = notif.type === 'evento';
+                    const isSoldOut = isEvent && (notif.metadata?.isSoldOut || notif.title.includes('Cupos Agotados'));
                     const isSystem = notif.type === 'sistema';
 
                     return (
@@ -1201,19 +1205,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         className={`p-4 rounded-2xl border transition flex flex-col justify-between gap-3 shadow-xs ${
                           notif.read
                             ? 'bg-white border-[#EAE2D5]'
-                            : 'bg-[#FFFDF9] border-[#9E6B38]/40 ring-1 ring-[#9E6B38]/20'
+                            : isSoldOut
+                              ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-300/30'
+                              : isEvent
+                                ? 'bg-blue-50/50 border-blue-200 ring-1 ring-blue-200/30'
+                                : 'bg-[#FFFDF9] border-[#9E6B38]/40 ring-1 ring-[#9E6B38]/20'
                         }`}
                       >
                         <div className="space-y-2.5">
                           <div className="flex items-center justify-between gap-2">
                             <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
-                              isReport 
-                                ? 'bg-red-100 text-red-800' 
-                                : isAdoption 
-                                  ? 'bg-amber-100 text-amber-900' 
-                                  : 'bg-blue-100 text-blue-900'
+                              isSoldOut
+                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                : isEvent
+                                  ? 'bg-blue-100 text-blue-900 border border-blue-200'
+                                  : isReport 
+                                    ? 'bg-red-100 text-red-800' 
+                                    : isAdoption 
+                                      ? 'bg-amber-100 text-amber-900' 
+                                      : 'bg-emerald-100 text-emerald-900'
                             }`}>
-                              {isReport ? (
+                              {isSoldOut ? (
+                                <AlertTriangle className="w-3 h-3 text-amber-700" />
+                              ) : isEvent ? (
+                                <Calendar className="w-3 h-3 text-blue-700" />
+                              ) : isReport ? (
                                 <AlertCircle className="w-3 h-3" />
                               ) : isAdoption ? (
                                 <Heart className="w-3 h-3" />
@@ -1221,11 +1237,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 <Mail className="w-3 h-3" />
                               )}
                               <span>
-                                {isReport 
-                                  ? '🚨 Reporte Ciudadano' 
-                                  : isAdoption 
-                                    ? '🐾 Postulación de Adopción' 
-                                    : '📩 Mensaje / Sistema'}
+                                {isSoldOut
+                                  ? '⚠️ ¡Cupos Agotados!'
+                                  : isEvent
+                                    ? '📋 Inscripción en Brigada'
+                                    : isReport 
+                                      ? '🚨 Reporte Ciudadano' 
+                                      : isAdoption 
+                                        ? '🐾 Postulación de Adopción' 
+                                        : '📩 Mensaje / Sistema'}
                               </span>
                             </span>
 
@@ -1250,6 +1270,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               {notif.message}
                             </p>
                           </div>
+
+                          {/* Event specific details preview */}
+                          {isEvent && notif.metadata?.confirmationCode && (
+                            <div className="bg-blue-50/80 p-2.5 rounded-xl border border-blue-200 text-xs flex flex-wrap items-center justify-between gap-2 text-blue-950">
+                              <span className="font-semibold">Código: <span className="font-mono bg-white px-2 py-0.5 rounded border border-blue-200">{notif.metadata.confirmationCode}</span></span>
+                              {notif.metadata.registeredCount && notif.metadata.capacity && (
+                                <span className="font-medium">Ocupación: {notif.metadata.registeredCount}/{notif.metadata.capacity}</span>
+                              )}
+                            </div>
+                          )}
 
                           {/* Email Dispatch Status Details */}
                           {notif.emailDispatch ? (
