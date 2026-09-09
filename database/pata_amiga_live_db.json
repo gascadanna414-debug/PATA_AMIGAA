@@ -797,6 +797,7 @@
   ],
   "adoptionApplications": [
     {
+      "id": "app-kiara-1",
       "petId": "pet-kiara",
       "petName": "Kiara",
       "applicantName": "Carlos Mendoza",
@@ -805,7 +806,9 @@
       "applicantCity": "Purificación, Tolima",
       "housingType": "Casa con patio",
       "hasOtherPets": false,
-      "reasonForAdoption": "Quiero darle un hogar lleno de amor"
+      "reasonForAdoption": "Quiero darle un hogar lleno de amor",
+      "status": "pendiente",
+      "submittedAt": "28 Feb 2025"
     },
     {
       "id": "test-app-1",

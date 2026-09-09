@@ -194,15 +194,22 @@ export function updateReportOnServer(reportId: string, updates: Partial<AnimalRe
 export function addAdoptionApplicationToServer(app: AdoptionApplication): { application: AdoptionApplication; state: LiveDatabaseState } {
   const db = getDatabase();
   
-  const existingIdx = db.adoptionApplications.findIndex(a => a.id === app.id);
+  const normalizedApp: AdoptionApplication = {
+    ...app,
+    id: app.id || `app-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    status: app.status || 'pendiente',
+    submittedAt: app.submittedAt || new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
+  };
+
+  const existingIdx = db.adoptionApplications.findIndex(a => a.id === normalizedApp.id);
   if (existingIdx !== -1) {
-    db.adoptionApplications[existingIdx] = { ...db.adoptionApplications[existingIdx], ...app };
+    db.adoptionApplications[existingIdx] = { ...db.adoptionApplications[existingIdx], ...normalizedApp };
   } else {
-    db.adoptionApplications.unshift(app);
+    db.adoptionApplications.unshift(normalizedApp);
   }
 
   // Update target pet status to 'en_proceso' unless already 'adoptado'
-  const petIdx = db.pets.findIndex(p => p.id === app.petId);
+  const petIdx = db.pets.findIndex(p => p.id === normalizedApp.petId);
   if (petIdx !== -1 && db.pets[petIdx].status !== 'adoptado') {
     db.pets[petIdx].status = 'en_proceso';
   }
@@ -210,24 +217,24 @@ export function addAdoptionApplicationToServer(app: AdoptionApplication): { appl
   // Add admin notification
   const adminNotif: AppNotification = {
     id: `notif-app-${Date.now()}`,
-    title: `🐾 Nueva Postulación de Adopción: ${app.petName}`,
-    message: `${app.applicantName} (${app.applicantPhone}) se ha postulado para adoptar a ${app.petName}. Ubicación: ${app.applicantCity}.`,
+    title: `🐾 Nueva Postulación de Adopción: ${normalizedApp.petName}`,
+    message: `${normalizedApp.applicantName} (${normalizedApp.applicantPhone}) se ha postulado para adoptar a ${normalizedApp.petName}. Ubicación: ${normalizedApp.applicantCity}.`,
     type: 'adopcion',
     timestamp: 'Ahora mismo',
     read: false,
     linkTab: 'admin',
     targetRole: 'admin',
     metadata: {
-      petName: app.petName,
-      applicantName: app.applicantName,
-      applicantPhone: app.applicantPhone,
-      applicationId: app.id
+      petName: normalizedApp.petName,
+      applicantName: normalizedApp.applicantName,
+      applicantPhone: normalizedApp.applicantPhone,
+      applicationId: normalizedApp.id
     }
   };
   db.adminNotifications.unshift(adminNotif);
 
   saveDatabase(db);
-  return { application: app, state: db };
+  return { application: normalizedApp, state: db };
 }
 
 export function updateAdoptionApplicationOnServer(
@@ -264,6 +271,29 @@ export function updateAdoptionApplicationOnServer(
     if (petIdx !== -1) {
       db.pets[petIdx].status = 'adoptado';
     }
+
+    // Add user notification for applicant
+    if (!db.userNotifications) db.userNotifications = [];
+    db.userNotifications.unshift({
+      id: `user-notif-${Date.now()}`,
+      userId: targetApp.userId,
+      userEmail: targetApp.applicantEmail?.trim().toLowerCase(),
+      statusType: 'aprobada',
+      title: `🎉 ¡Postulación Aprobada para ${targetApp.petName}!`,
+      message: adminNote
+        ? `¡Felicidades, ${targetApp.applicantName}! Tu solicitud para adoptar a ${targetApp.petName} ha sido APROBADA. Mensaje de la administración: "${adminNote}". Nos comunicaremos contigo al ${targetApp.applicantPhone}.`
+        : `¡Felicidades, ${targetApp.applicantName}! Tu solicitud para adoptar a ${targetApp.petName} ha sido APROBADA con éxito por la administración de Pata Amiga Purificación. Nos comunicaremos contigo al ${targetApp.applicantPhone}.`,
+      type: 'adopcion',
+      linkTab: 'adopciones',
+      timestamp: 'Ahora mismo',
+      read: false,
+      metadata: {
+        petName: targetApp.petName,
+        applicantName: targetApp.applicantName,
+        applicantPhone: targetApp.applicantPhone,
+        statusNote: targetApp.statusNote
+      }
+    });
   } else if (status === 'rechazada') {
     // If no other pending application for this pet, revert to disponible
     const hasOtherPending = db.adoptionApplications.some(
@@ -272,6 +302,29 @@ export function updateAdoptionApplicationOnServer(
     if (!hasOtherPending && petIdx !== -1 && db.pets[petIdx].status !== 'adoptado') {
       db.pets[petIdx].status = 'disponible';
     }
+
+    // Add user notification for applicant
+    if (!db.userNotifications) db.userNotifications = [];
+    db.userNotifications.unshift({
+      id: `user-notif-${Date.now()}`,
+      userId: targetApp.userId,
+      userEmail: targetApp.applicantEmail?.trim().toLowerCase(),
+      statusType: 'rechazada',
+      title: `Aviso sobre tu postulación de adopción (${targetApp.petName})`,
+      message: adminNote
+        ? `Hola ${targetApp.applicantName}, tu solicitud para adoptar a ${targetApp.petName} no ha podido ser aprobada. Observación: "${adminNote}". Te invitamos a conocer otros peluditos en adopción.`
+        : `Hola ${targetApp.applicantName}, tu postulación para adoptar a ${targetApp.petName} fue evaluada y no ha podido ser aprobada en esta ocasión. Te invitamos a consultar nuestro catálogo.`,
+      type: 'adopcion',
+      linkTab: 'adopciones',
+      timestamp: 'Ahora mismo',
+      read: false,
+      metadata: {
+        petName: targetApp.petName,
+        applicantName: targetApp.applicantName,
+        applicantPhone: targetApp.applicantPhone,
+        statusNote: targetApp.statusNote
+      }
+    });
   }
 
   saveDatabase(db);
