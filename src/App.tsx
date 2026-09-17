@@ -14,10 +14,11 @@ import { AdminPanel } from './components/AdminPanel';
 import { Footer } from './components/Footer';
 import { User } from './types';
 import { AuthController } from './controllers/authController';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, ArrowLeft, Home } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('inicio');
+  const [tabHistory, setTabHistory] = useState<string[]>(['inicio']);
   const [currentUser, setCurrentUser] = useState<User | null>(() => AuthController.getCurrentUser());
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
@@ -44,7 +45,8 @@ export default function App() {
   const handleNavigateToTab = (
     tab: string, 
     storyId?: string, 
-    petFilter?: 'Perro' | 'Gato' | 'Todos'
+    petFilter?: 'Perro' | 'Gato' | 'Todos',
+    isBack: boolean = false
   ) => {
     if (storyId) {
       setSelectedStoryId(storyId);
@@ -62,14 +64,30 @@ export default function App() {
       }
     }
 
+    if (!isBack && tab !== activeTab) {
+      setTabHistory(prev => [...prev, tab]);
+    }
+
     setActiveTab(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleGoBack = () => {
+    if (tabHistory.length > 1) {
+      const nextHistory = [...tabHistory];
+      nextHistory.pop(); // Remove current view
+      const previousTab = nextHistory[nextHistory.length - 1] || 'inicio';
+      setTabHistory(nextHistory);
+      handleNavigateToTab(previousTab, undefined, undefined, true);
+    } else {
+      setTabHistory(['inicio']);
+      handleNavigateToTab('inicio', undefined, undefined, true);
+    }
+  };
+
   const handleNavigateToChat = (rescuerName?: string) => {
     setTargetChatRescuer(rescuerName);
-    setActiveTab('chat');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    handleNavigateToTab('chat');
   };
 
   return (
@@ -82,10 +100,52 @@ export default function App() {
         onOpenAuth={handleOpenAuth}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
         onOpenProfile={() => setIsProfileModalOpen(true)}
+        onGoBack={handleGoBack}
       />
 
       {/* Main Content View Switcher */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
+        {/* Navigation Breadcrumb / Back Bar when not on Inicio */}
+        {activeTab !== 'inicio' && (
+          <div className="mb-4 sm:mb-6 flex flex-wrap items-center justify-between gap-2.5 bg-white/90 backdrop-blur-xs px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl border border-[#EAE2D5] shadow-2xs">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                id="btn-main-go-back"
+                onClick={handleGoBack}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-[#5C4538] hover:text-[#2C1E14] bg-[#F6EFE5] hover:bg-[#EAE2D5] border border-[#E8DFD3] transition-all cursor-pointer group shadow-2xs"
+                title="Ir a la pantalla anterior"
+              >
+                <ArrowLeft className="w-4 h-4 text-[#9E6B38] group-hover:-translate-x-0.5 transition-transform" />
+                <span>Ir atrás</span>
+              </button>
+
+              <span className="text-[#D5C8B8] text-xs">|</span>
+
+              <button
+                id="btn-main-go-home"
+                onClick={() => handleNavigateToTab('inicio')}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium text-[#7C6656] hover:text-[#2C1E14] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
+                title="Volver a la pantalla de inicio"
+              >
+                <Home className="w-3.5 h-3.5 text-[#9E6B38]" />
+                <span>Volver a Inicio</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1.5 text-xs text-[#8C7565]">
+              <span>Estás en:</span>
+              <span className="font-semibold text-[#9E6B38] bg-[#FAF6F0] px-2.5 py-0.5 rounded-full border border-[#E8DFD3]">
+                {activeTab === 'adopcion' ? '🐾 Mascotas en Adopción' :
+                 activeTab === 'reportar' ? '🚨 Reportar Rescate' :
+                 activeTab === 'eventos' ? '📅 Jornadas y Brigadas' :
+                 activeTab === 'blog' || activeTab === 'historias' ? '✨ Historias de Éxito' :
+                 activeTab === 'chat' ? '💬 Canal de Rescate' :
+                 activeTab === 'admin' ? '🛡️ Panel de Control' :
+                 activeTab === 'contacto' ? '✉️ Contacto' : activeTab}
+              </span>
+            </div>
+          </div>
+        )}
         {activeTab === 'inicio' && (
           <HomeView
             onNavigate={handleNavigateToTab}

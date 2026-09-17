@@ -17,7 +17,7 @@ INSERT INTO `success_stories` (`id`, `pet_name`, `species`, `breed`, `estimated_
 ('story-1', 'Canela', 'Perro', 'Criollo Tolimense', '2 años', 'Barrio El Ospina Pérez, Purificación Tolima', 
  'Canela fue hallada en grave estado de desnutrición y con sarna avanzada cerca a la salida hacia Prado. Una vecina hizo el reporte a través de Pata Amiga y los rescatistas voluntarios acudieron en menos de una hora.',
  'Tras 3 meses de cuidados médicos, baños medicados y mucho amor, la familia Gómez de Purificación decidió adoptarla. Ahora disfruta de paseos en el Malecón del Río Magdalena y tiene una cama calientita.',
- 'Familia Gómez Ramírez', '15 de Mayo, 2024',
+ 'Familia Gómez Ramírez', '20 de Diciembre, 2025',
  'Desnutrición severa (8kg), sarna sarcóptica y parásitos.',
  'Completamente sana (16kg), pelo brillante, esterilizada y con esquema de vacunas al día.',
  '/src/assets/images/canela_before_1787104655599.jpg', '/src/assets/images/canela_after_1787104667779.jpg',
@@ -26,7 +26,7 @@ INSERT INTO `success_stories` (`id`, `pet_name`, `species`, `breed`, `estimated_
 ('story-2', 'Milo & Bigotes', 'Gato', 'Mestizo Atigrado Naranja', '1 año', 'Sector de la Galería Municipal, Purificación',
  'Era un gatito cachorro abandonado en una caja de cartón bajo la lluvia. Fue alimentado con biberón por el equipo voluntario durante sus primeras 4 semanas.',
  'Fue adoptado por Don Hernando y su hija Mariana. Ahora es el consentido del hogar, duerme cómodo en los sillones y es sumamente juguetón.',
- 'Hernando & Mariana Lozano', '28 de Julio, 2024',
+ 'Hernando & Mariana Lozano', '28 de Diciembre, 2025',
  'Hipotermia, conjuntivitis neonatal y bajo peso.',
  '100% recuperado, castrado, desparasitado y con carné de vacunación felina al día.',
  '/src/assets/images/milo_before_1787104677033.jpg', '/src/assets/images/milo_after_1787104685898.jpg',
@@ -35,7 +35,7 @@ INSERT INTO `success_stories` (`id`, `pet_name`, `species`, `breed`, `estimated_
 ('story-3', 'Rocky', 'Perro', 'Cruce de Labrador Negro', '3 años', 'Vía Purificación - Saldaña (Sector Chenche)',
  'Fue víctima de un atropellamiento leve en la carretera nacional. Tenía una pata trasera fracturada y no podía caminar.',
  'Gracias a una colecta comunitaria se pagó su cirugía ortopédica en la veterinaria aliada. Tras su rehabilitación, fue adoptado por una familia que vive en una casa campestre en Purificación.',
- 'Familia Morales Castro', '10 de Noviembre, 2024',
+ 'Familia Morales Castro', '15 de Julio, 2026',
  'Fractura de pata trasera y deshidratación.',
  'Corre con total normalidad, hueso completamente consolidado y con gran vitalidad.',
  '/src/assets/images/rocky_before_1787104697477.jpg', '/src/assets/images/rocky_after_1787104708249.jpg',
@@ -94,21 +94,21 @@ INSERT INTO `animal_reports` (`id`, `reporter_name`, `reporter_email`, `reporter
 
 -- 5. JORNADAS DE SALUD Y BRIGADAS
 INSERT INTO `health_events` (`id`, `title`, `type`, `event_date`, `event_time`, `location_name`, `address`, `municipality`, `description`, `is_free`, `fee_details`, `requirements`, `total_spots`, `registered_count`, `contact_phone`, `contact_organizer`, `status`) VALUES
-('evt-1', 'Gran Jornada de Esterilización Gratuita para Caninos y Felinos', 'esterilizacion', 'Sábado 28 de Septiembre, 2024', '7:30 AM – 3:00 PM',
+('evt-1', 'Gran Jornada de Esterilización Gratuita para Caninos y Felinos', 'esterilizacion', 'Sábado 26 de Septiembre, 2026', '7:30 AM – 3:00 PM',
  'Polideportivo Barrio Ospina Pérez', 'Calle 8 con Carrera 3, Purificación', 'Purificación, Tolima',
  'Campaña masiva para frenar la sobrepoblación y el abandono animal en el municipio de Purificación. Cirugías realizadas por médicos veterinarios certificados.',
  1, '100% Gratuito (Cupos Limitados)',
  JSON_ARRAY('Ayuno de 8 horas de sólidos y líquidos', 'Traer cobija o manta térmica limpia', 'Perros con collar y bozal (si son nerviosos)', 'Gatos en guacal o funda de almohada segura', 'Mascotas mayores de 4 meses y en buen estado de salud'),
  60, 48, '+57 312 890 4521', 'Alcaldía de Purificación & Red Pata Amiga', 'proximo'),
 
-('evt-2', 'Brigada de Vacunación Antirrábica y Desparasitación General', 'vacunacion', 'Domingo 6 de Octubre, 2024', '8:00 AM – 1:00 PM',
+('evt-2', 'Brigada de Vacunación Antirrábica y Desparasitación General', 'vacunacion', 'Domingo 4 de Octubre, 2026', '8:00 AM – 1:00 PM',
  'Parque Principal de Purificación', 'Plaza de Bolívar Central', 'Purificación, Tolima',
  'Aplicación de dosis antirrábica obligatoria anual, desparasitación interna y entrega de vitaminas para perros y gatos de todas las edades.',
  1, 'Gratis para estratos 1, 2 y zonas rurales',
  JSON_ARRAY('Presentar carné de vacunación previo si lo tiene', 'Mascota sujeta con correa', 'Tener al menos 3 meses de edad'),
  120, 85, '+57 315 778 9012', 'Secretaría de Salud & Veterinarios Aliados', 'proximo'),
 
-('evt-3', 'Donatón de Alimento y Cobijas para Hogares de Paso', 'donacion_alimento', 'Sábado 19 de Octubre, 2024', '9:00 AM – 5:00 PM',
+('evt-3', 'Donatón de Alimento y Cobijas para Hogares de Paso', 'donacion_alimento', 'Sábado 17 de Octubre, 2026', '9:00 AM – 5:00 PM',
  'Malecón Turístico del Río Magdalena', 'Sector Puerto Fluvial, Purificación', 'Purificación, Tolima',
  'Recolección de bultos de concentrado, medicamentos, correas y elementos de aseo para abastecer los 6 refugios temporales de Purificación.',
  1, 'Donación voluntaria en especie o económica',
@@ -124,6 +124,6 @@ INSERT INTO `chat_channels` (`id`, `name`, `role_description`, `avatar`, `type`,
 
 -- 7. MENSAJES DE EJEMPLO EN EL CANAL DE RESCATISTAS
 INSERT INTO `chat_messages` (`id`, `channel_id`, `sender_id`, `sender_name`, `sender_role`, `avatar`, `text`, `image_url`, `created_at`) VALUES
-('msg-1', 'channel-rescatistas', 'sys-0', 'Pata Amiga Tolima', 'sistema', NULL, 'Canal oficial de atención ciudadana y coordinación de rescates en Purificación, Tolima.', NULL, '2024-09-01 08:00:00'),
-('msg-2', 'channel-rescatistas', 'usr-2', 'Dra. Sofía Alarcón', 'rescatista', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80', 'Hola comunidad de Purificación. Estamos listos para coordinar cualquier apoyo o caso de vulnerabilidad.', NULL, '2024-09-01 08:15:00'),
-('msg-3', 'channel-rescatistas', 'usr-3', 'Carlos Méndez', 'voluntario', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', 'Tenemos 2 bultos de concentrado disponibles en el centro de acopio para hogares de paso temporales.', NULL, '2024-09-01 08:30:00');
+('msg-1', 'channel-rescatistas', 'sys-0', 'Pata Amiga Tolima', 'sistema', NULL, 'Canal oficial de atención ciudadana y coordinación de rescates en Purificación, Tolima.', NULL, '2026-09-01 08:00:00'),
+('msg-2', 'channel-rescatistas', 'usr-2', 'Dra. Sofía Alarcón', 'rescatista', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80', 'Hola comunidad de Purificación. Estamos listos para coordinar cualquier apoyo o caso de vulnerabilidad.', NULL, '2026-09-01 08:15:00'),
+('msg-3', 'channel-rescatistas', 'usr-3', 'Carlos Méndez', 'voluntario', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', 'Tenemos 2 bultos de concentrado disponibles en el centro de acopio para hogares de paso temporales.', NULL, '2026-09-01 08:30:00');

@@ -66,8 +66,8 @@ const DEFAULT_USERS: StoredUser[] = [
     phone: '+57 312 890 4521',
     location: 'Purificación, Tolima',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-    createdAt: '2024-01-10',
-    registeredAt: '10 Ene 2024',
+    createdAt: '2025-12-01',
+    registeredAt: '01 Dic 2025',
     passwordHash: 'DannaGasca180610'
   },
   {
@@ -78,8 +78,8 @@ const DEFAULT_USERS: StoredUser[] = [
     phone: '+57 314 772 1093',
     location: 'Purificación, Tolima',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80',
-    createdAt: '2024-01-12',
-    registeredAt: '12 Ene 2024',
+    createdAt: '2025-12-10',
+    registeredAt: '10 Dic 2025',
     passwordHash: 'S11112009'
   },
   {
@@ -90,8 +90,8 @@ const DEFAULT_USERS: StoredUser[] = [
     phone: '+57 310 556 7812',
     location: 'Purificación, Tolima',
     avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80',
-    createdAt: '2024-01-15',
-    registeredAt: '15 Ene 2024',
+    createdAt: '2025-12-15',
+    registeredAt: '15 Dic 2025',
     passwordHash: 'perezadriana'
   },
   {
@@ -102,8 +102,8 @@ const DEFAULT_USERS: StoredUser[] = [
     phone: '+57 311 884 9201',
     location: 'Purificación, Tolima',
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
-    createdAt: '2024-02-22',
-    registeredAt: '22 Feb 2024',
+    createdAt: '2026-01-10',
+    registeredAt: '10 Ene 2026',
     passwordHash: '22022025onyx'
   },
   {
@@ -114,8 +114,8 @@ const DEFAULT_USERS: StoredUser[] = [
     phone: '+57 314 772 1093',
     location: 'Barrio El Ospina Pérez, Purificación',
     avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=200&q=80',
-    createdAt: '2024-01-01',
-    registeredAt: '01 Ene 2024',
+    createdAt: '2025-12-05',
+    registeredAt: '05 Dic 2025',
     passwordHash: '123456'
   },
   {
@@ -126,8 +126,8 @@ const DEFAULT_USERS: StoredUser[] = [
     phone: '+57 310 445 8892',
     location: 'Barrio Santander, Purificación',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-    createdAt: '2024-02-15',
-    registeredAt: '15 Feb 2024',
+    createdAt: '2026-01-20',
+    registeredAt: '20 Ene 2026',
     passwordHash: '123456'
   },
   {
@@ -138,8 +138,8 @@ const DEFAULT_USERS: StoredUser[] = [
     phone: '+57 315 670 9922',
     location: 'Barrio Camilo Torres, Purificación',
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
-    createdAt: '2024-03-01',
-    registeredAt: '01 Mar 2024',
+    createdAt: '2026-02-15',
+    registeredAt: '15 Feb 2026',
     passwordHash: '123456'
   }
 ];
@@ -187,8 +187,8 @@ function getStoredUsers(): StoredUser[] {
           phone: cred.phone,
           location: cred.location,
           avatar: cred.avatar,
-          createdAt: '2024-01-10',
-          registeredAt: '10 Ene 2024',
+          createdAt: '2025-12-01',
+          registeredAt: '01 Dic 2025',
           passwordHash: cred.password
         });
         updated = true;
@@ -314,8 +314,8 @@ export const AuthController = {
         phone: adminCred.phone,
         location: adminCred.location,
         avatar: adminCred.avatar,
-        createdAt: '2024-01-10',
-        registeredAt: '10 Ene 2024',
+        createdAt: '2025-12-01',
+        registeredAt: '01 Dic 2025',
         passwordHash: adminCred.password
       };
       users.unshift(user);

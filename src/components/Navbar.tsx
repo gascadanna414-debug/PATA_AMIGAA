@@ -12,7 +12,8 @@ import {
   Heart,
   Bell,
   ShieldCheck,
-  UserCog
+  UserCog,
+  ArrowLeft
 } from 'lucide-react';
 import { User } from '../types';
 import { AuthController } from '../controllers/authController';
@@ -27,6 +28,7 @@ interface NavbarProps {
   onOpenAuth: (mode?: 'login' | 'register' | 'forgot') => void;
   onOpenNotifications?: () => void;
   onOpenProfile?: () => void;
+  onGoBack?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -35,7 +37,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentUser,
   onOpenAuth,
   onOpenNotifications,
-  onOpenProfile
+  onOpenProfile,
+  onGoBack
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isAdmin = AuthController.isAdmin(currentUser);
@@ -91,13 +94,35 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Main Navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-18">
-          {/* Brand Logo */}
-          <div 
-            id="brand-logo-btn"
-            onClick={() => { setActiveTab('inicio'); setIsMobileMenuOpen(false); }}
-            className="cursor-pointer group select-none transition transform hover:opacity-95"
-          >
-            <Logo size="md" variant="color" />
+          {/* Brand Logo & Back Arrow */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {activeTab !== 'inicio' && (
+              <button
+                id="nav-btn-back"
+                onClick={() => {
+                  if (onGoBack) {
+                    onGoBack();
+                  } else {
+                    setActiveTab('inicio');
+                  }
+                }}
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-semibold text-[#5C4538] hover:text-[#2C1E14] bg-[#F6EFE5] hover:bg-[#EAE2D5] border border-[#E8DFD3] transition shadow-2xs cursor-pointer group select-none"
+                title="Volver a inicio o ir atrás"
+                aria-label="Volver a inicio o ir atrás"
+              >
+                <ArrowLeft className="w-4 h-4 text-[#9E6B38] group-hover:-translate-x-0.5 transition-transform" />
+                <span className="hidden sm:inline">Volver / Inicio</span>
+                <span className="sm:hidden">Atrás</span>
+              </button>
+            )}
+
+            <div 
+              id="brand-logo-btn"
+              onClick={() => { setActiveTab('inicio'); setIsMobileMenuOpen(false); }}
+              className="cursor-pointer group select-none transition transform hover:opacity-95"
+            >
+              <Logo size="md" variant="color" />
+            </div>
           </div>
 
           {/* Desktop Navigation Links */}
@@ -348,6 +373,29 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <LogOut className="w-3.5 h-3.5" />
                 </button>
               </div>
+            </div>
+          )}
+
+          {activeTab !== 'inicio' && (
+            <div className="mb-2">
+              <button
+                id="mobile-nav-back-to-home"
+                onClick={() => {
+                  if (onGoBack) {
+                    onGoBack();
+                  } else {
+                    setActiveTab('inicio');
+                  }
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full px-3.5 py-2 rounded-xl text-sm font-semibold bg-[#F6EFE5] text-[#2C1E14] border border-[#E8DFD3] flex items-center justify-between cursor-pointer hover:bg-[#EAE2D5] transition"
+              >
+                <div className="flex items-center gap-2">
+                  <ArrowLeft className="w-4 h-4 text-[#9E6B38]" />
+                  <span>Volver a inicio o ir atrás</span>
+                </div>
+                <Home className="w-4 h-4 text-[#9E6B38]" />
+              </button>
             </div>
           )}
 
