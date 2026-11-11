@@ -103,6 +103,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [newUserPassword, setNewUserPassword] = useState('');
   const [userModalError, setUserModalError] = useState<string | null>(null);
 
+  // Dedicated Add Administrator Modal State
+  const [isAddingAdmin, setIsAddingAdmin] = useState(false);
+  const [newAdminName, setNewAdminName] = useState('');
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [newAdminPhone, setNewAdminPhone] = useState('');
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [adminModalError, setAdminModalError] = useState<string | null>(null);
+
+  // Admin Promote / Demote Confirmation State
+  const [adminActionConfirm, setAdminActionConfirm] = useState<{
+    type: 'promote' | 'demote';
+    userId: string;
+    userName: string;
+    userEmail: string;
+    targetRole?: UserRole;
+  } | null>(null);
+
   const [editingPet, setEditingPet] = useState<Partial<AdoptionPet> | null>(null);
   const [editingEvent, setEditingEvent] = useState<Partial<HealthEvent> | null>(null);
   const [editingStory, setEditingStory] = useState<Partial<SuccessStory> | null>(null);
@@ -345,42 +362,143 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const handleToggleAdminRole = (userId: string) => {
     const targetUser = usersList.find(u => u.id === userId);
     if (!targetUser) return;
-    if (!AUTHORIZED_ADMIN_EMAILS.includes(targetUser.email.toLowerCase())) {
-      showNotification('Por seguridad, solo las Administradoras autorizadas pueden gestionar el Panel.');
+
+    if (targetUser.id === currentUser?.id) {
+      showNotification('No puedes quitarte el rol de Administradora a ti misma.');
       return;
     }
-    showNotification('No se puede revocar el rol a una Administradora oficial del sistema.');
+
+    if (targetUser.role === 'admin') {
+      const activeAdmins = usersList.filter(u => u.role === 'admin');
+      if (activeAdmins.length <= 1) {
+        showNotification('Debe haber al menos una Administradora activa en el sistema.');
+        return;
+      }
+      setAdminActionConfirm({
+        type: 'demote',
+        userId: targetUser.id,
+        userName: targetUser.name,
+        userEmail: targetUser.email,
+        targetRole: 'voluntario'
+      });
+    } else {
+      setAdminActionConfirm({
+        type: 'promote',
+        userId: targetUser.id,
+        userName: targetUser.name,
+        userEmail: targetUser.email
+      });
+    }
+  };
+
+  const handleExecuteAdminAction = () => {
+    if (!adminActionConfirm) return;
+    if (adminActionConfirm.type === 'promote') {
+      const ok = AuthController.updateUserRole(adminActionConfirm.userId, 'admin');
+      if (ok) {
+        showNotification(`¡${adminActionConfirm.userName} ahora tiene permisos completos de Administradora!`);
+      } else {
+        showNotification('No fue posible asignar el rol de Administradora.');
+      }
+    } else if (adminActionConfirm.type === 'demote') {
+      const ok = AuthController.updateUserRole(adminActionConfirm.userId, adminActionConfirm.targetRole || 'voluntario');
+      if (ok) {
+        showNotification(`Se han retirado los permisos de Administradora a ${adminActionConfirm.userName}.`);
+      } else {
+        showNotification('No fue posible revocar los permisos de Administradora.');
+      }
+    }
+    setAdminActionConfirm(null);
+    refreshAllData();
   };
 
   const handleChangeRole = (userId: string, newRole: UserRole) => {
     const targetUser = usersList.find(u => u.id === userId);
     if (!targetUser) return;
-    const targetEmail = targetUser.email.toLowerCase();
 
-    if (newRole === 'admin' && !AUTHORIZED_ADMIN_EMAILS.includes(targetEmail)) {
-      showNotification('Por seguridad, solo las Administradoras autorizadas pueden tener este rol.');
+    if (targetUser.id === currentUser?.id && newRole !== 'admin') {
+      showNotification('No puedes revocar tu propio rol de Administradora.');
       return;
     }
-    if (AUTHORIZED_ADMIN_EMAILS.includes(targetEmail) && newRole !== 'admin') {
-      showNotification('No se puede alterar el rol de una Administradora oficial del sistema.');
-      return;
+
+    if (targetUser.role === 'admin' && newRole !== 'admin') {
+      const activeAdmins = usersList.filter(u => u.role === 'admin');
+      if (activeAdmins.length <= 1) {
+        showNotification('Debe haber al menos una Administradora activa en el sistema.');
+        return;
+      }
     }
-    AuthController.updateUserRole(userId, newRole);
-    refreshAllData();
-    showNotification(`Rol actualizado a ${newRole.toUpperCase()}`);
+
+    const ok = AuthController.updateUserRole(userId, newRole);
+    if (ok) {
+      refreshAllData();
+      showNotification(`Rol de ${targetUser.name} actualizado a ${newRole.toUpperCase()}.`);
+    } else {
+      showNotification('No se pudo actualizar el rol del usuario.');
+    }
   };
 
   const handleDeleteUser = (userId: string, userName: string, email?: string) => {
-    if (email && AUTHORIZED_ADMIN_EMAILS.includes(email.toLowerCase())) {
-      showNotification('No se puede eliminar a una Administradora oficial del sistema.');
+    if (userId === currentUser?.id) {
+      showNotification('No puedes eliminar tu propia cuenta mientras estés en sesión.');
       return;
+    }
+    const targetUser = usersList.find(u => u.id === userId);
+    if (targetUser?.role === 'admin') {
+      const activeAdmins = usersList.filter(u => u.role === 'admin');
+      if (activeAdmins.length <= 1) {
+        showNotification('No se puede eliminar a la única Administradora activa del sistema.');
+        return;
+      }
     }
     setDeleteTarget({
       type: 'user',
       id: userId,
       name: userName,
-      detail: email ? `Correo: ${email}` : undefined
+      detail: email ? `Correo: ${email} ${targetUser?.role === 'admin' ? '(Administradora oficial)' : ''}` : undefined
     });
+  };
+
+  const handleCreateAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminModalError(null);
+
+    if (!newAdminName.trim() || !newAdminEmail.trim() || !newAdminPhone.trim() || !newAdminPassword.trim()) {
+      setAdminModalError('Por favor completa todos los campos requeridos.');
+      return;
+    }
+
+    if (newAdminPassword.trim().length < 5) {
+      setAdminModalError('La contraseña debe tener al menos 5 caracteres.');
+      return;
+    }
+
+    const phoneValidation = parsePhoneWithCountry(newAdminPhone);
+    if (!phoneValidation.isValid) {
+      setAdminModalError(phoneValidation.message);
+      return;
+    }
+
+    const res = AuthController.createUserByAdmin({
+      name: newAdminName.trim(),
+      email: newAdminEmail.trim(),
+      phone: newAdminPhone.trim(),
+      role: 'admin',
+      password: newAdminPassword.trim(),
+      location: 'Purificación, Tolima'
+    });
+
+    if (res.success) {
+      setIsAddingAdmin(false);
+      setNewAdminName('');
+      setNewAdminEmail('');
+      setNewAdminPhone('');
+      setNewAdminPassword('');
+      refreshAllData();
+      showNotification(res.message);
+    } else {
+      setAdminModalError(res.message);
+    }
   };
 
   // --- ACTIONS: REPORT MANAGEMENT ---
@@ -595,23 +713,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       return;
     }
 
-    const adminCred = AUTHORIZED_ADMIN_CREDENTIALS[email];
-    if (!adminCred) {
-      setQuickLoginError('Acceso denegado: El correo ingresado no cuenta con permisos de administración.');
-      return;
-    }
-
-    if (pass !== adminCred.password) {
-      setQuickLoginError('Contraseña de administrador incorrecta. Acceso no autorizado.');
-      return;
-    }
-
     const res = AuthController.login(email, pass);
     if (res.success) {
       const user = AuthController.getCurrentUser();
       if (user && AuthController.isAdmin(user)) {
         refreshAllData();
-        showNotification(`¡Bienvenida al Panel Administrativo, ${user.name}!`);
+        showNotification(`¡Bienvenida(o) al Panel Administrativo, ${user.name}!`);
       } else {
         setQuickLoginError('Esta cuenta no cuenta con permisos de Administrador.');
       }
@@ -1574,65 +1681,99 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       {/* ========================================================================= */}
       {activeAdminTab === 'usuarios' && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#EAE2D5]">
-            <div>
-              <h2 className="text-lg font-bold font-['Fraunces',serif] text-[#2C1E14]">
-                Personas Registradas en la Plataforma ({usersList.length})
-              </h2>
-              <p className="text-xs text-[#6E574B]">
-                Directorio completo de ciudadanos, adoptantes, voluntarios, rescatistas y administradores.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="px-3 py-1.5 bg-[#FAF6F0] border border-[#E8DFD3] rounded-full text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
-              >
-                <option value="todos">Todos los Roles</option>
-                <option value="admin">Administradores</option>
-                <option value="rescatista">Rescatistas</option>
-                <option value="voluntario">Voluntarios</option>
-                <option value="ciudadano">Ciudadanos</option>
-              </select>
-
-              <div className="relative flex-1 sm:w-56">
-                <Search className="w-3.5 h-3.5 text-[#8A7568] absolute left-3 top-2.5" />
-                <input
-                  type="text"
-                  placeholder="Buscar nombre, correo o teléfono..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 bg-[#FAF6F0] border border-[#E8DFD3] rounded-full text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
-                />
+          <div className="space-y-3">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#EAE2D5] shadow-xs">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-bold font-['Fraunces',serif] text-[#2C1E14]">
+                    Personas Registradas ({usersList.length})
+                  </h2>
+                  <span className="px-2 py-0.5 bg-[#2C1E14] text-[#E6C687] rounded-full text-[11px] font-bold border border-[#5C4538] flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3" />
+                    {usersList.filter(u => u.role === 'admin').length} Administradoras
+                  </span>
+                </div>
+                <p className="text-xs text-[#6E574B] mt-0.5">
+                  Gestiona el equipo de administradoras, rescatistas, voluntarios y ciudadanos registrados en Purificación.
+                </p>
               </div>
 
-              <button
-                id="admin-add-user-btn"
-                onClick={() => {
-                  setUserModalError(null);
-                  setIsAddingUser(true);
-                }}
-                className="px-3.5 py-1.5 bg-[#9E6B38] hover:bg-[#86582A] text-white rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Registrar Persona</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                <select
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                  className="px-3 py-1.5 bg-[#FAF6F0] border border-[#E8DFD3] rounded-full text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38] font-medium"
+                >
+                  <option value="todos">Todos los Roles ({usersList.length})</option>
+                  <option value="admin">🛡️ Administradoras ({usersList.filter(u => u.role === 'admin').length})</option>
+                  <option value="rescatista">🐾 Rescatistas ({usersList.filter(u => u.role === 'rescatista').length})</option>
+                  <option value="voluntario">🤝 Voluntarios ({usersList.filter(u => u.role === 'voluntario').length})</option>
+                  <option value="ciudadano">🏡 Ciudadanos ({usersList.filter(u => u.role === 'ciudadano').length})</option>
+                </select>
+
+                <div className="relative flex-1 sm:w-52">
+                  <Search className="w-3.5 h-3.5 text-[#8A7568] absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    placeholder="Buscar persona o correo..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 bg-[#FAF6F0] border border-[#E8DFD3] rounded-full text-xs text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+                  />
+                </div>
+
+                <button
+                  id="admin-add-admin-btn"
+                  onClick={() => {
+                    setAdminModalError(null);
+                    setIsAddingAdmin(true);
+                  }}
+                  className="px-3.5 py-1.5 bg-[#2C1E14] hover:bg-black text-[#FAF6F0] rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer border border-[#5C4538] transition"
+                  title="Añadir una nueva persona como Administradora oficial"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#E6C687]" />
+                  <span>＋ Añadir Administradora</span>
+                </button>
+
+                <button
+                  id="admin-add-user-btn"
+                  onClick={() => {
+                    setUserModalError(null);
+                    setIsAddingUser(true);
+                  }}
+                  className="px-3 py-1.5 bg-[#9E6B38] hover:bg-[#86582A] text-white rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer transition"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Registrar Persona</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Quick summary banner for admin team */}
+            <div className="bg-[#FAF6F0] p-3 rounded-2xl border border-[#E8DFD3] flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 text-[#5C4538]">
+                <ShieldCheck className="w-4 h-4 text-[#9E6B38]" />
+                <span>
+                  <strong>Equipo Administrativo Actual:</strong> {usersList.filter(u => u.role === 'admin').map(u => u.name).join(', ')}
+                </span>
+              </div>
+              <span className="text-[11px] text-[#8A7568]">
+                Puedes promover usuarios existentes a Administradoras o añadir nuevas con el botón negro.
+              </span>
             </div>
           </div>
 
           <div className="bg-white rounded-2xl border border-[#EAE2D5] overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs min-w-[700px]">
+              <table className="w-full text-left text-xs min-w-[720px]">
                 <thead className="bg-[#FAF6F0] text-[#6E574B] uppercase tracking-wider font-bold border-b border-[#E8DFD3]">
                   <tr>
                     <th className="px-4 py-3">Nombre Completo</th>
                     <th className="px-4 py-3">Correo Electrónico</th>
                     <th className="px-4 py-3">Teléfono / Celular</th>
-                    <th className="px-4 py-3">Rol</th>
+                    <th className="px-4 py-3">Rol Asignado</th>
                     <th className="px-4 py-3">Fecha Registro</th>
-                    <th className="px-4 py-3 text-right">Acciones</th>
+                    <th className="px-4 py-3 text-right">Acciones de Administración</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F5EDE2]">
@@ -1648,15 +1789,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     .map(user => {
                       const cleanPhone = user.phone ? user.phone.replace(/[^0-9]/g, '') : '';
                       const waPhone = cleanPhone.startsWith('57') ? cleanPhone : cleanPhone.length === 10 ? `57${cleanPhone}` : cleanPhone;
+                      const isUserAdmin = user.role === 'admin';
+                      const isCurrentLoggedIn = user.id === currentUser?.id;
 
                       return (
-                        <tr key={user.id} className="hover:bg-[#FAF6F0]/60 transition">
+                        <tr key={user.id} className={`hover:bg-[#FAF6F0]/60 transition ${isUserAdmin ? 'bg-amber-50/25' : ''}`}>
                           <td className="px-4 py-3.5 font-bold text-[#2C1E14] flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-[#9E6B38] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-xs shrink-0 ${
+                              isUserAdmin ? 'bg-[#2C1E14] text-[#E6C687] border border-[#5C4538]' : 'bg-[#9E6B38] text-white'
+                            }`}>
                               {user.name.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <span className="block font-bold">{user.name}</span>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-bold text-[#2C1E14]">{user.name}</span>
+                                {isUserAdmin && (
+                                  <span className="inline-flex items-center gap-0.5 text-[9px] bg-[#2C1E14] text-[#E6C687] px-1.5 py-0.2 rounded-full font-bold border border-[#5C4538]">
+                                    <ShieldCheck className="w-2.5 h-2.5" /> Admin
+                                  </span>
+                                )}
+                                {isCurrentLoggedIn && (
+                                  <span className="text-[9px] bg-[#FAF6F0] text-[#9E6B38] px-1.5 py-0.2 rounded border border-[#E8DFD3] font-semibold">Tú</span>
+                                )}
+                              </div>
                               <span className="text-[10px] text-[#8A7568]">{user.location || 'Purificación, Tolima'}</span>
                             </div>
                           </td>
@@ -1687,38 +1842,57 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             <select
                               value={user.role}
                               onChange={(e) => handleChangeRole(user.id, e.target.value as UserRole)}
-                              className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase border cursor-pointer ${
+                              disabled={isCurrentLoggedIn}
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border cursor-pointer ${
                                 user.role === 'admin'
-                                  ? 'bg-[#2C1E14] text-[#FAF6F0] border-black'
+                                  ? 'bg-[#2C1E14] text-[#E6C687] border-[#5C4538]'
                                   : user.role === 'rescatista'
                                   ? 'bg-amber-100 text-amber-900 border-amber-300'
                                   : user.role === 'voluntario'
                                   ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
                                   : 'bg-stone-100 text-stone-800 border-stone-300'
-                              }`}
+                              } ${isCurrentLoggedIn ? 'opacity-90 cursor-not-allowed' : ''}`}
                             >
                               <option value="ciudadano">Ciudadano</option>
                               <option value="voluntario">Voluntario</option>
                               <option value="rescatista">Rescatista</option>
-                              <option value="admin">Administrador</option>
+                              <option value="admin">Administrador/a</option>
                             </select>
                           </td>
                           <td className="px-4 py-3.5 text-[#8A7568]">
                             {user.registeredAt || user.createdAt || 'Reciente'}
                           </td>
-                          <td className="px-4 py-3.5 text-right space-x-2">
-                            <button
-                              onClick={() => handleToggleAdminRole(user.id)}
-                              className="px-2 py-1 bg-[#FAF6F0] border border-[#E8DFD3] hover:bg-[#F3ECE0] rounded-lg text-[11px] font-semibold text-[#9E6B38] cursor-pointer"
-                              title="Alternar permisos de administrador"
-                            >
-                              {user.role === 'admin' ? 'Quitar Admin' : 'Hacer Admin'}
-                            </button>
-                            {user.id !== currentUser.id && (
+                          <td className="px-4 py-3.5 text-right space-x-1.5 whitespace-nowrap">
+                            {isUserAdmin ? (
+                              isCurrentLoggedIn ? (
+                                <span className="px-2 py-1 bg-[#FAF6F0] text-[#8A7568] rounded-lg text-[11px] font-semibold italic border border-[#E8DFD3]">
+                                  (Sesión activa)
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => handleToggleAdminRole(user.id)}
+                                  className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                                  title="Quitar permisos de administradora a esta persona"
+                                >
+                                  <ShieldAlert className="w-3.5 h-3.5" />
+                                  <span>Quitar Admin</span>
+                                </button>
+                              )
+                            ) : (
                               <button
-                                onClick={() => handleDeleteUser(user.id, user.name)}
-                                className="p-1 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
-                                title="Eliminar usuario"
+                                onClick={() => handleToggleAdminRole(user.id)}
+                                className="px-2.5 py-1 bg-[#FAF6F0] hover:bg-[#F3ECE0] border border-[#E8DFD3] text-[#9E6B38] rounded-lg text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                                title="Promover a esta persona como Administradora"
+                              >
+                                <ShieldCheck className="w-3.5 h-3.5" />
+                                <span>Hacer Admin</span>
+                              </button>
+                            )}
+                            {!isCurrentLoggedIn && (
+                              <button
+                                onClick={() => handleDeleteUser(user.id, user.name, user.email)}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer inline-flex items-center justify-center transition"
+                                title={`Eliminar cuenta ${isUserAdmin ? 'de administradora' : 'de usuario'}`}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -2490,6 +2664,196 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: AÑADIR NUEVA ADMINISTRADORA */}
+      {/* ========================================================================= */}
+      {isAddingAdmin && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <form onSubmit={handleCreateAdmin} className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 border border-[#EAE2D5] shadow-2xl animate-in fade-in">
+            <div className="flex items-center justify-between border-b border-[#EAE2D5] pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-full bg-[#2C1E14] text-[#E6C687] flex items-center justify-center shadow-xs border border-[#5C4538]">
+                  <ShieldCheck className="w-5 h-5 text-[#E6C687]" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold font-['Fraunces',serif] text-[#2C1E14]">
+                    Añadir Nueva Administradora
+                  </h3>
+                  <p className="text-[11px] text-[#6E574B]">Acceso total al Panel de Pata Amiga Purificación</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddingAdmin(false)}
+                className="text-[#8A7568] hover:text-[#2C1E14] p-1 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {adminModalError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-xs rounded-xl flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <span>{adminModalError}</span>
+              </div>
+            )}
+
+            <div className="p-3 bg-[#FAF6F0] rounded-xl border border-[#E8DFD3] text-xs text-[#5C4538] space-y-1">
+              <p className="font-semibold text-[#2C1E14] flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#9E6B38]" /> Permisos del Administrador
+              </p>
+              <p className="text-[11px] text-[#6E574B] leading-relaxed">
+                Esta persona podrá ingresar al panel de administración para responder reportes de rescate, aprobar adopciones, convocar brigadas de salud y gestionar otros usuarios.
+              </p>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-[#2C1E14] mb-1">Nombre Completo *</label>
+                <input
+                  type="text"
+                  required
+                  value={newAdminName}
+                  onChange={e => setNewAdminName(e.target.value)}
+                  placeholder="Ej. María Paula Torres"
+                  className="w-full px-3 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#2C1E14] mb-1">Correo Electrónico *</label>
+                <input
+                  type="email"
+                  required
+                  value={newAdminEmail}
+                  onChange={e => setNewAdminEmail(e.target.value)}
+                  placeholder="admin.nuevo@gmail.com"
+                  className="w-full px-3 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#2C1E14] mb-1">
+                  Teléfono / Celular (10 dígitos) *
+                </label>
+                <PhoneInput
+                  id="admin-create-admin-phone"
+                  value={newAdminPhone}
+                  onChange={setNewAdminPhone}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#2C1E14] mb-1">Contraseña de Acceso al Panel *</label>
+                <input
+                  type="password"
+                  required
+                  minLength={5}
+                  value={newAdminPassword}
+                  onChange={e => setNewAdminPassword(e.target.value)}
+                  placeholder="Mínimo 5 caracteres"
+                  className="w-full px-3 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-xl text-[#2C1E14] focus:outline-none focus:ring-2 focus:ring-[#9E6B38]"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-[#EAE2D5]">
+              <button
+                type="button"
+                onClick={() => setIsAddingAdmin(false)}
+                className="px-4 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-full text-xs font-semibold text-[#2C1E14] cursor-pointer hover:bg-[#EAE2D5]"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-[#2C1E14] hover:bg-black text-[#FAF6F0] rounded-full text-xs font-semibold shadow-xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-[#E6C687]" />
+                <span>Guardar Administradora</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: CONFIRMAR CAMBIO O REVOCACIÓN DE ADMINISTRADOR */}
+      {/* ========================================================================= */}
+      {adminActionConfirm && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 border border-[#EAE2D5] shadow-2xl animate-in fade-in">
+            <div className="flex items-center gap-3">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+                adminActionConfirm.type === 'demote' 
+                  ? 'bg-red-50 text-red-600 border border-red-200' 
+                  : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+              }`}>
+                {adminActionConfirm.type === 'demote' ? (
+                  <ShieldAlert className="w-6 h-6" />
+                ) : (
+                  <ShieldCheck className="w-6 h-6" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-base font-bold font-['Fraunces',serif] text-[#2C1E14]">
+                  {adminActionConfirm.type === 'demote' 
+                    ? '¿Quitar permisos de Administradora?' 
+                    : '¿Asignar rol de Administradora?'}
+                </h3>
+                <p className="text-xs text-[#6E574B]">
+                  {adminActionConfirm.userName} ({adminActionConfirm.userEmail})
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-[#FAF6F0] rounded-xl border border-[#E8DFD3] text-xs text-[#5C4538]">
+              {adminActionConfirm.type === 'demote' ? (
+                <p>
+                  Esta persona <strong>perderá el acceso de administración al Panel</strong>, dejará de recibir notificaciones administrativas de rescates y pasará a ser Voluntaria de Pata Amiga.
+                </p>
+              ) : (
+                <p>
+                  Esta persona <strong>tendrá acceso completo para gestionar reportes, postulaciones, brigadas y otros usuarios</strong> en la plataforma de Purificación, Tolima.
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-[#EAE2D5]">
+              <button
+                type="button"
+                onClick={() => setAdminActionConfirm(null)}
+                className="px-4 py-2 bg-[#FAF6F0] border border-[#E8DFD3] rounded-full text-xs font-semibold text-[#2C1E14] cursor-pointer hover:bg-[#EAE2D5]"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteAdminAction}
+                className={`px-5 py-2 rounded-full text-xs font-semibold shadow-xs flex items-center gap-1.5 cursor-pointer ${
+                  adminActionConfirm.type === 'demote'
+                    ? 'bg-red-600 hover:bg-red-700 text-white'
+                    : 'bg-[#2C1E14] hover:bg-black text-[#FAF6F0]'
+                }`}
+              >
+                {adminActionConfirm.type === 'demote' ? (
+                  <>
+                    <ShieldAlert className="w-3.5 h-3.5" />
+                    <span>Sí, Quitar Administradora</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#E6C687]" />
+                    <span>Sí, Asignar Administradora</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

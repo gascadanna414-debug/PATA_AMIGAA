@@ -29,6 +29,23 @@ const DEFAULT_ADMIN_EMAILS = [
   'marimasmela15@gmail.com'
 ];
 
+export function getDynamicAdminEmails(): string[] {
+  const recipients = new Set<string>(DEFAULT_ADMIN_EMAILS.map(e => e.toLowerCase().trim()));
+  try {
+    const db = getDatabase();
+    if (Array.isArray(db.registeredUsers)) {
+      for (const u of db.registeredUsers) {
+        if (u.role === 'admin' && u.email) {
+          recipients.add(u.email.toLowerCase().trim());
+        }
+      }
+    }
+  } catch {
+    // fallback
+  }
+  return Array.from(recipients);
+}
+
 interface EmailConfig {
   configured: boolean;
   provider: 'gmail' | 'smtp' | 'resend' | 'none';
@@ -201,7 +218,7 @@ app.get('/api/email/status', (req: Request, res: Response) => {
     configured: config.configured,
     provider: config.provider,
     account: gmailUser ? `${gmailUser.split('@')[0].slice(0, 3)}***@gmail.com` : (smtpUser || null),
-    recipients: DEFAULT_ADMIN_EMAILS,
+    recipients: getDynamicAdminEmails(),
     instructions: config.configured 
       ? 'Servidor de correo activo y listo para enviar notificaciones reales a la bandeja de entrada.'
       : 'Para recibir correos reales en Gmail, configura GMAIL_USER y GMAIL_APP_PASSWORD en las variables de entorno de la aplicación.'
@@ -220,7 +237,7 @@ export async function sendInternalAdminEmail(params: {
     const { title, message, type = 'sistema', metadata, recipients } = params;
     const targetRecipients: string[] = Array.isArray(recipients) && recipients.length > 0 
       ? recipients 
-      : DEFAULT_ADMIN_EMAILS;
+      : getDynamicAdminEmails();
 
     const emailConfig = getEmailConfig();
     const htmlBody = buildHtmlEmail(title, message, type, metadata);
